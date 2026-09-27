@@ -27,10 +27,19 @@ uv run python -m job_scraper scrape --site pro_act
 - `pro_act` — Pro-Act IT (pro-act.nl/vacatures)
 - `hero` — Hero Interim (hero.eu/interim-opdrachten)
 - `flexvalue` — FlexValue (aanvragen.flexvalue.nl/careers)
+- `synprofs` — Synprofs (synprofs.nl, via its vacancy sitemap)
+- `stone_interim` — Stone Interim (stone-interim.nl, via its JSON API)
+- `tender_link` — Tender-Link (tender-link.nl, via its JSON API)
+- `harveynash` — Harvey Nash (harveynash.nl, via its sitemap)
+- `headfirst` — HeadFirst (headfirst.nl) — see its own ticket for scope
+  limits: only a partial set of postings, no full description
+- `sevenstars` — Sevenstars (sevenstars.nl/opdrachten, paginated)
+- `circle8` — Circle8 (circle8.nl/opdrachten)
 
-None of the three currently paginate their listing page — each adapter
-fetches exactly one listing URL. A future site with genuine multi-page
-listings would need pagination handling added to its own adapter.
+Of these, only `sevenstars` currently paginates its listing page — every
+other adapter fetches exactly one listing URL. A future site with genuine
+multi-page listings would need pagination handling added to its own
+adapter.
 
 ## robots.txt
 
