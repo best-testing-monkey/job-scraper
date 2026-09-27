@@ -32,6 +32,29 @@ disjoint files.
 
 - [x] E4-S01 End-to-end smoke test and README update (docs/tickets/E4-S01-integration.md)
 
+## Epic 5 — Second-wave site adapters (synprofs, stone-interim, tender-link, harveynash, headfirst, sevenstars, circle8)
+
+Recon found every one of these needs a different approach than assumed in
+`scrape-targets.md`: 4 have hidden JSON APIs or sitemaps substituting for
+broken/client-rendered listing pages, 1 (headfirst) needs JSON-in-script
+parsing with documented partial coverage, and 2 (sevenstars, circle8) need
+`FetchStrategy.STEALTH` (a real anti-detect browser) since they're behind
+a Vercel WAF, not actually robots.txt-blocked as first thought.
+overheidsopdrachten.nl was dropped — confirmed still a broken Blazor app
+with no usable API. Pagination was checked per-site during recon; none of
+these need pagination-following except headfirst (browser-only, out of
+scope, documented as a known gap).
+
+- [ ] E5-S01 Synprofs adapter (docs/tickets/E5-S01-synprofs-adapter.md) — parallel-safe with E5-S02..S07
+- [ ] E5-S02 Stone Interim adapter (docs/tickets/E5-S02-stone-interim-adapter.md) — parallel-safe with E5-S01, E5-S03..S07
+- [ ] E5-S03 Tender-Link adapter (docs/tickets/E5-S03-tender-link-adapter.md) — parallel-safe with E5-S01/S02, E5-S04..S07
+- [ ] E5-S04 Harvey Nash adapter (docs/tickets/E5-S04-harveynash-adapter.md) — parallel-safe with E5-S01..S03, E5-S05..S07
+- [ ] E5-S05 HeadFirst adapter (docs/tickets/E5-S05-headfirst-adapter.md) — parallel-safe with E5-S01..S04, E5-S06/S07 (assign to Sonnet: RSC chunk parsing is more complex than the others)
+- [ ] E5-S06 Sevenstars adapter (docs/tickets/E5-S06-sevenstars-adapter.md) — parallel-safe with E5-S01..S05, E5-S07
+- [ ] E5-S07 Circle8 adapter (docs/tickets/E5-S07-circle8-adapter.md) — parallel-safe with E5-S01..S06
+- [ ] E5-S08 Wire second-wave adapters into registry (docs/tickets/E5-S08-wire-registry-v2.md)
+- [ ] E5-S09 Extend integration test and README for second-wave sites (docs/tickets/E5-S09-integration-update.md)
+
 ## Post-implementation bugfix (found via live-site verification, not a separate story)
 
 `list_postings()` had no consistent way to fetch a real listing page (3
