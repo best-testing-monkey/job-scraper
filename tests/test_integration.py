@@ -22,12 +22,10 @@ def load_fixture(site_id: str, filename: str) -> str:
 
 
 class FixtureAwareProActAdapter(ProActAdapter):
-    """Wrapper adapter that fetches listing page and passes it to list_postings."""
+    """Wrapper adapter that filters list_postings down to fixture-backed listings."""
 
     def list_postings(self) -> Iterator[ListingStub]:
-        listing_html = load_fixture("pro_act", "listing.html")
-        # Only yield postings that have fixture detail pages
-        for stub in super().list_postings(listing_html):
+        for stub in super().list_postings():
             if stub.listing_id == "8887":  # We have detail_8887.html
                 yield stub
 
@@ -47,23 +45,18 @@ class FixtureAwareProActAdapter(ProActAdapter):
 
 
 class FixtureAwareHeroAdapter(HeroAdapter):
-    """Wrapper adapter that fetches listing page and passes it to list_postings."""
+    """Wrapper adapter that filters list_postings down to fixture-backed listings."""
 
     def list_postings(self) -> Iterator[ListingStub]:
-        listing_html = load_fixture("hero", "listing.html")
-        # Only yield postings that have fixture detail pages
-        for stub in super().list_postings(listing_html):
+        for stub in super().list_postings():
             if stub.listing_id == "e98187b8":  # We have detail_e98187b8.html
                 yield stub
 
 
 class FixtureAwareFlexValueAdapter(FlexValueAdapter):
-    """Wrapper adapter that sets page before calling list_postings."""
+    """Wrapper adapter that filters list_postings down to fixture-backed listings."""
 
     def list_postings(self) -> Iterator[ListingStub]:
-        listing_html = load_fixture("flexvalue", "listing.html")
-        self.page = listing_html
-        # Only yield postings that have fixture detail pages
         for stub in super().list_postings():
             if stub.listing_id == "1065407":  # We have detail_1065407.html
                 yield stub
@@ -71,10 +64,16 @@ class FixtureAwareFlexValueAdapter(FlexValueAdapter):
 
 @pytest.fixture
 def fixture_fetch_page():
-    """Create a monkeypatch function for fetch_page that returns fixture HTML."""
+    """Create a monkeypatch function for fetch_page that returns fixture HTML
+    for both listing-page and detail-page URLs."""
 
     def mock_fetch_page(strategy: Any, url: str) -> str:
-        """Return fixture HTML for detail pages based on URL."""
+        if url == ProActAdapter.LISTING_URL:
+            return load_fixture("pro_act", "listing.html")
+        if url == HeroAdapter.LISTING_URL:
+            return load_fixture("hero", "listing.html")
+        if url == FlexValueAdapter.LISTING_URL:
+            return load_fixture("flexvalue", "listing.html")
         if "pro-act.nl" in url and "8887" in url:
             return load_fixture("pro_act", "detail_8887.html")
         elif "hero.eu" in url and "e98187b8" in url:
@@ -101,9 +100,12 @@ def test_integration_end_to_end(tmp_path: Path, fixture_fetch_page: Any) -> None
         "flexvalue": FixtureAwareFlexValueAdapter,
     }
 
-    with patch("job_scraper.pipeline.SITE_REGISTRY", fake_registry):
-        with patch("job_scraper.pipeline.fetch_page", side_effect=fixture_fetch_page):
-            results_first = run(["pro_act", "hero", "flexvalue"], repo, str(jobs_dir))
+    with patch("job_scraper.pipeline.SITE_REGISTRY", fake_registry), \
+         patch("job_scraper.pipeline.fetch_page", side_effect=fixture_fetch_page), \
+         patch("job_scraper.sites.pro_act.fetch_page", side_effect=fixture_fetch_page), \
+         patch("job_scraper.sites.hero.fetch_page", side_effect=fixture_fetch_page), \
+         patch("job_scraper.sites.flexvalue.fetch_page", side_effect=fixture_fetch_page):
+        results_first = run(["pro_act", "hero", "flexvalue"], repo, str(jobs_dir))
 
     # Assertions for first run
     assert "pro_act" in results_first
@@ -135,9 +137,12 @@ def test_integration_end_to_end(tmp_path: Path, fixture_fetch_page: Any) -> None
     assert any(f.exists() for f in flexvalue_files), "flexvalue markdown files should exist"
 
     # Second run: run again with same fixtures, verify idempotence
-    with patch("job_scraper.pipeline.SITE_REGISTRY", fake_registry):
-        with patch("job_scraper.pipeline.fetch_page", side_effect=fixture_fetch_page):
-            results_second = run(["pro_act", "hero", "flexvalue"], repo, str(jobs_dir))
+    with patch("job_scraper.pipeline.SITE_REGISTRY", fake_registry), \
+         patch("job_scraper.pipeline.fetch_page", side_effect=fixture_fetch_page), \
+         patch("job_scraper.sites.pro_act.fetch_page", side_effect=fixture_fetch_page), \
+         patch("job_scraper.sites.hero.fetch_page", side_effect=fixture_fetch_page), \
+         patch("job_scraper.sites.flexvalue.fetch_page", side_effect=fixture_fetch_page):
+        results_second = run(["pro_act", "hero", "flexvalue"], repo, str(jobs_dir))
 
     # On the second run, nothing should change (idempotence)
     assert results_second["pro_act"]["written"] == 0, "Second run should not write any new postings"

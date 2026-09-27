@@ -1,24 +1,11 @@
-from typing import Any
 from datetime import datetime
-
-from scrapling.fetchers import Fetcher
 
 from job_scraper.core.db import JobRepository
 from job_scraper.core.filters import apply_dedup, is_excluded
 from job_scraper.core.markdown_export import write
 from job_scraper.core.robots import robots_allowed
-from job_scraper.sites.base import FetchStrategy, SiteAdapter
+from job_scraper.sites.base import FetchStrategy, SiteAdapter, fetch_page
 from job_scraper.sites.registry import SITE_REGISTRY
-
-
-def fetch_page(strategy: FetchStrategy, url: str) -> Any:
-    """Dispatches to the right Scrapling fetcher for this strategy.
-    FetchStrategy.STATIC -> scrapling.fetchers.Fetcher.get(url). The other
-    two strategies (STEALTH, DYNAMIC) are out of scope this phase: raise
-    NotImplementedError with a message naming the strategy if called."""
-    if strategy == FetchStrategy.STATIC:
-        return Fetcher.get(url)
-    raise NotImplementedError(f"Fetch strategy {strategy.value} not yet implemented")
 
 
 def run_site(

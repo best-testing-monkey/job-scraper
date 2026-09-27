@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import patch
 from job_scraper.sites.pro_act import ProActAdapter
 from job_scraper.sites.base import FetchStrategy
 from job_scraper.core.models import ListingStub
@@ -14,7 +15,8 @@ def test_pro_act_adapter_attributes():
 def test_list_postings():
     adapter = ProActAdapter()
     listing_html = Path("tests/fixtures/pro_act/listing.html").read_text()
-    postings = list(adapter.list_postings(listing_html))
+    with patch("job_scraper.sites.pro_act.fetch_page", return_value=listing_html):
+        postings = list(adapter.list_postings())
     assert len(postings) >= 1
     listing_ids = [p.listing_id for p in postings]
     assert "8887" in listing_ids

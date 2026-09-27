@@ -4,16 +4,18 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
-from job_scraper.sites.base import FetchStrategy, SiteAdapter
+from job_scraper.sites.base import FetchStrategy, SiteAdapter, fetch_page
 
 
 class FlexValueAdapter(SiteAdapter):
     site_id = "flexvalue"
     base_url = "https://aanvragen.flexvalue.nl"
     fetch_strategy = FetchStrategy.STATIC
+    LISTING_URL = "https://aanvragen.flexvalue.nl/careers/6605"
 
     def list_postings(self) -> Iterator[ListingStub]:
-        soup = BeautifulSoup(self.page, "html.parser")
+        page = fetch_page(self.fetch_strategy, self.LISTING_URL)
+        soup = BeautifulSoup(page, "html.parser")
         for anchor in soup.select("div.jobs-table div.grid-table a.table-row"):
             href = anchor.get("href", "")
             title_cell = anchor.select_one("div.data-cell.title-cell")

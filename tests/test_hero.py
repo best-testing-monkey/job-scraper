@@ -1,5 +1,6 @@
 import pytest
 from pathlib import Path
+from unittest.mock import patch
 
 from job_scraper.sites.hero import HeroAdapter
 from job_scraper.sites.base import FetchStrategy
@@ -37,20 +38,23 @@ class TestHeroListPostings:
     def test_list_postings_yields_stubs(
         self, adapter: HeroAdapter, listing_html: str
     ) -> None:
-        stubs = list(adapter.list_postings(listing_html))
+        with patch("job_scraper.sites.hero.fetch_page", return_value=listing_html):
+            stubs = list(adapter.list_postings())
         assert len(stubs) >= 1
 
     def test_list_postings_has_absolute_urls(
         self, adapter: HeroAdapter, listing_html: str
     ) -> None:
-        stubs = list(adapter.list_postings(listing_html))
+        with patch("job_scraper.sites.hero.fetch_page", return_value=listing_html):
+            stubs = list(adapter.list_postings())
         for stub in stubs:
             assert stub.detail_url.startswith("https://")
 
     def test_list_postings_includes_e98187b8(
         self, adapter: HeroAdapter, listing_html: str
     ) -> None:
-        stubs = list(adapter.list_postings(listing_html))
+        with patch("job_scraper.sites.hero.fetch_page", return_value=listing_html):
+            stubs = list(adapter.list_postings())
         listing_ids = [stub.listing_id for stub in stubs]
         assert "e98187b8" in listing_ids
 

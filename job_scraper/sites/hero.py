@@ -4,18 +4,17 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
-from job_scraper.sites.base import FetchStrategy, SiteAdapter
+from job_scraper.sites.base import FetchStrategy, SiteAdapter, fetch_page
 
 
 class HeroAdapter(SiteAdapter):
     site_id = "hero"
     base_url = "https://hero.eu"
     fetch_strategy = FetchStrategy.STATIC
+    LISTING_URL = "https://hero.eu/interim-opdrachten"
 
-    def list_postings(self, page: Any = None) -> Iterator[ListingStub]:
-        if page is None:
-            return
-
+    def list_postings(self) -> Iterator[ListingStub]:
+        page = fetch_page(self.fetch_strategy, self.LISTING_URL)
         soup = BeautifulSoup(page, "html.parser")
         ul = soup.find("ul", class_="divide-y")
         if not ul:

@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import patch
 
 from job_scraper.sites.flexvalue import FlexValueAdapter
 from job_scraper.sites.base import FetchStrategy
@@ -19,9 +20,9 @@ def test_adapter_properties() -> None:
 def test_list_postings() -> None:
     listing_html = load_fixture("listing.html")
     adapter = FlexValueAdapter()
-    adapter.page = listing_html
 
-    postings = list(adapter.list_postings())
+    with patch("job_scraper.sites.flexvalue.fetch_page", return_value=listing_html):
+        postings = list(adapter.list_postings())
 
     assert len(postings) > 0
 

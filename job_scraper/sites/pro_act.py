@@ -3,15 +3,17 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
-from job_scraper.sites.base import SiteAdapter, FetchStrategy
+from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
 class ProActAdapter(SiteAdapter):
     site_id: str = "pro_act"
     base_url: str = "https://pro-act.nl"
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
+    LISTING_URL: str = "https://pro-act.nl/vacatures"
 
-    def list_postings(self, page: Any) -> Iterator[ListingStub]:
+    def list_postings(self) -> Iterator[ListingStub]:
+        page = fetch_page(self.fetch_strategy, self.LISTING_URL)
         soup = BeautifulSoup(page, "html.parser")
         articles = soup.find_all("article", class_="vacancy-item")
         for article in articles:
@@ -146,4 +148,18 @@ class ProActAdapter(SiteAdapter):
             return ""
         description = content_wrapper.get_text(separator=" ", strip=True)
         description = re.sub(r"\s+", " ", description)
+        # The page bundles the application form (employment-type radio
+        # buttons, contact fields, etc.) into the same content block as the
+        # real job description. Keep only the "Opdrachtomschrijving" section,
+        # which is the actual job content — everything after "Interesse?"
+        # (or the next "Solliciteren" prompt) is form boilerplate that can
+        # spuriously trip the exclusion-keyword filter (e.g. an "In
+        # loondienst" radio option, not a statement about this job).
+        match = re.search(
+            r"Opdrachtomschrijving(.*?)(?:Interesse\?|Solliciteren)",
+            description,
+            re.DOTALL,
+        )
+        if match:
+            description = ("Opdrachtomschrijving" + match.group(1)).strip()
         return description

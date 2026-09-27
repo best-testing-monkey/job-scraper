@@ -66,8 +66,11 @@ class FakeAdapter(SiteAdapter):
 
 
 def test_fetch_page_static() -> None:
-    with patch("job_scraper.pipeline.Fetcher.get") as mock_get:
-        mock_get.return_value = "<html>test</html>"
+    class FakeResponse:
+        html_content = "<html>test</html>"
+
+    with patch("job_scraper.sites.base.Fetcher.get") as mock_get:
+        mock_get.return_value = FakeResponse()
         result = fetch_page(FetchStrategy.STATIC, "https://example.com")
         assert result == "<html>test</html>"
         mock_get.assert_called_once_with("https://example.com")
