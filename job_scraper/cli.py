@@ -28,6 +28,12 @@ def main() -> None:
         default="jobs/",
         help="Path to jobs directory (default: jobs/)",
     )
+    scrape_parser.add_argument(
+        "--ignore-robots",
+        action="store_true",
+        help="Bypass the robots.txt check (only use for sites you have "
+        "explicit permission to scrape)",
+    )
 
     subparsers.add_parser("list-sites", help="List all available sites")
 
@@ -54,7 +60,7 @@ def handle_scrape(args: argparse.Namespace) -> None:
         site_ids = args.sites
 
     repo = JobRepository(args.db)
-    results = run(site_ids, repo, args.jobs_dir)
+    results = run(site_ids, repo, args.jobs_dir, ignore_robots=args.ignore_robots)
 
     for site_id, counters in results.items():
         print(f"{site_id}: {json.dumps(counters)}")

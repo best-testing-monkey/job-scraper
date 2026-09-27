@@ -28,6 +28,17 @@ uv run python -m job_scraper scrape --site pro_act
 - `hero` — Hero Interim (hero.eu/interim-opdrachten)
 - `flexvalue` — FlexValue (aanvragen.flexvalue.nl/careers)
 
+None of the three currently paginate their listing page — each adapter
+fetches exactly one listing URL. A future site with genuine multi-page
+listings would need pagination handling added to its own adapter.
+
+## robots.txt
+
+Every scrape checks `robots.txt` before touching a site, and skips it if
+disallowed. Pass `--ignore-robots` to bypass this — only for sites you have
+explicit permission to scrape; it does not by itself add support for a new
+site (an adapter still has to exist for it).
+
 ## Integration with resume-matcher
 
 Point the sibling `resume-matcher` project at the exported job files:

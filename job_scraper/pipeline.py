@@ -50,12 +50,19 @@ def run_site(
     return counters
 
 
-def run(site_ids: list[str], repo: JobRepository, jobs_dir: str) -> dict[str, dict]:
+def run(
+    site_ids: list[str],
+    repo: JobRepository,
+    jobs_dir: str,
+    ignore_robots: bool = False,
+) -> dict[str, dict]:
     """For each site_id: if not in SITE_REGISTRY, skip with a printed
     warning (to stderr) and continue. If robots_allowed(adapter.base_url) is
-    False, skip with a printed warning and continue. Otherwise instantiate
-    the adapter and call run_site(...). Returns {site_id: counters_dict}
-    for every site actually run."""
+    False, skip with a printed warning and continue — unless ignore_robots
+    is True, in which case the check is bypassed (with a printed notice, so
+    the bypass is always visible in the run's output, not silent). Otherwise
+    instantiate the adapter and call run_site(...). Returns
+    {site_id: counters_dict} for every site actually run."""
     import sys
 
     results = {}
@@ -69,11 +76,18 @@ def run(site_ids: list[str], repo: JobRepository, jobs_dir: str) -> dict[str, di
         adapter = adapter_class()
 
         if not robots_allowed(adapter.base_url):
-            print(
-                f"Warning: robots.txt disallows scraping {adapter.base_url}",
-                file=sys.stderr,
-            )
-            continue
+            if ignore_robots:
+                print(
+                    f"Notice: robots.txt disallows scraping {adapter.base_url}, "
+                    "but --ignore-robots was set; proceeding anyway",
+                    file=sys.stderr,
+                )
+            else:
+                print(
+                    f"Warning: robots.txt disallows scraping {adapter.base_url}",
+                    file=sys.stderr,
+                )
+                continue
 
         run_started_at = datetime.now().isoformat()
         counters = run_site(adapter, repo, jobs_dir, run_started_at)

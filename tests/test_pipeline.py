@@ -167,6 +167,26 @@ def test_run_with_robots_disallowed(tmp_path: Path) -> None:
     assert results == {}
 
 
+def test_run_with_robots_disallowed_but_ignored(tmp_path: Path) -> None:
+    db_path = tmp_path / "test.db"
+    jobs_dir = tmp_path / "jobs"
+    repo = JobRepository(str(db_path))
+
+    fake_registry = {"fake-site": FakeAdapter}
+
+    with patch("job_scraper.pipeline.SITE_REGISTRY", fake_registry):
+        with patch("job_scraper.pipeline.robots_allowed") as mock_robots:
+            mock_robots.return_value = False
+            with patch("job_scraper.pipeline.fetch_page") as mock_fetch:
+                mock_fetch.return_value = None
+                results = run(
+                    ["fake-site"], repo, str(jobs_dir), ignore_robots=True
+                )
+
+    assert "fake-site" in results
+    assert results["fake-site"]["seen"] == 3
+
+
 def test_list_sites_command() -> None:
     result = subprocess.run(
         [sys.executable, "-m", "job_scraper", "list-sites"],
