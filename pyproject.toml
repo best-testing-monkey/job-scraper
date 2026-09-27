@@ -1,0 +1,13 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "job-scraper"
+version = "0.1.0"
+description = "Scrape job postings from multiple job boards and export as markdown"
+requires-python = ">=3.11"
+dependencies = [
+    "scrapling[fetchers]",
+    "pytest",
+]
