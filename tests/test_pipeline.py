@@ -67,18 +67,24 @@ class FakeAdapter(SiteAdapter):
 
 def test_fetch_page_static() -> None:
     class FakeResponse:
-        html_content = "<html>test</html>"
+        body = b"<html>test</html>"
 
     with patch("job_scraper.sites.base.Fetcher.get") as mock_get:
         mock_get.return_value = FakeResponse()
         result = fetch_page(FetchStrategy.STATIC, "https://example.com")
-        assert result == "<html>test</html>"
+        assert result == b"<html>test</html>"
         mock_get.assert_called_once_with("https://example.com")
 
 
-def test_fetch_page_stealth_not_implemented() -> None:
-    with pytest.raises(NotImplementedError, match="stealth"):
-        fetch_page(FetchStrategy.STEALTH, "https://example.com")
+def test_fetch_page_stealth() -> None:
+    class FakeResponse:
+        body = b"<html>stealth test</html>"
+
+    with patch("job_scraper.sites.base.StealthyFetcher.fetch") as mock_fetch:
+        mock_fetch.return_value = FakeResponse()
+        result = fetch_page(FetchStrategy.STEALTH, "https://example.com")
+        assert result == b"<html>stealth test</html>"
+        mock_fetch.assert_called_once_with("https://example.com", headless=True)
 
 
 def test_fetch_page_dynamic_not_implemented() -> None:

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, ClassVar, Iterator
 
-from scrapling.fetchers import Fetcher
+from scrapling.fetchers import Fetcher, StealthyFetcher
 
 from job_scraper.core.models import JobPosting, ListingStub
 
@@ -13,14 +13,23 @@ class FetchStrategy(Enum):
     DYNAMIC = "dynamic"
 
 
-def fetch_page(strategy: "FetchStrategy", url: str) -> str:
+def fetch_page(strategy: "FetchStrategy", url: str) -> bytes:
     """Dispatches to the right Scrapling fetcher for this strategy and
-    returns the fetched page's HTML as a plain string.
-    FetchStrategy.STATIC -> scrapling.fetchers.Fetcher.get(url).html_content.
-    The other two strategies (STEALTH, DYNAMIC) are out of scope this
-    phase: raises NotImplementedError naming the strategy."""
+    returns the fetched page's raw response body as bytes (not
+    .html_content, which is empty for non-HTML responses like JSON/XML —
+    .body works uniformly for HTML, JSON, and XML, and every parser used
+    in this project — BeautifulSoup, json.loads, ElementTree — accepts
+    bytes directly).
+    FetchStrategy.STATIC -> scrapling.fetchers.Fetcher.get(url).body.
+    FetchStrategy.STEALTH -> scrapling.fetchers.StealthyFetcher.fetch(url,
+    headless=True).body — a real anti-detect browser (Camoufox), for sites
+    behind bot-mitigation WAFs that block plain HTTP entirely.
+    FetchStrategy.DYNAMIC is out of scope this phase: raises
+    NotImplementedError."""
     if strategy == FetchStrategy.STATIC:
-        return Fetcher.get(url).html_content
+        return Fetcher.get(url).body
+    if strategy == FetchStrategy.STEALTH:
+        return StealthyFetcher.fetch(url, headless=True).body
     raise NotImplementedError(f"Fetch strategy {strategy.value} not yet implemented")
 
 
