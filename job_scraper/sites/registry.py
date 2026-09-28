@@ -9,6 +9,16 @@ from . import (
     headfirst,
     sevenstars,
     circle8,
+    iamexpat,
+    djinni,
+    arc_dev,
+    freelancer_com,
+    guru,
+    planet_interim,
+    ictergezocht,
+    wearedevelopers,
+    working_nomads,
+    freelancermap,
 )
 from job_scraper.sites.base import SiteAdapter
 
@@ -23,4 +33,14 @@ SITE_REGISTRY: dict[str, type[SiteAdapter]] = {
     headfirst.HeadfirstAdapter.site_id: headfirst.HeadfirstAdapter,
     sevenstars.SevenstarsAdapter.site_id: sevenstars.SevenstarsAdapter,
     circle8.Circle8Adapter.site_id: circle8.Circle8Adapter,
+    iamexpat.IamexpatAdapter.site_id: iamexpat.IamexpatAdapter,
+    djinni.DjinniAdapter.site_id: djinni.DjinniAdapter,
+    arc_dev.ArcDevAdapter.site_id: arc_dev.ArcDevAdapter,
+    freelancer_com.FreelancerComAdapter.site_id: freelancer_com.FreelancerComAdapter,
+    guru.GuruAdapter.site_id: guru.GuruAdapter,
+    planet_interim.PlanetInterimAdapter.site_id: planet_interim.PlanetInterimAdapter,
+    ictergezocht.IctergezochtAdapter.site_id: ictergezocht.IctergezochtAdapter,
+    wearedevelopers.WearedevelopersAdapter.site_id: wearedevelopers.WearedevelopersAdapter,
+    working_nomads.WorkingNomadsAdapter.site_id: working_nomads.WorkingNomadsAdapter,
+    freelancermap.FreelancermapAdapter.site_id: freelancermap.FreelancermapAdapter,
 }
