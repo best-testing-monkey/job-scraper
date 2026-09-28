@@ -149,9 +149,10 @@ def test_run_with_registry_entry(tmp_path: Path) -> None:
     fake_registry = {"fake-site": FakeAdapter}
 
     with patch("job_scraper.pipeline.SITE_REGISTRY", fake_registry):
-        with patch("job_scraper.pipeline.fetch_page") as mock_fetch:
-            mock_fetch.return_value = None
-            results = run(["fake-site"], repo, str(jobs_dir))
+        with patch("job_scraper.pipeline.robots_allowed", return_value=True):
+            with patch("job_scraper.pipeline.fetch_page") as mock_fetch:
+                mock_fetch.return_value = None
+                results = run(["fake-site"], repo, str(jobs_dir))
 
     assert "fake-site" in results
     assert results["fake-site"]["seen"] == 3

@@ -395,6 +395,7 @@ def _patch_all_sites(
     this many context managers at once — CPython's compiler caps nested
     blocks — so patches are entered dynamically instead."""
     stack.enter_context(patch("job_scraper.pipeline.SITE_REGISTRY", fake_registry))
+    stack.enter_context(patch("job_scraper.pipeline.robots_allowed", return_value=True))
     stack.enter_context(patch("job_scraper.pipeline.fetch_page", side_effect=fixture_fetch_page))
     for module in _ALL_SITE_MODULES:
         stack.enter_context(
@@ -443,12 +444,11 @@ def test_integration_end_to_end(tmp_path: Path, fixture_fetch_page: Any) -> None
 
     with contextlib.ExitStack() as stack:
         _patch_all_sites(stack, fake_registry, fixture_fetch_page, stone_interim_response)
-        # ignore_robots=True: stone-interim.nl's WAF returns 403 to urllib's
-        # default user agent when fetching robots.txt itself (unrelated to the
-        # adapter's own fetch mechanics, which use scrapling and succeed fine),
-        # which Python's robotparser treats as disallow-all. This test cares
+        # robots_allowed is mocked to always return True above: this test cares
         # about adapter/pipeline behavior against fixtures, not live robots.txt
-        # fetch results for 20 real domains.
+        # fetch results for 20 real domains — it must never make a real request.
+        # ignore_robots=True is kept as a belt-and-braces guard in case that
+        # mock is ever removed by mistake.
         results_first = run(ALL_SITE_IDS, repo, str(jobs_dir), ignore_robots=True)
 
     # Assertions for first run

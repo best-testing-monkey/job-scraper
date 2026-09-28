@@ -12,3 +12,11 @@ dependencies = [
     "pytest",
     "beautifulsoup4",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest-socket>=0.8.1",
+]
+
+[tool.pytest.ini_options]
+addopts = "--disable-socket"

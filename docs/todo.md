@@ -26,18 +26,25 @@ listing deep-links to a mobile-app invite gate, no real job pages exist.
 - [x] E6-S10 freelancermap.de adapter (docs/tickets/E6-S10-freelancermap-adapter.md) — parallel-safe with E6-S01..S09 (STEALTH, assign to Sonnet: embedded-JSON extraction is more complex than the others)
 - [x] E6-S11 Wire third-wave adapters into registry (docs/tickets/E6-S11-wire-registry-v3.md)
 - [x] E6-S12 Extend integration test and README for third-wave sites (docs/tickets/E6-S12-integration-update.md)
-- [ ] E6-S13 Audit: verify the ENTIRE test suite makes zero live network
+- [x] E6-S13 Audit: verify the ENTIRE test suite makes zero live network
       connections to any scraped site, across all 20 adapters — user-requested
-      hard rule, not previously verified systematically (each ticket said
-      "no live network calls" but this was never independently checked end
-      to end). To be done by the orchestrator directly, not delegated: run
-      the full suite with sockets blocked (e.g. monkeypatch
-      `socket.socket`/use `pytest-socket`'s `--disable-socket`) and confirm
-      it still passes; separately grep every `job_scraper/sites/*.py` +
-      `tests/test_*.py` for direct `Fetcher.`/`StealthyFetcher.`/`urlopen`/
-      `requests.` calls that aren't behind a mocked `fetch_page` in tests.
-      Fix any test found making a real connection before considering this
-      epic done.
+      hard rule (docs/tickets/E6-S13 note above; done by the orchestrator
+      directly, not delegated). Added `pytest-socket` as a dev dependency and
+      `addopts = "--disable-socket"` in pyproject.toml so this is enforced on
+      every future run, not just checked once. Found and fixed a real gap:
+      `test_run_with_registry_entry` (tests/test_pipeline.py) and
+      `test_integration_end_to_end` (tests/test_integration.py) mocked
+      `fetch_page` but not `pipeline.robots_allowed`, so both were making
+      genuine outbound robots.txt HTTP requests — the integration test to
+      all 20 real production domains — silently masked by
+      `robots_allowed()`'s fail-open exception handling. Fixed by patching
+      `job_scraper.pipeline.robots_allowed` in both tests. Grepped every
+      `job_scraper/sites/*.py` + `tests/test_*.py` for direct
+      `Fetcher.`/`StealthyFetcher.`/`urlopen`/`requests.` calls outside
+      `fetch_page`: found two (stone_interim.py's `Fetcher.post`,
+      core/robots.py's `urlopen`), both already correctly mocked everywhere
+      they're exercised. Full suite (188 tests) now passes with sockets
+      fully disabled, zero warnings.
 
 ## Epic 0 — Scaffolding
 
