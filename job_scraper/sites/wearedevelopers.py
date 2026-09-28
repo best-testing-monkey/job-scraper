@@ -1,0 +1,102 @@
+import re
+from typing import Any, Iterator
+
+from bs4 import BeautifulSoup
+
+from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
+
+
+class WearedevelopersAdapter(SiteAdapter):
+    site_id: str = "wearedevelopers"
+    base_url: str = "https://www.wearedevelopers.com"
+    fetch_strategy: FetchStrategy = FetchStrategy.STEALTH
+    LISTING_URL: str = "https://www.wearedevelopers.com/jobs?country=all&q=QA"
+
+    def list_postings(self) -> Iterator[ListingStub]:
+        page = fetch_page(self.fetch_strategy, self.LISTING_URL)
+        soup = BeautifulSoup(page, "html.parser")
+        articles = soup.find_all("article")
+
+        for article in articles:
+            link = article.find("a", href=re.compile(r"^/jobs/ext/"))
+            if not link:
+                continue
+
+            href = link.get("href", "")
+            match = re.match(r"^/jobs/ext/(\d+)-", href)
+            if not match:
+                continue
+
+            listing_id = match.group(1)
+            title_elem = article.find("h3")
+            if not title_elem:
+                continue
+
+            title = title_elem.get_text(strip=True)
+            detail_url = f"{self.base_url}{href}"
+
+            yield ListingStub(
+                listing_id=listing_id,
+                detail_url=detail_url,
+                title=title,
+            )
+
+    def parse_detail(self, stub: ListingStub, page: Any) -> JobPosting:
+        soup = BeautifulSoup(page, "html.parser")
+
+        h1_elem = soup.find("h1")
+        title = h1_elem.get_text(strip=True) if h1_elem else stub.title
+
+        location = self._get_meta_content(soup, "job:location")
+        posted_date = self._get_meta_content(soup, "job:posted_time")
+        client = self._get_meta_content(soup, "og:article:author", is_property=True)
+
+        skills = self._get_all_meta_content(soup, "job:skill")
+        category = " ".join(skills) if skills else None
+
+        description = self._extract_description(soup)
+
+        posting = JobPosting(
+            site_id=self.site_id,
+            listing_id=stub.listing_id,
+            source_url=stub.detail_url,
+            title=title,
+            client=client,
+            location=location,
+            posted_date=posted_date,
+            category=category,
+            description=description,
+            rate=None,
+            hours=None,
+            duration=None,
+            scrape_note="Page 1 only — pagination is a Hotwire/Turbo 'Load more' mechanism not yet supported",
+        )
+
+        extra_fields = self._get_meta_content(soup, "job:employment_type")
+        if extra_fields:
+            posting.extra_fields["employment_type"] = extra_fields
+
+        return posting
+
+    def _get_meta_content(
+        self, soup: BeautifulSoup, name: str, is_property: bool = False
+    ) -> str | None:
+        attr_name = "property" if is_property else "name"
+        meta = soup.find("meta", {attr_name: name})
+        if meta:
+            return meta.get("content")
+        return None
+
+    def _get_all_meta_content(self, soup: BeautifulSoup, name: str) -> list[str]:
+        metas = soup.find_all("meta", {"name": name})
+        return [meta.get("content") for meta in metas if meta.get("content")]
+
+    def _extract_description(self, soup: BeautifulSoup) -> str:
+        h2_elems = soup.find_all("h2")
+        for h2 in h2_elems:
+            if h2.get_text(strip=True) == "Job description":
+                next_div = h2.find_next("div", class_="prose-base-content")
+                if next_div:
+                    return next_div.get_text(strip=True)
+        return ""
