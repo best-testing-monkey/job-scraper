@@ -1,4 +1,5 @@
 from typing import Any, Iterator
+from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
@@ -23,9 +24,10 @@ class ArcDevAdapter(SiteAdapter):
             if not job_title_link:
                 continue
             title = job_title_link.get_text(strip=True)
-            detail_url = job_title_link.get("href", "")
-            if not detail_url:
+            href = job_title_link.get("href", "")
+            if not href:
                 continue
+            detail_url = urljoin(self.base_url, href)
             yield ListingStub(
                 listing_id=listing_id,
                 detail_url=detail_url,
