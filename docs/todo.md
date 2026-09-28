@@ -14,12 +14,12 @@ JSON API instead — cheaper than a browser, switched to STATIC). Fring was
 also triaged as a StealthyFetcher candidate but dropped entirely: every
 listing deep-links to a mobile-app invite gate, no real job pages exist.
 
-- [ ] E6-S01 IamExpat Jobs adapter (docs/tickets/E6-S01-iamexpat-adapter.md) — parallel-safe with E6-S02..S10
-- [ ] E6-S02 Djinni adapter (docs/tickets/E6-S02-djinni-adapter.md) — parallel-safe with E6-S01, E6-S03..S10
-- [ ] E6-S03 Arc.dev adapter (docs/tickets/E6-S03-arc-dev-adapter.md) — parallel-safe with E6-S01/S02, E6-S04..S10
-- [ ] E6-S04 Freelancer.com adapter (docs/tickets/E6-S04-freelancer-com-adapter.md) — parallel-safe with E6-S01..S03, E6-S05..S10
-- [ ] E6-S05 Guru adapter (docs/tickets/E6-S05-guru-adapter.md) — parallel-safe with E6-S01..S04, E6-S06..S10 (STEALTH: live site currently blocked by Incapsula on plain HTTP)
-- [ ] E6-S06 Planet Interim adapter (docs/tickets/E6-S06-planet-interim-adapter.md) — parallel-safe with E6-S01..S05, E6-S07..S10 (STEALTH, partial/gated fields)
+- [x] E6-S01 IamExpat Jobs adapter (docs/tickets/E6-S01-iamexpat-adapter.md) — parallel-safe with E6-S02..S10
+- [x] E6-S02 Djinni adapter (docs/tickets/E6-S02-djinni-adapter.md) — parallel-safe with E6-S01, E6-S03..S10
+- [x] E6-S03 Arc.dev adapter (docs/tickets/E6-S03-arc-dev-adapter.md) — parallel-safe with E6-S01/S02, E6-S04..S10
+- [x] E6-S04 Freelancer.com adapter (docs/tickets/E6-S04-freelancer-com-adapter.md) — parallel-safe with E6-S01..S03, E6-S05..S10
+- [x] E6-S05 Guru adapter (docs/tickets/E6-S05-guru-adapter.md) — parallel-safe with E6-S01..S04, E6-S06..S10 (STEALTH: live site currently blocked by Incapsula on plain HTTP)
+- [x] E6-S06 Planet Interim adapter (docs/tickets/E6-S06-planet-interim-adapter.md) — parallel-safe with E6-S01..S05, E6-S07..S10 (STEALTH, partial/gated fields)
 - [x] E6-S07 ICTerGezocht adapter (docs/tickets/E6-S07-ictergezocht-adapter.md) — parallel-safe with E6-S01..S06, E6-S08..S10 (STEALTH + solve_cloudflare)
 - [x] E6-S08 WeAreDevelopers adapter (docs/tickets/E6-S08-wearedevelopers-adapter.md) — parallel-safe with E6-S01..S07, E6-S09/S10 (STEALTH)
 - [x] E6-S09 Working Nomads adapter (docs/tickets/E6-S09-working-nomads-adapter.md) — parallel-safe with E6-S01..S08, E6-S10 (STATIC via public JSON API)
@@ -45,6 +45,18 @@ listing deep-links to a mobile-app invite gate, no real job pages exist.
       core/robots.py's `urlopen`), both already correctly mocked everywhere
       they're exercised. Full suite (188 tests) now passes with sockets
       fully disabled, zero warnings.
+
+**Live verification (2026-09-28)**: full `scrape --site all` run against all 20
+real sites — 1045 postings written (iamexpat 275, guru 201, tender_link 186,
+working_nomads 52, ictergezocht 49, hero 49, harveynash 29, freelancer_com 29,
+synprofs 27, stone_interim 24, wearedevelopers 22, freelancermap 21, djinni 15,
+sevenstars 14, flexvalue 14, headfirst 10, pro_act 9, planet_interim 9,
+circle8 9, arc_dev 1). Found and fixed a real bug this live run caught that no
+unit test could (fixture-based tests mock `fetch_page` and never validate the
+URL string itself): `arc_dev`'s `list_postings()` passed a relative
+`href` straight through as `detail_url`, which crashed the live detail fetch
+with "URL rejected: No host part in the URL" — fixed with
+`urljoin(self.base_url, href)`, see the `job_scraper/sites/arc_dev.py` commit.
 
 ## Epic 0 — Scaffolding
 
