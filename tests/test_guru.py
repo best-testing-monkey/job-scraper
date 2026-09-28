@@ -1,0 +1,76 @@
+from pathlib import Path
+from typing import Any
+from unittest.mock import patch
+
+from job_scraper.sites.guru import GuruAdapter
+from job_scraper.sites.base import FetchStrategy
+from job_scraper.core.models import ListingStub
+
+
+def test_guru_adapter_site_id() -> None:
+    adapter = GuruAdapter()
+    assert adapter.site_id == "guru"
+
+
+def test_guru_adapter_fetch_strategy() -> None:
+    adapter = GuruAdapter()
+    assert adapter.fetch_strategy == FetchStrategy.STEALTH
+
+
+def test_list_postings() -> None:
+    adapter = GuruAdapter()
+    listing_html = Path("tests/fixtures/guru/listing.html").read_bytes()
+
+    def mock_fetch(strategy: Any, url: str, **kwargs: Any) -> bytes:
+        # Only return the HTML for the first page
+        if "pg/" in url:
+            # Return empty page for page 2 (no records, no pagination)
+            return b"<html><body></body></html>"
+        return listing_html
+
+    with patch("job_scraper.sites.guru.fetch_page", side_effect=mock_fetch):
+        stubs = list(adapter.list_postings())
+
+    assert len(stubs) > 0
+    listing_ids = [stub.listing_id for stub in stubs]
+    assert "2120954" in listing_ids
+
+
+def test_list_postings_absolute_urls() -> None:
+    adapter = GuruAdapter()
+    listing_html = Path("tests/fixtures/guru/listing.html").read_bytes()
+
+    def mock_fetch(strategy: Any, url: str, **kwargs: Any) -> bytes:
+        # Only return the HTML for the first page
+        if "pg/" in url:
+            # Return empty page for page 2 (no records, no pagination)
+            return b"<html><body></body></html>"
+        return listing_html
+
+    with patch("job_scraper.sites.guru.fetch_page", side_effect=mock_fetch):
+        stubs = list(adapter.list_postings())
+
+    for stub in stubs:
+        assert stub.detail_url.startswith("https://www.guru.com/jobs/")
+
+
+def test_parse_detail_2101732() -> None:
+    adapter = GuruAdapter()
+    detail_html = Path("tests/fixtures/guru/detail_2101732.html").read_bytes()
+    stub = ListingStub(
+        listing_id="2101732",
+        detail_url="https://www.guru.com/jobs/automation-test-selenium-with-c/2101732",
+        title="Automation Test Selenium with C#",
+    )
+    posting = adapter.parse_detail(stub, detail_html)
+
+    assert posting.site_id == "guru"
+    assert posting.listing_id == "2101732"
+    assert posting.title == "Automation Test Selenium with C#"
+    assert posting.rate is not None and "250-$500" in posting.rate
+    assert posting.category is not None and ("QA" in posting.category or "Testing" in posting.category)
+    assert posting.client is None
+    assert len(posting.description) > 0
+    assert "Show more" not in posting.description
+    assert "skills" in posting.extra_fields
+    assert len(posting.extra_fields["skills"]) > 0
