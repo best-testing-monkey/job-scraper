@@ -1,0 +1,77 @@
+import json
+from typing import Any, Iterator
+from bs4 import BeautifulSoup
+
+from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
+
+
+class WorkingNomadsAdapter(SiteAdapter):
+    site_id: str = "working_nomads"
+    base_url: str = "https://www.workingnomads.com"
+    fetch_strategy: FetchStrategy = FetchStrategy.STATIC
+    LISTING_URL: str = "https://www.workingnomads.com/api/exposed_jobs/"
+
+    def __init__(self) -> None:
+        self._job_cache: dict[str, dict[str, Any]] = {}
+
+    def list_postings(self) -> Iterator[ListingStub]:
+        page = fetch_page(self.fetch_strategy, self.LISTING_URL)
+        jobs = json.loads(page)
+        for job in jobs:
+            url = job.get("url", "")
+            title = job.get("title", "")
+            if not url:
+                continue
+            listing_id = self._extract_listing_id(url)
+            if not listing_id:
+                continue
+            self._job_cache[listing_id] = job
+            yield ListingStub(
+                listing_id=listing_id,
+                detail_url=url,
+                title=title,
+            )
+
+    def parse_detail(self, stub: ListingStub, page: Any) -> JobPosting:
+        job = self._job_cache.get(stub.listing_id, {})
+        title = job.get("title", "")
+        client = job.get("company_name", "")
+        tags = job.get("tags", "")
+        location = job.get("location", "")
+        posted_date = job.get("pub_date", "")
+        description = self._strip_html_tags(job.get("description", ""))
+        category_name = job.get("category_name", "")
+
+        extra_fields: dict[str, str] = {}
+        if category_name:
+            extra_fields["category_name"] = category_name
+
+        posting = JobPosting(
+            site_id=self.site_id,
+            listing_id=stub.listing_id,
+            source_url=stub.detail_url,
+            title=title,
+            client=client,
+            category=tags,
+            location=location,
+            hours=None,
+            rate=None,
+            duration=None,
+            posted_date=posted_date,
+            description=description,
+            extra_fields=extra_fields,
+        )
+        return posting
+
+    def _extract_listing_id(self, url: str) -> str | None:
+        if "/job/go/" in url:
+            parts = url.split("/job/go/")
+            if len(parts) == 2:
+                job_id = parts[1].rstrip("/")
+                return job_id
+        return None
+
+    def _strip_html_tags(self, html: str) -> str:
+        soup = BeautifulSoup(html, "html.parser")
+        return soup.get_text(separator=" ", strip=True)
