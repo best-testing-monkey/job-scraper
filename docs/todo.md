@@ -22,7 +22,7 @@ listing deep-links to a mobile-app invite gate, no real job pages exist.
 - [ ] E6-S06 Planet Interim adapter (docs/tickets/E6-S06-planet-interim-adapter.md) — parallel-safe with E6-S01..S05, E6-S07..S10 (STEALTH, partial/gated fields)
 - [x] E6-S07 ICTerGezocht adapter (docs/tickets/E6-S07-ictergezocht-adapter.md) — parallel-safe with E6-S01..S06, E6-S08..S10 (STEALTH + solve_cloudflare)
 - [x] E6-S08 WeAreDevelopers adapter (docs/tickets/E6-S08-wearedevelopers-adapter.md) — parallel-safe with E6-S01..S07, E6-S09/S10 (STEALTH)
-- [ ] E6-S09 Working Nomads adapter (docs/tickets/E6-S09-working-nomads-adapter.md) — parallel-safe with E6-S01..S08, E6-S10 (STATIC via public JSON API)
+- [x] E6-S09 Working Nomads adapter (docs/tickets/E6-S09-working-nomads-adapter.md) — parallel-safe with E6-S01..S08, E6-S10 (STATIC via public JSON API)
 - [ ] E6-S10 freelancermap.de adapter (docs/tickets/E6-S10-freelancermap-adapter.md) — parallel-safe with E6-S01..S09 (STEALTH, assign to Sonnet: embedded-JSON extraction is more complex than the others)
 - [ ] E6-S11 Wire third-wave adapters into registry (docs/tickets/E6-S11-wire-registry-v3.md)
 - [ ] E6-S12 Extend integration test and README for third-wave sites (docs/tickets/E6-S12-integration-update.md)
