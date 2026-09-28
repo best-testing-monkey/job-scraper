@@ -1,0 +1,1868 @@
+<!DOCTYPE html><html lang="en" data-theme="dark"><head><style type="text/css">.turbo-progress-bar {
+  position: fixed;
+  display: block;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: #0076ff;
+  z-index: 2147483647;
+  transition:
+    width 300ms ease-out,
+    opacity 150ms 150ms ease-in;
+  transform: translate3d(0, 0, 0);
+}
+</style>
+
+    <title>WeAreDevelopers</title>
+
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="oklch(100% 0 0)">
+
+    <link rel="alternate" type="text/markdown" href="/jobs.md?country=all&amp;q=QA">
+
+      <meta name="wad-api-base-url" content="https://wad-api.wearedevelopers.com/api">
+
+    
+    <meta name="csp-nonce">
+
+      <script type="text/javascript" async="" src="https://cdn.priv.center/pc/truendo_cmp.pid.js"></script><script async="" src="https://load.ss.wearedevelopers.com/5hrttlcas.js?1v=GgVeKyA5XyMiKTA9Nkc%2BTgVcUUJFUhYGThYGDQYRFg0FBA8DBBEAG10CDAE%3D"></script><script nonce="">
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s);j.async=true;j.src="https://load.ss.wearedevelopers.com/5hrttlcas.js"+"?"+i;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer',"1v=GgVeKyA5XyMiKTA9Nkc%2BTgVcUUJFUhYGThYGDQYRFg0FBA8DBBEAG10CDAE%3D");
+      </script>
+
+    <meta property="og:title" content="WeAreDevelopers">
+<meta property="og:description" content="Hands-on talks, live shows, and practical guides from top engineers.">
+<meta property="og:image" content="https://www.wearedevelopers.com/og-image.jpg">
+<meta property="og:url" content="https://www.wearedevelopers.com/jobs?country=all&amp;q=QA">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="WeAreDevelopers">
+
+
+
+
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="WeAreDevelopers">
+<meta name="twitter:description" content="Hands-on talks, live shows, and practical guides from top engineers.">
+<meta name="twitter:image" content="https://www.wearedevelopers.com/og-image.jpg">
+
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+        <meta name="robots" content="noindex">
+
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+
+    <script nonce="">
+      (() => {
+        try {
+          const themeParam = new URLSearchParams(window.location.search).get("theme")
+          const allowedThemes = ["light", "dark", "terminal", "halloween", "system"]
+
+          if (allowedThemes.includes(themeParam)) {
+            if (themeParam === "system") {
+              localStorage.removeItem("theme")
+            } else {
+              localStorage.setItem("theme", themeParam)
+            }
+
+            const url = new URL(window.location.href)
+            url.searchParams.delete("theme")
+            history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`)
+          }
+
+          const savedTheme = localStorage.getItem("theme")
+          const theme = savedTheme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+          document.documentElement.setAttribute("data-theme", theme)
+        } catch (_error) {}
+      })()
+    </script>
+
+    <link rel="stylesheet" href="/assets/tailwind-93daa271.css" data-turbo-track="reload">
+    <script src="/assets/application-1dd97aec.js" data-turbo-track="reload" type="module"></script>
+    <meta name="sentry-trace" content="414492a7bb10415c8b696bfcddb1da1c-831ac1c3f2ea4943-0">
+<meta name="baggage" content="sentry-trace_id=414492a7bb10415c8b696bfcddb1da1c,sentry-sample_rate=0.02,sentry-sample_rand=0.266043,sentry-sampled=false,sentry-environment=production,sentry-release=49f0e6c28dbc20a8429a2ac6356151cc69ba45de,sentry-public_key=9bcd63d7f53f2fce75239618a901d45c,sentry-org_id=4511546597769216">
+
+    <!-- Plausible Analytics -->
+    
+  </head>
+
+  <body class="isolate flex min-h-dvh flex-col bg-base-100 text-base-content" data-controller="bookmark-manager" data-bookmark-manager-url-value="/bookmarks" data-terminal-navigation-title="Jobs">
+      <noscript>
+        <iframe
+          src="https://load.ss.wearedevelopers.com/ns.html?id=GTM-KQHSQB3L"
+          height="0"
+          width="0"
+          style="display:none;visibility:hidden"
+          title="Google Tag Manager"
+        ></iframe>
+      </noscript>
+
+    <header class="sticky top-0 z-50 bg-base-100/80 backdrop-blur-sm">
+  <div class="container mx-auto">
+    <div class="navbar">
+      <!-- Start: Logo + Mobile Menu -->
+      <div class="navbar-start gap-2">
+        <a class="header-logo-link inline-flex items-center gap-2 normal-case text-lg font-bold" aria-label="WeAreDevelopers" href="/">
+          <span class="terminal-logo-mark relative inline-flex shrink-0"><img alt="WeAreDevelopers Logo" class="h-5 w-auto shrink-0" src="/assets/logo-120876c6.svg"></span>
+          <span class="header-wordmark lg:hidden xl:inline">WeAreDevelopers</span>
+</a>
+        <a class="terminal-title-trigger hidden items-center normal-case text-lg font-bold" href="/">
+          <span id="terminal-navigation-title" class="terminal-title inline-flex min-w-[16ch] items-center font-mono" data-controller="terminal-title" data-turbo-permanent="true" data-terminal-title-default-text-value="WeAreDevelopers" data-terminal-title-global-search-hint-value="Global Search">WeAreDevelopers</span>
+</a>      </div>
+
+      <!-- Center: Desktop Menu -->
+      <nav class="navbar-center hidden lg:flex" aria-label="Main">
+        <ul class="menu menu-horizontal items-center gap-x-2 px-1" role="list">
+          <li><a href="/profile/recommendations">For You</a></li>
+          <li><a href="/videos">Videos</a></li>
+
+          <li><a href="/live">LIVE</a></li>
+          <li><a href="/playlists">Playlists</a></li>
+          <li><a href="/magazine">Magazine</a></li>
+
+          <li>
+            <details name="header-nav-dropdown" data-controller="popup" data-action="click@window-&gt;popup#closeOnOutsideClick focusout-&gt;popup#closeOnFocusLeave keydown.esc-&gt;popup#dismiss turbo:before-cache@document-&gt;popup#close">
+              <summary class="menu-active">Career</summary>
+
+              <ul class="z-[1] w-52 space-y-1 rounded-box border border-base-300/50 bg-base-100 p-2 shadow-lg" role="list">
+                <li><a class="menu-active" href="/jobs">Jobs</a></li>
+                <li><a href="/insights">Salary insights</a></li>
+                <li><a href="/companies">Who's hiring</a></li>
+              </ul>
+            </details>
+          </li>
+
+          <li>
+            <details name="header-nav-dropdown" data-controller="popup" data-action="click@window-&gt;popup#closeOnOutsideClick focusout-&gt;popup#closeOnFocusLeave keydown.esc-&gt;popup#dismiss turbo:before-cache@document-&gt;popup#close">
+              <summary>Events</summary>
+
+              <ul class="z-[1] w-72 space-y-1 rounded-box border border-base-300/50 bg-base-100 p-2 shadow-lg" role="list">
+                  <li>
+                    <a href="https://www.wearedevelopers.com/world-congress" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between gap-2">
+                      World Congress Europe
+                      <svg class="size-3.5 opacity-60" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://www.wearedevelopers.com/world-congress-north-america" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between gap-2">
+                      World Congress North America
+                      <svg class="size-3.5 opacity-60" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://www.wearedevelopers.com/conference-india" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between gap-2">
+                      Conference India
+                      <svg class="size-3.5 opacity-60" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+                    </a>
+                  </li>
+              </ul>
+            </details>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- End: Utilities -->
+      <div class="navbar-end items-center gap-2">
+        <button type="button" class="btn hidden btn-circle btn-ghost text-2xl" data-controller="seasonal-theme-toggle" data-seasonal-theme-toggle-theme-value="halloween" data-seasonal-theme-toggle-start-month-value="10" data-seasonal-theme-toggle-start-day-value="26" data-seasonal-theme-toggle-end-month-value="11" data-seasonal-theme-toggle-end-day-value="3" data-action="click-&gt;seasonal-theme-toggle#activate" aria-label="Enable Halloween theme" title="Enable Halloween theme">
+  🎃
+</button>
+
+        <button type="button" class="btn hidden btn-circle btn-ghost text-2xl" data-controller="seasonal-theme-toggle" data-seasonal-theme-toggle-theme-value="christmas" data-seasonal-theme-toggle-start-month-value="12" data-seasonal-theme-toggle-start-day-value="17" data-seasonal-theme-toggle-end-month-value="1" data-seasonal-theme-toggle-end-day-value="7" data-action="click-&gt;seasonal-theme-toggle#activate" aria-label="Enable Christmas theme" title="Enable Christmas theme">
+  🎄
+</button>
+
+
+        <!-- Search button (desktop only) -->
+        <div class="-mr-1 hidden items-center lg:flex">
+          <button type="button" class="btn btn-circle btn-ghost" data-controller="nav-search" data-action="click-&gt;nav-search#open" aria-label="Open search (⌘/Ctrl + K)">
+            <svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"></path></svg>
+          </button>
+        </div>
+
+        <!-- User menu -->
+
+        <turbo-frame loading="lazy" data-controller="session-loader" data-session-loader-src-value="/session/current?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA&amp;surface=desktop" data-turbo-permanent="true" id="current-session-user-menu" target="_top">
+            <a class="btn btn-ghost px-4" data-turbo-frame="modal-content" href="/session/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA">Sign in</a>
+
+</turbo-frame>
+        <!-- Mobile hamburger on far right -->
+        <details class="mobile-nav relative lg:hidden" data-controller="popup" data-action="click@window-&gt;popup#closeOnOutsideClick focusout-&gt;popup#closeOnFocusLeave keydown.esc-&gt;popup#dismiss turbo:before-cache@document-&gt;popup#close">
+          <summary class="btn btn-circle btn-ghost" aria-label="Open navigation">
+            <svg class="size-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg>
+          </summary>
+
+          <div class="
+              popup-panel absolute top-full right-0 z-[1] mt-3 max-h-[calc(100dvh-6rem)] w-[calc(100vw-1rem)] max-w-sm overflow-y-auto overscroll-contain rounded-box border
+              border-base-300/50 bg-base-100 p-4 shadow-lg
+            ">
+            <form action="/search" method="get">
+              <label for="mobile-search" class="sr-only">Search videos, moments, articles, and more...</label>
+
+              <div class="relative">
+                <svg class="pointer-events-none absolute left-5 top-1/2 z-10 size-5 -translate-y-1/2 text-base-content/50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"></path></svg>
+
+                <input id="mobile-search" type="search" name="q" placeholder="Search videos, moments, articles, and more..." class="
+                    input w-full rounded-full border-2 border-secondary/60 bg-base-100 pr-6 !pl-12 text-base transition-all input-lg placeholder:text-base-content/60
+                    focus:border-secondary focus:ring-4 focus:ring-secondary/15 focus:outline-none
+                  " autocomplete="off">
+              </div>
+
+              <button type="submit" class="sr-only">Search</button>
+            </form>
+
+            <div class="mt-4 grid grid-cols-2 gap-2">
+              <a class="flex items-center gap-3 rounded-xl border border-base-300/70 px-4 py-3.5 text-base font-medium text-base-content transition hover:bg-base-200/50" href="/profile/recommendations">For You</a>
+
+              <a class="flex items-center gap-3 rounded-xl border border-base-300/70 px-4 py-3.5 text-base font-medium text-base-content transition hover:bg-base-200/50" href="/live">
+                LIVE
+</a>            </div>
+
+            <nav aria-label="Mobile">
+              <ul class="mobile-nav-menu menu mt-4 w-full menu-lg px-1 py-0" role="list">
+                <li class="pointer-events-none menu-title !px-4">
+                  <span class="text-xs font-semibold tracking-[0.18em] text-base-content/40 uppercase">Learn &amp; grow</span>
+                </li>
+
+                <li><a href="/videos">Videos</a></li>
+                <li><a href="/playlists">Playlists</a></li>
+                <li><a href="/magazine">Magazine</a></li>
+
+                <li class="pointer-events-none mt-3 menu-title !px-4">
+                  <span class="text-xs font-semibold tracking-[0.18em] text-base-content/40 uppercase">Career</span>
+                </li>
+
+                <li><a class="menu-active" href="/jobs">Jobs</a></li>
+                <li><a href="/insights">Salary insights</a></li>
+                <li><a href="/companies">Who's hiring</a></li>
+
+                <li class="pointer-events-none mt-3 menu-title !px-4">
+                  <span class="text-xs font-semibold tracking-[0.18em] text-base-content/40 uppercase">Events</span>
+                </li>
+
+                  <li>
+                    <a href="https://www.wearedevelopers.com/world-congress" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between gap-2">
+                      World Congress Europe
+                      <svg class="size-3.5 opacity-60" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://www.wearedevelopers.com/world-congress-north-america" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between gap-2">
+                      World Congress North America
+                      <svg class="size-3.5 opacity-60" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://www.wearedevelopers.com/conference-india" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between gap-2">
+                      Conference India
+                      <svg class="size-3.5 opacity-60" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+                    </a>
+                  </li>
+
+                <li class="mt-3"></li>
+                <li><a href="/about-labs">About</a></li>
+              </ul>
+            </nav>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+    <main class="flex-1">
+      
+
+
+<div class="container mx-auto px-6 py-8">
+  <div class="mx-auto">
+    <div class="mb-10">
+      <h1 class="mb-2 font-display text-4xl leading-tight font-semibold tracking-tight text-base-content">
+        <a class="no-underline hover:no-underline text-base-content" href="/jobs">Jobs</a>
+      </h1>
+
+
+      <div class="text-sm leading-snug text-base-content/70">
+        Find <span class="font-medium text-base-content">655,753</span> jobs across
+        <span class="font-medium text-base-content">11</span> countries.
+      </div>
+    </div>
+
+    
+<div class="mb-4">
+  <div class="max-w-3xl">
+    <form class="w-full" data-controller="job-filter" data-job-filter-target="form" action="/jobs" accept-charset="UTF-8" method="get">
+      <div class="flex flex-col gap-2 sm:flex-row sm:flex-nowrap sm:items-center sm:gap-2">
+        <div class="group relative flex-1">
+          <input placeholder="Role, tech stack, company, or location" value="QA" class="w-full input input-lg bg-base-100 text-lg placeholder:text-base-content/60 border-2 border-primary focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15 transition-all duration-300 rounded-full pl-6 pr-12 py-6 shadow-xl hover:shadow-2xl text-ellipsis" aria-label="Search jobs" data-job-filter-target="input" data-action="input-&gt;job-filter#onInput" type="text" name="q" id="q">
+
+          <div class="absolute top-1/2 right-3 z-10 -translate-y-1/2">
+            <button type="button" class="btn btn-circle btn-ghost btn-sm" data-job-filter-target="clear" data-action="click-&gt;job-filter#clear" aria-label="Clear search">
+              <svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="sm:w-64">
+          <select class="select select-lg w-full bg-base-100 border-2 border-primary focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15 transition-all duration-300 rounded-full pl-5 pr-10 shadow-md hover:shadow-lg" data-action="change-&gt;job-filter#change" aria-label="Country" name="country" id="country"><option selected="selected" value="all">All countries</option>
+<option value="AT">Austria</option>
+<option value="BE">Belgium</option>
+<option value="DE">Germany</option>
+<option value="ES">Spain</option>
+<option value="FR">France</option>
+<option value="GB">United Kingdom</option>
+<option value="IT">Italy</option>
+<option value="NL">Netherlands</option>
+<option value="PT">Portugal</option>
+<option value="UK">UK</option>
+<option value="US">United States</option></select>
+        </div>
+
+        <div class="flex items-center gap-2 sm:self-auto">
+          <input type="submit" value="Search" class="sr-only" aria-label="Submit job search" data-disable-with="Search">
+        </div>
+      </div>
+</form>
+    <div class="mt-2 mb-2 flex flex-wrap items-center justify-center gap-2">
+      <span class="text-xs text-base-content/50">Try:</span>
+
+
+        <a class="btn btn-xs btn-ghost normal-case text-base-content/60 hover:text-primary hover:bg-primary/10 transition-colors duration-200" href="/jobs?country=all&amp;q=React">
+          <svg class="size-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.28 5.22a.75.75 0 0 1 0 1.06L2.56 10l3.72 3.72a.75.75 0 0 1-1.06 1.06L.97 10.53a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Zm7.44 0a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L17.44 10l-3.72-3.72a.75.75 0 0 1 0-1.06ZM11.377 2.011a.75.75 0 0 1 .612.867l-2.5 14.5a.75.75 0 0 1-1.478-.255l2.5-14.5a.75.75 0 0 1 .866-.612Z" clip-rule="evenodd"></path></svg>
+          <span class="hidden sm:inline">React</span>
+          <span class="sm:hidden">React</span>
+</a>
+        <a class="btn btn-xs btn-ghost normal-case text-base-content/60 hover:text-primary hover:bg-primary/10 transition-colors duration-200" href="/jobs?country=all&amp;q=PHP">
+          <svg class="size-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.28 5.22a.75.75 0 0 1 0 1.06L2.56 10l3.72 3.72a.75.75 0 0 1-1.06 1.06L.97 10.53a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Zm7.44 0a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L17.44 10l-3.72-3.72a.75.75 0 0 1 0-1.06ZM11.377 2.011a.75.75 0 0 1 .612.867l-2.5 14.5a.75.75 0 0 1-1.478-.255l2.5-14.5a.75.75 0 0 1 .866-.612Z" clip-rule="evenodd"></path></svg>
+          <span class="hidden sm:inline">PHP</span>
+          <span class="sm:hidden">PHP</span>
+</a>
+        <a class="btn btn-xs btn-ghost normal-case text-base-content/60 hover:text-primary hover:bg-primary/10 transition-colors duration-200" href="/jobs?country=all&amp;q=iOS+Swift">
+          <svg class="size-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.28 5.22a.75.75 0 0 1 0 1.06L2.56 10l3.72 3.72a.75.75 0 0 1-1.06 1.06L.97 10.53a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Zm7.44 0a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L17.44 10l-3.72-3.72a.75.75 0 0 1 0-1.06ZM11.377 2.011a.75.75 0 0 1 .612.867l-2.5 14.5a.75.75 0 0 1-1.478-.255l2.5-14.5a.75.75 0 0 1 .866-.612Z" clip-rule="evenodd"></path></svg>
+          <span class="hidden sm:inline">iOS Swift</span>
+          <span class="sm:hidden">iOS Swift</span>
+</a>
+        <a class="btn btn-xs btn-ghost normal-case text-base-content/60 hover:text-primary hover:bg-primary/10 transition-colors duration-200" href="/jobs?country=all&amp;q=Kubernetes">
+          <svg class="size-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M4.25 2A2.25 2.25 0 0 0 2 4.25v2.5A2.25 2.25 0 0 0 4.25 9h2.5A2.25 2.25 0 0 0 9 6.75v-2.5A2.25 2.25 0 0 0 6.75 2h-2.5Zm0 9A2.25 2.25 0 0 0 2 13.25v2.5A2.25 2.25 0 0 0 4.25 18h2.5A2.25 2.25 0 0 0 9 15.75v-2.5A2.25 2.25 0 0 0 6.75 11h-2.5Zm9-9A2.25 2.25 0 0 0 11 4.25v2.5A2.25 2.25 0 0 0 13.25 9h2.5A2.25 2.25 0 0 0 18 6.75v-2.5A2.25 2.25 0 0 0 15.75 2h-2.5Zm0 9A2.25 2.25 0 0 0 11 13.25v2.5A2.25 2.25 0 0 0 13.25 18h2.5A2.25 2.25 0 0 0 18 15.75v-2.5A2.25 2.25 0 0 0 15.75 11h-2.5Z" clip-rule="evenodd"></path></svg>
+          <span class="hidden sm:inline">Kubernetes</span>
+          <span class="sm:hidden">Kubernetes</span>
+</a>
+        <a class="btn btn-xs btn-ghost normal-case text-base-content/60 hover:text-primary hover:bg-primary/10 transition-colors duration-200" href="/jobs?country=all&amp;q=Bitpanda">
+          <svg class="size-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M1 2.75A.75.75 0 0 1 1.75 2h10.5a.75.75 0 0 1 0 1.5H12v13.75a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1-.75-.75v-2.5a.75.75 0 0 0-.75-.75h-2.5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5H2v-13h-.25A.75.75 0 0 1 1 2.75ZM4 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1ZM4.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1ZM8 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1ZM8.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1ZM14.25 6a.75.75 0 0 0-.75.75V17a1 1 0 0 0 1 1h3.75a.75.75 0 0 0 0-1.5H18v-9h.25a.75.75 0 0 0 0-1.5h-4Zm.5 3.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1Zm.5 3.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1Z" clip-rule="evenodd"></path></svg>
+          <span class="hidden sm:inline">Bitpanda</span>
+          <span class="sm:hidden">Bitpanda</span>
+</a>    </div>
+  </div>
+</div>
+
+
+      <div class="mt-4 mb-2 text-base text-base-content/80">
+        <span class="font-semibold text-base-content">
+            227
+            jobs
+        </span>
+      </div>
+      <div class="mb-8 grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3" id="jobs_grid">
+          <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_1987763_73038f76"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:1987763" data-bookmarkable-type="job" data-bookmarkable-id="1987763" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=1987763&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/1987763-ai-qa-engineer-automation-data-testing">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 2 months ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Ai Qa Engineer - Automation &amp; Data Testing
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">AILY LABS</div>
+
+                    <div class="truncate text-base-content/60">Madrid, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Appium</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">ReactJS</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Backend</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_1984635_8f1d48c8"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:1984635" data-bookmarkable-type="job" data-bookmarkable-id="1984635" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=1984635&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/1984635-ai-driven-qa-engineer-for-scalable-testing-automation">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 2 months ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Ai-Driven Qa Engineer For Scalable Testing &amp; Automation
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">AILY LABS</div>
+
+                    <div class="truncate text-base-content/60">Barcelona, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Appium</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">ReactJS</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Backend</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2203015_eac0abd1"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2203015" data-bookmarkable-type="job" data-bookmarkable-id="2203015" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2203015&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2203015-qa-qa-automation-sap">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 1 month ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Qa / Qa Automation - Sap
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Grupo TECDATA Engineering</div>
+
+                    <div class="truncate text-base-content/60">Pontevedra, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Postman</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">SAP IS-U</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Selenium</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_3113955_a2166f20"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:3113955" data-bookmarkable-type="job" data-bookmarkable-id="3113955" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=3113955&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/3113955-qa-manual">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">1 day ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Qa Manual
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Open Assessment Technologies S.A.</div>
+
+                    <div class="truncate text-base-content/60">Valencia, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Git</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">JIRA</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Postman</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2244522_0cfe783c"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2244522" data-bookmarkable-type="job" data-bookmarkable-id="2244522" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2244522&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2244522-qa-qa-automation-sap">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 1 month ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Qa / Qa Automation - Sap
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Grupo TECDATA Engineering</div>
+
+                    <div class="truncate text-base-content/60">Ferrol, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Postman</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">SAP IS-U</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Selenium</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2251535_1a8d428c"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2251535" data-bookmarkable-type="job" data-bookmarkable-id="2251535" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2251535&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2251535-qa-qa-automation-sap">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 1 month ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Qa / Qa Automation - Sap
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Grupo TECDATA Engineering</div>
+
+                    <div class="truncate text-base-content/60">Guntín, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Postman</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">SAP IS-U</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Selenium</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2200529_20445ee2"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2200529" data-bookmarkable-type="job" data-bookmarkable-id="2200529" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2200529&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2200529-qa-qa-automation-sap">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 1 month ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Qa / Qa Automation - Sap
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Grupo TECDATA Engineering</div>
+
+                    <div class="truncate text-base-content/60">Gusendos de los Oteros, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Postman</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">SAP IS-U</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Selenium</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2184902_b14111fe"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2184902" data-bookmarkable-type="job" data-bookmarkable-id="2184902" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2184902&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2184902-qa-qa-automation-sap">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 1 month ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Qa / Qa Automation - Sap
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Grupo TECDATA Engineering</div>
+
+                    <div class="truncate text-base-content/60">Málaga, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Postman</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">SAP IS-U</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Selenium</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2202596_295d1715"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2202596" data-bookmarkable-type="job" data-bookmarkable-id="2202596" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2202596&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2202596-qa-qa-automation-sap">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 1 month ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Qa / Qa Automation - Sap
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Grupo TECDATA Engineering</div>
+
+                    <div class="truncate text-base-content/60">Pontevedra, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Postman</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">SAP IS-U</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Selenium</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2204153_8232c44a"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2204153" data-bookmarkable-type="job" data-bookmarkable-id="2204153" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2204153&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2204153-qa-qa-automation-sap">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 1 month ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Qa / Qa Automation - Sap
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Grupo TECDATA Engineering</div>
+
+                    <div class="truncate text-base-content/60">Chantada, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Postman</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">SAP IS-U</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Selenium</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_1343363_c2c1503f"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:1343363" data-bookmarkable-type="job" data-bookmarkable-id="1343363" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=1343363&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/1343363-qa-engineer-manual-automation">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">2 months ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            QA Engineer (Manual / Automation)
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">GLUZDOV.COM, INC.</div>
+
+                    <div class="truncate text-base-content/60">United States</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+              <span class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                <span class="mr-1 inline-flex size-3.5 flex-col items-center justify-center space-y-0.5" aria-hidden="true">
+
+                    <span class="block h-0.5 w-3 rounded bg-primary"></span>
+                    <span class="block h-0.5 w-3 rounded bg-primary"></span>
+                    <span class="block h-0.5 w-3 rounded bg-primary"></span>
+                </span>
+
+                Expert
+              </span>
+
+
+              <span class="inline-flex items-center rounded-full bg-amber-500/10 px-3 py-1 text-sm font-medium text-amber-700">
+                <svg class="size-3.5 mr-1 text-amber-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path d="M16.555 5.412a8.028 8.028 0 0 0-3.503-2.81 14.899 14.899 0 0 1 1.663 4.472 8.547 8.547 0 0 0 1.84-1.662ZM13.326 7.825a13.43 13.43 0 0 0-2.413-5.773 8.087 8.087 0 0 0-1.826 0 13.43 13.43 0 0 0-2.413 5.773A8.473 8.473 0 0 0 10 8.5c1.18 0 2.304-.24 3.326-.675ZM6.514 9.376A9.98 9.98 0 0 0 10 10c1.226 0 2.4-.22 3.486-.624a13.54 13.54 0 0 1-.351 3.759A13.54 13.54 0 0 1 10 13.5c-1.079 0-2.128-.127-3.134-.366a13.538 13.538 0 0 1-.352-3.758ZM5.285 7.074a14.9 14.9 0 0 1 1.663-4.471 8.028 8.028 0 0 0-3.503 2.81c.529.638 1.149 1.199 1.84 1.66ZM17.334 6.798a7.973 7.973 0 0 1 .614 4.115 13.47 13.47 0 0 1-3.178 1.72 15.093 15.093 0 0 0 .174-3.939 10.043 10.043 0 0 0 2.39-1.896ZM2.666 6.798a10.042 10.042 0 0 0 2.39 1.896 15.196 15.196 0 0 0 .174 3.94 13.472 13.472 0 0 1-3.178-1.72 7.973 7.973 0 0 1 .615-4.115ZM10 15c.898 0 1.778-.079 2.633-.23a13.473 13.473 0 0 1-1.72 3.178 8.099 8.099 0 0 1-1.826 0 13.47 13.47 0 0 1-1.72-3.178c.855.151 1.735.23 2.633.23ZM14.357 14.357a14.912 14.912 0 0 1-1.305 3.04 8.027 8.027 0 0 0 4.345-4.345c-.953.542-1.971.981-3.04 1.305ZM6.948 17.397a8.027 8.027 0 0 1-4.345-4.345c.953.542 1.971.981 3.04 1.305a14.912 14.912 0 0 0 1.305 3.04Z"></path></svg> Remote
+              </span>
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Github</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Webhooks</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Test Suite</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2192181_c7e5334e"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2192181" data-bookmarkable-type="job" data-bookmarkable-id="2192181" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2192181&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2192181-qa-qa-automation-sap">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 1 month ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Qa / Qa Automation - Sap
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Grupo TECDATA Engineering</div>
+
+                    <div class="truncate text-base-content/60">Alcobendas, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Postman</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">SAP IS-U</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Selenium</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2407331_d8704483"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2407331" data-bookmarkable-type="job" data-bookmarkable-id="2407331" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2407331&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2407331-qa-tester-digital">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 1 month ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            QA Tester (Digital)
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Upperdog Ltd</div>
+
+                    <div class="truncate text-base-content/60">Bournemouth, UK</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+              <span class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                <span class="mr-1 inline-flex size-3.5 flex-col items-center justify-center space-y-0.5" aria-hidden="true">
+
+                    <span class="block h-0.5 w-3 rounded bg-primary/30"></span>
+                    <span class="block h-0.5 w-3 rounded bg-primary"></span>
+                    <span class="block h-0.5 w-3 rounded bg-primary"></span>
+                </span>
+
+                Experienced
+              </span>
+
+
+              <span class="inline-flex items-center rounded-full bg-amber-500/10 px-3 py-1 text-sm font-medium text-amber-700">
+                <svg class="size-3.5 mr-1 text-amber-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path d="M16.555 5.412a8.028 8.028 0 0 0-3.503-2.81 14.899 14.899 0 0 1 1.663 4.472 8.547 8.547 0 0 0 1.84-1.662ZM13.326 7.825a13.43 13.43 0 0 0-2.413-5.773 8.087 8.087 0 0 0-1.826 0 13.43 13.43 0 0 0-2.413 5.773A8.473 8.473 0 0 0 10 8.5c1.18 0 2.304-.24 3.326-.675ZM6.514 9.376A9.98 9.98 0 0 0 10 10c1.226 0 2.4-.22 3.486-.624a13.54 13.54 0 0 1-.351 3.759A13.54 13.54 0 0 1 10 13.5c-1.079 0-2.128-.127-3.134-.366a13.538 13.538 0 0 1-.352-3.758ZM5.285 7.074a14.9 14.9 0 0 1 1.663-4.471 8.028 8.028 0 0 0-3.503 2.81c.529.638 1.149 1.199 1.84 1.66ZM17.334 6.798a7.973 7.973 0 0 1 .614 4.115 13.47 13.47 0 0 1-3.178 1.72 15.093 15.093 0 0 0 .174-3.939 10.043 10.043 0 0 0 2.39-1.896ZM2.666 6.798a10.042 10.042 0 0 0 2.39 1.896 15.196 15.196 0 0 0 .174 3.94 13.472 13.472 0 0 1-3.178-1.72 7.973 7.973 0 0 1 .615-4.115ZM10 15c.898 0 1.778-.079 2.633-.23a13.473 13.473 0 0 1-1.72 3.178 8.099 8.099 0 0 1-1.826 0 13.47 13.47 0 0 1-1.72-3.178c.855.151 1.735.23 2.633.23ZM14.357 14.357a14.912 14.912 0 0 1-1.305 3.04 8.027 8.027 0 0 0 4.345-4.345c-.953.542-1.971.981-3.04 1.305ZM6.948 17.397a8.027 8.027 0 0 1-4.345-4.345c.953.542 1.971.981 3.04 1.305a14.912 14.912 0 0 0 1.305 3.04Z"></path></svg> Remote
+              </span>
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">HTML</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">JIRA</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">ASP.NET</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2179261_c0591410"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2179261" data-bookmarkable-type="job" data-bookmarkable-id="2179261" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2179261&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2179261-qa-qa-automation-sap">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 1 month ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Qa / Qa Automation - Sap
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Grupo TECDATA Engineering</div>
+
+                    <div class="truncate text-base-content/60">Valencia, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Postman</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">SAP IS-U</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Selenium</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_3090812_59bac3ae"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:3090812" data-bookmarkable-type="job" data-bookmarkable-id="3090812" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=3090812&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/3090812-graph-platform-qa-engineer-e2e-testing-llm-assist">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">2 days ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Graph Platform Qa Engineer - E2E Testing &amp; Llm-Assist
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Akuaro</div>
+
+                    <div class="truncate text-base-content/60">Barcelona, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Software Quality Assurance…</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Gherkin</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Test Case</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_3058513_b1ea61da"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:3058513" data-bookmarkable-type="job" data-bookmarkable-id="3058513" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=3058513&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/3058513-graph-platform-qa-engineer-e2e-testing-llm-assist">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">3 days ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Graph Platform Qa Engineer - E2E Testing &amp; Llm-Assist
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Akuaro</div>
+
+                    <div class="truncate text-base-content/60">Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Software Quality Assurance…</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Gherkin</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Test Case</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2212615_d45d56f2"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2212615" data-bookmarkable-type="job" data-bookmarkable-id="2212615" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2212615&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2212615-qa-tester">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 1 month ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            QA Tester
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">JPC Partners</div>
+
+                    <div class="truncate text-base-content/60">United States</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+              <span class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                <span class="mr-1 inline-flex size-3.5 flex-col items-center justify-center space-y-0.5" aria-hidden="true">
+
+                    <span class="block h-0.5 w-3 rounded bg-primary"></span>
+                    <span class="block h-0.5 w-3 rounded bg-primary"></span>
+                    <span class="block h-0.5 w-3 rounded bg-primary"></span>
+                </span>
+
+                Expert
+              </span>
+
+
+              <span class="inline-flex items-center rounded-full bg-amber-500/10 px-3 py-1 text-sm font-medium text-amber-700">
+                <svg class="size-3.5 mr-1 text-amber-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path d="M16.555 5.412a8.028 8.028 0 0 0-3.503-2.81 14.899 14.899 0 0 1 1.663 4.472 8.547 8.547 0 0 0 1.84-1.662ZM13.326 7.825a13.43 13.43 0 0 0-2.413-5.773 8.087 8.087 0 0 0-1.826 0 13.43 13.43 0 0 0-2.413 5.773A8.473 8.473 0 0 0 10 8.5c1.18 0 2.304-.24 3.326-.675ZM6.514 9.376A9.98 9.98 0 0 0 10 10c1.226 0 2.4-.22 3.486-.624a13.54 13.54 0 0 1-.351 3.759A13.54 13.54 0 0 1 10 13.5c-1.079 0-2.128-.127-3.134-.366a13.538 13.538 0 0 1-.352-3.758ZM5.285 7.074a14.9 14.9 0 0 1 1.663-4.471 8.028 8.028 0 0 0-3.503 2.81c.529.638 1.149 1.199 1.84 1.66ZM17.334 6.798a7.973 7.973 0 0 1 .614 4.115 13.47 13.47 0 0 1-3.178 1.72 15.093 15.093 0 0 0 .174-3.939 10.043 10.043 0 0 0 2.39-1.896ZM2.666 6.798a10.042 10.042 0 0 0 2.39 1.896 15.196 15.196 0 0 0 .174 3.94 13.472 13.472 0 0 1-3.178-1.72 7.973 7.973 0 0 1 .615-4.115ZM10 15c.898 0 1.778-.079 2.633-.23a13.473 13.473 0 0 1-1.72 3.178 8.099 8.099 0 0 1-1.826 0 13.47 13.47 0 0 1-1.72-3.178c.855.151 1.735.23 2.633.23ZM14.357 14.357a14.912 14.912 0 0 1-1.305 3.04 8.027 8.027 0 0 0 4.345-4.345c-.953.542-1.971.981-3.04 1.305ZM6.948 17.397a8.027 8.027 0 0 1-4.345-4.345c.953.542 1.971.981 3.04 1.305a14.912 14.912 0 0 0 1.305 3.04Z"></path></svg> Remote
+              </span>
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Testing (Software)</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">System Configuration</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2593013_ae2b3e78"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2593013" data-bookmarkable-type="job" data-bookmarkable-id="2593013" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2593013&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2593013-idb-invest-it-qa-practice-consultant">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 2 months ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            IDB Invest - IT QA Practice Consultant
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Inter-American Development Bank</div>
+
+                    <div class="truncate text-base-content/60">Washington, DC, United States</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+              <span class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                <span class="mr-1 inline-flex size-3.5 flex-col items-center justify-center space-y-0.5" aria-hidden="true">
+
+                    <span class="block h-0.5 w-3 rounded bg-primary/30"></span>
+                    <span class="block h-0.5 w-3 rounded bg-primary"></span>
+                    <span class="block h-0.5 w-3 rounded bg-primary"></span>
+                </span>
+
+                Experienced
+              </span>
+
+
+              <span class="inline-flex items-center rounded-full bg-amber-500/10 px-3 py-1 text-sm font-medium text-amber-700">
+                <svg class="size-3.5 mr-1 text-amber-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path d="M16.555 5.412a8.028 8.028 0 0 0-3.503-2.81 14.899 14.899 0 0 1 1.663 4.472 8.547 8.547 0 0 0 1.84-1.662ZM13.326 7.825a13.43 13.43 0 0 0-2.413-5.773 8.087 8.087 0 0 0-1.826 0 13.43 13.43 0 0 0-2.413 5.773A8.473 8.473 0 0 0 10 8.5c1.18 0 2.304-.24 3.326-.675ZM6.514 9.376A9.98 9.98 0 0 0 10 10c1.226 0 2.4-.22 3.486-.624a13.54 13.54 0 0 1-.351 3.759A13.54 13.54 0 0 1 10 13.5c-1.079 0-2.128-.127-3.134-.366a13.538 13.538 0 0 1-.352-3.758ZM5.285 7.074a14.9 14.9 0 0 1 1.663-4.471 8.028 8.028 0 0 0-3.503 2.81c.529.638 1.149 1.199 1.84 1.66ZM17.334 6.798a7.973 7.973 0 0 1 .614 4.115 13.47 13.47 0 0 1-3.178 1.72 15.093 15.093 0 0 0 .174-3.939 10.043 10.043 0 0 0 2.39-1.896ZM2.666 6.798a10.042 10.042 0 0 0 2.39 1.896 15.196 15.196 0 0 0 .174 3.94 13.472 13.472 0 0 1-3.178-1.72 7.973 7.973 0 0 1 .615-4.115ZM10 15c.898 0 1.778-.079 2.633-.23a13.473 13.473 0 0 1-1.72 3.178 8.099 8.099 0 0 1-1.826 0 13.47 13.47 0 0 1-1.72-3.178c.855.151 1.735.23 2.633.23ZM14.357 14.357a14.912 14.912 0 0 1-1.305 3.04 8.027 8.027 0 0 0 4.345-4.345c-.953.542-1.971.981-3.04 1.305ZM6.948 17.397a8.027 8.027 0 0 1-4.345-4.345c.953.542 1.971.981 3.04 1.305a14.912 14.912 0 0 0 1.305 3.04Z"></path></svg> Remote
+              </span>
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Data Analysis</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Data Migration</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Testing (Software)</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2203011_805348b8"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2203011" data-bookmarkable-type="job" data-bookmarkable-id="2203011" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2203011&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2203011-qa-qa-automation-sap">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 1 month ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Qa / Qa Automation - Sap
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Grupo TECDATA Engineering</div>
+
+                    <div class="truncate text-base-content/60">Valladolid, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Postman</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">SAP IS-U</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Selenium</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2200814_cd3576e7"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2200814" data-bookmarkable-type="job" data-bookmarkable-id="2200814" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2200814&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2200814-qa-qa-automation-sap">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 1 month ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Qa / Qa Automation - Sap
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Grupo TECDATA Engineering</div>
+
+                    <div class="truncate text-base-content/60">Alcobendas, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Postman</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">SAP IS-U</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Selenium</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2904764_7b96e61d"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2904764" data-bookmarkable-type="job" data-bookmarkable-id="2904764" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2904764&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2904764-senior-qa-testing-engineer">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">14 days ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Senior Qa Testing Engineer
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">AILY LABS</div>
+
+                    <div class="truncate text-base-content/60">Barcelona, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Appium</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Web Api</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Backend</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2962154_55a4ac3e"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2962154" data-bookmarkable-type="job" data-bookmarkable-id="2962154" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2962154&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2962154-qa-manual">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">11 days ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Qa Manual
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Open Assessment Technologies S.A.</div>
+
+                    <div class="truncate text-base-content/60">Castro-Urdiales, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Git</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">JIRA</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Postman</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_1932762_b4fa99cf"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:1932762" data-bookmarkable-type="job" data-bookmarkable-id="1932762" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=1932762&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/1932762-qa-engineer-functional-automation-barcelona">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 2 months ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            Qa Engineer - Functional &amp; Automation (Barcelona)
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Nuvolar Works</div>
+
+                    <div class="truncate text-base-content/60">Madrid, Spain</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+              <span class="inline-flex items-center rounded-full bg-amber-500/10 px-3 py-1 text-sm font-medium text-amber-700">
+                <svg class="size-3.5 mr-1 text-amber-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path d="M16.555 5.412a8.028 8.028 0 0 0-3.503-2.81 14.899 14.899 0 0 1 1.663 4.472 8.547 8.547 0 0 0 1.84-1.662ZM13.326 7.825a13.43 13.43 0 0 0-2.413-5.773 8.087 8.087 0 0 0-1.826 0 13.43 13.43 0 0 0-2.413 5.773A8.473 8.473 0 0 0 10 8.5c1.18 0 2.304-.24 3.326-.675ZM6.514 9.376A9.98 9.98 0 0 0 10 10c1.226 0 2.4-.22 3.486-.624a13.54 13.54 0 0 1-.351 3.759A13.54 13.54 0 0 1 10 13.5c-1.079 0-2.128-.127-3.134-.366a13.538 13.538 0 0 1-.352-3.758ZM5.285 7.074a14.9 14.9 0 0 1 1.663-4.471 8.028 8.028 0 0 0-3.503 2.81c.529.638 1.149 1.199 1.84 1.66ZM17.334 6.798a7.973 7.973 0 0 1 .614 4.115 13.47 13.47 0 0 1-3.178 1.72 15.093 15.093 0 0 0 .174-3.939 10.043 10.043 0 0 0 2.39-1.896ZM2.666 6.798a10.042 10.042 0 0 0 2.39 1.896 15.196 15.196 0 0 0 .174 3.94 13.472 13.472 0 0 1-3.178-1.72 7.973 7.973 0 0 1 .615-4.115ZM10 15c.898 0 1.778-.079 2.633-.23a13.473 13.473 0 0 1-1.72 3.178 8.099 8.099 0 0 1-1.826 0 13.47 13.47 0 0 1-1.72-3.178c.855.151 1.735.23 2.633.23ZM14.357 14.357a14.912 14.912 0 0 1-1.305 3.04 8.027 8.027 0 0 0 4.345-4.345c-.953.542-1.971.981-3.04 1.305ZM6.948 17.397a8.027 8.027 0 0 1-4.345-4.345c.953.542 1.971.981 3.04 1.305a14.912 14.912 0 0 0 1.305 3.04Z"></path></svg> Remote
+              </span>
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Github</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Backend</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Postman</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+  <article class="group relative size-full rounded-2xl bg-base-100 shadow-sm ring-1 ring-base-300/40 transition-colors hover:bg-base-200/40 hover:shadow-md">
+    <div class="absolute top-6 right-6 z-10">
+      <div id="bookmark_button_job_2095016_df2f4ebb"><button type="button" class="inline-flex items-center justify-center disabled:cursor-wait disabled:opacity-60 aria-[busy=true]:animate-pulse shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-base-300/50 group-hover:opacity-80 cursor-pointer" title="Bookmark this job" aria-label="Bookmark this job" aria-pressed="false" data-bookmark-manager-target="control" data-action="click-&gt;bookmark-manager#toggle" data-bookmark-key="job:2095016" data-bookmarkable-type="job" data-bookmarkable-id="2095016" data-bookmark-return-to="/jobs?country=all&amp;q=QA" data-bookmark-auth-path="/bookmarks/new?bookmarkable_id=2095016&amp;bookmarkable_type=job&amp;return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA" data-bookmark-completion-path="/signup/completion/new?return_to=%2Fjobs%3Fcountry%3Dall%26q%3DQA"><span data-bookmark-icon="unsaved"><svg class="size-4 text-base-content/70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"></path></svg></span><span data-bookmark-icon="saved" class="hidden"><svg class="size-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd"></path></svg></span></button></div>
+    </div>
+
+    <a data-turbo-frame="_top" class="block h-full p-6 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60" href="/jobs/ext/2095016-it-consultant-qa-manager-agile-po-support-servicenow">
+      <div class="flex h-full flex-col gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="mb-2 flex items-center gap-2 text-[11px] text-base-content/50">
+              <span class="font-display">about 1 month ago</span>
+
+
+          </div>
+
+          <h3 class="
+              mb-3 line-clamp-3 font-display text-base leading-snug font-semibold tracking-tight text-pretty text-base-content transition-colors group-hover:text-primary
+              md:text-lg
+            ">
+            IT Consultant - QA Manager &amp; Agile PO Support ServiceNow
+          </h3>
+
+          <div class="mb-4 text-sm leading-normal text-base-content/80">
+              <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+                    <div class="truncate">Westhouse Consulting GmbH</div>
+
+                    <div class="truncate text-base-content/60">Bad Friedrichshall, Germany</div>
+                </div>
+              </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+
+
+
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Servicenow</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Agile Methodology</span>
+
+              <span class="inline-flex items-center rounded-full bg-base-200 px-3 py-1 text-sm font-medium text-base-content/80">Scrum Methodology</span>
+          </div>
+        </div>
+
+        <span class="sr-only">View details</span>
+      </div>
+</a>  </article>
+
+      </div>
+      <turbo-frame class="group" id="jobs_pagination">
+          <div class="mb-20 flex justify-center">
+            <a data-turbo-frame="jobs_pagination" data-turbo-prefetch="false" class="btn btn-outline btn-primary gap-2 group-aria-busy:pointer-events-none group-aria-busy:opacity-60" href="https://www.wearedevelopers.com/jobs.turbo_stream?country=all&amp;page=2&amp;q=QA">
+              Load more jobs <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M10 3a.75.75 0 0 1 .75.75v10.638l3.96-4.158a.75.75 0 1 1 1.08 1.04l-5.25 5.5a.75.75 0 0 1-1.08 0l-5.25-5.5a.75.75 0 1 1 1.08-1.04l3.96 4.158V3.75A.75.75 0 0 1 10 3Z" clip-rule="evenodd"></path></svg>
+</a>          </div>
+</turbo-frame>  </div>
+</div>
+
+    </main>
+
+    <dialog id="modal" class="modal p-4 backdrop:backdrop-blur-sm" aria-label="Dialog" data-controller="modal" data-action="turbo:before-fetch-request-&gt;modal#open turbo:frame-missing-&gt;modal#visitMissingFrame close-&gt;modal#afterClose" data-modal-return-url-value="https://www.wearedevelopers.com/jobs?country=all&amp;q=QA" data-modal-return-title-value="WeAreDevelopers">
+  <div class="
+      relative modal-box max-h-[calc(100vh-2rem)] max-w-md scrollbar-gutter-stable overflow-y-auto rounded-3xl bg-base-200 p-6 text-pretty
+      shadow-[0_24px_56px_rgba(15,23,42,0.14)] sm:p-7
+    ">
+    <button type="button" class="btn absolute top-4 right-4 z-10 btn-circle btn-ghost btn-sm" aria-label="Close dialog" data-action="modal#close">
+      <svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"></path></svg>
+    </button>
+
+    <turbo-frame class="peer block min-h-56 w-full" data-modal-target="frame" id="modal-content"></turbo-frame>
+
+    <div class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-3xl opacity-0 transition-opacity peer-aria-busy:opacity-100">
+      <div class="rounded-full bg-base-100/88 p-3 shadow-lg backdrop-blur-sm">
+        <span class="loading loading-lg loading-spinner"></span>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+
+    
+<div class="pointer-events-none fixed inset-0 z-50 opacity-0 active:pointer-events-auto active:opacity-100" data-controller="floating-search" data-active="false" role="search" aria-label="Floating search">
+  <div class="absolute inset-0 bg-base-100/80 backdrop-blur-sm backdrop-saturate-20" data-action="click-&gt;floating-search#dismiss" aria-hidden="true"></div>
+
+  <div class="relative size-full">
+    <div class="flex size-full items-start justify-center px-4 pt-24 sm:px-6 sm:pt-32">
+      <div class="w-full max-w-3xl scale-95 opacity-0 transition-all duration-150 ease-out active:scale-100 active:opacity-100" data-active="false" data-floating-search-target="content">
+        <div class="rounded-2xl">
+          <div>
+            <form class="relative group" data-controller="search-form" action="/search" accept-charset="UTF-8" method="get">
+  <div class="relative max-w-3xl mx-auto">
+    <input maxlength="200" class="w-full input input-lg bg-base-100 text-lg placeholder:text-base-content/60 border-2 border-primary focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15 transition-all duration-300 rounded-full pl-6 pr-12 py-6 shadow-xl hover:shadow-2xl text-ellipsis" data-search-form-target="input" placeholder="Search videos, moments, articles, and more..." autocomplete="off" aria-label="Search videos, moments, articles, and more..." size="200" type="text" name="q">
+
+    <input type="submit" value="Search" class="sr-only" aria-label="Submit search" data-disable-with="Search">
+  </div>
+
+    <div class="m-3 flex flex-wrap items-center justify-center gap-2">
+      <span class="text-xs text-base-content/50">Try:</span>
+
+        <a class="btn btn-xs btn-ghost normal-case text-base-content/60 hover:text-primary hover:bg-primary/10 transition-colors duration-200" href="/search?q=Vue">
+          <svg class="size-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M6.28 5.22a.75.75 0 0 1 0 1.06L2.56 10l3.72 3.72a.75.75 0 0 1-1.06 1.06L.97 10.53a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Zm7.44 0a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L17.44 10l-3.72-3.72a.75.75 0 0 1 0-1.06ZM11.377 2.011a.75.75 0 0 1 .612.867l-2.5 14.5a.75.75 0 0 1-1.478-.255l2.5-14.5a.75.75 0 0 1 .866-.612Z" clip-rule="evenodd"></path></svg>
+          <span class="hidden sm:inline">Vue</span>
+          <span class="sm:hidden">Vue</span>
+</a>        <a class="btn btn-xs btn-ghost normal-case text-base-content/60 hover:text-primary hover:bg-primary/10 transition-colors duration-200" href="/search?q=Testing+strategies">
+          <svg class="size-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M14.5 10a4.5 4.5 0 0 0 4.284-5.882c-.105-.324-.51-.391-.752-.15L15.34 6.66a.454.454 0 0 1-.493.11 3.01 3.01 0 0 1-1.618-1.616.455.455 0 0 1 .11-.494l2.694-2.692c.24-.241.174-.647-.15-.752a4.5 4.5 0 0 0-5.873 4.575c.055.873-.128 1.808-.8 2.368l-7.23 6.024a2.724 2.724 0 1 0 3.837 3.837l6.024-7.23c.56-.672 1.495-.855 2.368-.8.096.007.193.01.291.01ZM5 16a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z" clip-rule="evenodd"></path><path d="M14.5 11.5c.173 0 .345-.007.514-.022l3.754 3.754a2.5 2.5 0 0 1-3.536 3.536l-4.41-4.41 2.172-2.607c.052-.063.147-.138.342-.196.202-.06.469-.087.777-.067.128.008.257.012.387.012ZM6 4.586l2.33 2.33a.452.452 0 0 1-.08.09L6.8 8.214 4.586 6H3.309a.5.5 0 0 1-.447-.276l-1.7-3.402a.5.5 0 0 1 .093-.577l.49-.49a.5.5 0 0 1 .577-.094l3.402 1.7A.5.5 0 0 1 6 3.31v1.277Z"></path></svg>
+          <span class="hidden sm:inline">Testing strategies</span>
+          <span class="sm:hidden">Testing strategies</span>
+</a>        <a class="btn btn-xs btn-ghost normal-case text-base-content/60 hover:text-primary hover:bg-primary/10 transition-colors duration-200" href="/search?q=AI+sovereignty">
+          <svg class="size-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path d="M15.98 1.804a1 1 0 0 0-1.96 0l-.24 1.192a1 1 0 0 1-.784.785l-1.192.238a1 1 0 0 0 0 1.962l1.192.238a1 1 0 0 1 .785.785l.238 1.192a1 1 0 0 0 1.962 0l.238-1.192a1 1 0 0 1 .785-.785l1.192-.238a1 1 0 0 0 0-1.962l-1.192-.238a1 1 0 0 1-.785-.785l-.238-1.192ZM6.949 5.684a1 1 0 0 0-1.898 0l-.683 2.051a1 1 0 0 1-.633.633l-2.051.683a1 1 0 0 0 0 1.898l2.051.684a1 1 0 0 1 .633.632l.683 2.051a1 1 0 0 0 1.898 0l.683-2.051a1 1 0 0 1 .633-.633l2.051-.683a1 1 0 0 0 0-1.898l-2.051-.683a1 1 0 0 1-.633-.633L6.95 5.684ZM13.949 13.684a1 1 0 0 0-1.898 0l-.184.551a1 1 0 0 1-.632.633l-.551.183a1 1 0 0 0 0 1.898l.551.183a1 1 0 0 1 .633.633l.183.551a1 1 0 0 0 1.898 0l.184-.551a1 1 0 0 1 .632-.633l.551-.183a1 1 0 0 0 0-1.898l-.551-.184a1 1 0 0 1-.633-.632l-.183-.551Z"></path></svg>
+          <span class="hidden sm:inline">AI sovereignty</span>
+          <span class="sm:hidden">AI sovereignty</span>
+</a>        <a class="btn btn-xs btn-ghost normal-case text-base-content/60 hover:text-primary hover:bg-primary/10 transition-colors duration-200" href="/search?q=GitOps">
+          <svg class="size-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M3.25 3A2.25 2.25 0 0 0 1 5.25v9.5A2.25 2.25 0 0 0 3.25 17h13.5A2.25 2.25 0 0 0 19 14.75v-9.5A2.25 2.25 0 0 0 16.75 3H3.25Zm.943 8.752a.75.75 0 0 1 .055-1.06L6.128 9l-1.88-1.693a.75.75 0 1 1 1.004-1.114l2.5 2.25a.75.75 0 0 1 0 1.114l-2.5 2.25a.75.75 0 0 1-1.06-.055ZM9.75 10.25a.75.75 0 0 0 0 1.5h2.5a.75.75 0 0 0 0-1.5h-2.5Z" clip-rule="evenodd"></path></svg>
+          <span class="hidden sm:inline">GitOps</span>
+          <span class="sm:hidden">GitOps</span>
+</a>    </div>
+</form>
+          </div>
+
+          <div class="flex items-center justify-center gap-4 pt-2 text-sm text-base-content/60">
+            <button class="inline-flex items-center gap-1.5 transition-colors hover:text-base-content" data-action="click-&gt;floating-search#dismiss" type="button">
+              <span>Close</span>
+              <span class="inline-flex items-center gap-1 text-base-content/70" data-controller="keyboard-hint" data-action="">
+      <span class="rounded-md border border-base-300/70 bg-base-200/70 leading-none font-medium tracking-wide px-1.5 py-0.5 text-[11px]">esc</span>
+
+</span>
+
+            </button>
+
+            <span aria-hidden="true" class="text-base-content/25">•</span>
+
+            <div class="inline-flex items-center gap-1.5">
+              <span>Toggle search</span>
+              <span class="inline-flex items-center gap-1 text-base-content/70" data-controller="keyboard-hint" data-action="">
+      <span class="rounded-md border border-base-300/70 bg-base-200/70 leading-none font-medium tracking-wide px-1.5 py-0.5 text-[11px]" data-keyboard-hint-target="key">Ctrl</span>
+      <span class="rounded-md border border-base-300/70 bg-base-200/70 leading-none font-medium tracking-wide px-1.5 py-0.5 text-[11px]">K</span>
+
+    <span class="sr-only" data-keyboard-hint-target="srLabel">Press Control and K to toggle search</span>
+</span>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <footer class="footer text-base-content">
+  <div class="container mx-auto px-6 py-16">
+    <div class="mb-12 grid w-full grid-cols-2 gap-8 lg:grid-cols-5 lg:gap-6">
+        <div class="min-w-0">
+          <h4 class="footer-title mb-6 text-sm font-semibold text-base-content">About us</h4>
+
+          <div class="space-y-3">
+              <a href="https://www.wearedevelopers.com/company" target="_blank" rel="noopener noreferrer" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">About WeAreDevelopers</span>
+
+                  <svg class="size-4 shrink-0 opacity-60 sm:size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+              </a>
+              <a href="https://www.wearedevelopers.com/company/contact" target="_blank" rel="noopener noreferrer" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Contact</span>
+
+                  <svg class="size-4 shrink-0 opacity-60 sm:size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+              </a>
+              <a href="https://www.wearedevelopers.com/company/media" target="_blank" rel="noopener noreferrer" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Press &amp; Media</span>
+
+                  <svg class="size-4 shrink-0 opacity-60 sm:size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+              </a>
+          </div>
+        </div>
+        <div class="min-w-0">
+          <h4 class="footer-title mb-6 text-sm font-semibold text-base-content">Learn &amp; grow</h4>
+
+          <div class="space-y-3">
+              <a href="/live" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Weekly LIVE</span>
+
+              </a>
+              <a href="/videos" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Videos</span>
+
+              </a>
+              <a href="/playlists" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Playlists</span>
+
+              </a>
+              <a href="/magazine" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Magazine</span>
+
+              </a>
+              <a href="/contributors" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Contributors</span>
+
+              </a>
+          </div>
+        </div>
+        <div class="min-w-0">
+          <h4 class="footer-title mb-6 text-sm font-semibold text-base-content">Events</h4>
+
+          <div class="space-y-3">
+              <a href="https://www.wearedevelopers.com/world-congress" target="_blank" rel="noopener noreferrer" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">World Congress Europe</span>
+
+                  <svg class="size-4 shrink-0 opacity-60 sm:size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+              </a>
+              <a href="https://www.wearedevelopers.com/world-congress/tech-leaders-summit" target="_blank" rel="noopener noreferrer" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Tech Leaders Summit</span>
+
+                  <svg class="size-4 shrink-0 opacity-60 sm:size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+              </a>
+              <a href="https://www.wearedevelopers.com/world-congress-north-america" target="_blank" rel="noopener noreferrer" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">World Congress North America</span>
+
+                  <svg class="size-4 shrink-0 opacity-60 sm:size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+              </a>
+              <a href="https://www.wearedevelopers.com/conference-india" target="_blank" rel="noopener noreferrer" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Conference India</span>
+
+                  <svg class="size-4 shrink-0 opacity-60 sm:size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+              </a>
+              <a href="https://www.wearedevelopers.com/business/event-partnerships" target="_blank" rel="noopener noreferrer" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Become a sponsor</span>
+
+                  <svg class="size-4 shrink-0 opacity-60 sm:size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+              </a>
+          </div>
+        </div>
+        <div class="min-w-0">
+          <h4 class="footer-title mb-6 text-sm font-semibold text-base-content">Jobs &amp; career</h4>
+
+          <div class="space-y-3">
+              <a href="/insights" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Salary insights</span>
+
+              </a>
+              <a href="/jobs" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Browse jobs</span>
+
+              </a>
+              <a href="/companies" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Who's hiring</span>
+
+              </a>
+              <a href="/stories" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Inside stories</span>
+
+              </a>
+          </div>
+        </div>
+        <div class="min-w-0">
+          <h4 class="footer-title mb-6 text-sm font-semibold text-base-content">For business</h4>
+
+          <div class="space-y-3">
+              <a href="https://www.wearedevelopers.com/business/employer-branding" target="_blank" rel="noopener noreferrer" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Employer Branding</span>
+
+                  <svg class="size-4 shrink-0 opacity-60 sm:size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+              </a>
+              <a href="https://www.wearedevelopers.com/business/tech-recruiting" target="_blank" rel="noopener noreferrer" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Tech Recruiting</span>
+
+                  <svg class="size-4 shrink-0 opacity-60 sm:size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+              </a>
+              <a href="https://www.wearedevelopers.com/business/product-marketing" target="_blank" rel="noopener noreferrer" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Product Marketing</span>
+
+                  <svg class="size-4 shrink-0 opacity-60 sm:size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+              </a>
+              <a href="https://www.wearedevelopers.com/business/event-partnerships" target="_blank" rel="noopener noreferrer" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Event Partnerships</span>
+
+                  <svg class="size-4 shrink-0 opacity-60 sm:size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+              </a>
+              <a href="https://www.wearedevelopers.com/business/book-a-call" target="_blank" rel="noopener noreferrer" class="flex link items-center gap-1 text-base/7 font-normal text-base-content/80 link-hover transition-colors hover:text-base-content sm:text-sm/6">
+                <span class="min-w-0">Contact sales</span>
+
+                  <svg class="size-4 shrink-0 opacity-60 sm:size-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" height="20" width="20" version="1.1" fill="currentColor" stroke="none" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"></path></svg>
+              </a>
+          </div>
+        </div>
+    </div>
+
+    <div class="pt-8">
+      <div class="flex flex-col items-center gap-5 text-center md:flex-row md:justify-center md:gap-8">
+        <div class="flex items-center gap-4">
+            <a href="https://www.facebook.com/wearedevelopers" target="_blank" rel="noopener noreferrer" class="text-base-content/70 transition-colors duration-300 hover:text-base-content" aria-label="Facebook">
+              <svg class="size-5 shrink-0 sm:size-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path></svg>
+            </a>
+            <a href="https://www.instagram.com/_wearedevelopers/" target="_blank" rel="noopener noreferrer" class="text-base-content/70 transition-colors duration-300 hover:text-base-content" aria-label="Instagram">
+              <svg class="size-5 shrink-0 sm:size-4" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true"><path d="M160,128a32,32,0,1,1-32-32A32.03667,32.03667,0,0,1,160,128Zm68-44v88a56.06353,56.06353,0,0,1-56,56H84a56.06353,56.06353,0,0,1-56-56V84A56.06353,56.06353,0,0,1,84,28h88A56.06353,56.06353,0,0,1,228,84Zm-52,44a48,48,0,1,0-48,48A48.05436,48.05436,0,0,0,176,128Zm16-52a12,12,0,1,0-12,12A12,12,0,0,0,192,76Z"></path></svg>
+            </a>
+            <a href="https://twitter.com/WeAreDevs" target="_blank" rel="noopener noreferrer" class="text-base-content/70 transition-colors duration-300 hover:text-base-content" aria-label="Twitter/X">
+              <svg class="size-5 shrink-0 sm:size-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+            </a>
+            <a href="https://www.youtube.com/channel/UCSD0dLRGQk_T-D3RvpM5aFQ" target="_blank" rel="noopener noreferrer" class="text-base-content/70 transition-colors duration-300 hover:text-base-content" aria-label="YouTube">
+              <svg class="size-5 shrink-0 sm:size-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12z"></path></svg>
+            </a>
+            <a href="https://www.linkedin.com/company/wearedevelopers.org" target="_blank" rel="noopener noreferrer" class="text-base-content/70 transition-colors duration-300 hover:text-base-content" aria-label="LinkedIn">
+              <svg class="size-5 shrink-0 sm:size-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path></svg>
+            </a>
+        </div>
+
+        <div class="flex flex-col items-center gap-3 text-center md:flex-row md:flex-wrap md:justify-center md:gap-x-5 md:gap-y-2">
+          <p class="text-base/7 text-base-content/60 sm:text-sm/6">
+            © 2026 WeAreDevelopers. All rights reserved.
+          </p>
+
+          <nav class="flex flex-wrap justify-center gap-x-4 gap-y-2" aria-label="Legal links">
+            <a href="https://www.wearedevelopers.com/legal" target="_blank" rel="noopener noreferrer" class="text-base/7 font-normal text-base-content/60 transition-colors hover:text-base-content sm:text-sm/6">
+              Privacy &amp; Terms
+            </a>
+
+              <button type="button" class="cursor-pointer text-base/7 font-normal text-base-content/60 transition-colors hover:text-base-content sm:text-sm/6" data-controller="truendo" data-action="click-&gt;truendo#manage">
+                Manage Cookies
+              </button>
+
+            <a href="https://www.wearedevelopers.com/legal/imprint" target="_blank" rel="noopener noreferrer" class="text-base/7 font-normal text-base-content/60 transition-colors hover:text-base-content sm:text-sm/6">
+              Imprint
+            </a>
+
+            <a class="text-base/7 font-normal text-base-content/60 transition-colors hover:text-base-content sm:text-sm/6" href="/releases">Releases</a>
+
+            
+
+
+  <a rel="nofollow" class="inline-flex items-center gap-1.5 text-base/7 text-base-content/60 transition-colors hover:text-base-content sm:text-sm/6" href="/jobs.md?country=all&amp;q=QA">
+    <svg class="size-4 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"></path></svg>
+    <span>View as Markdown</span>
+</a>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;f73048ebccc54aa5916a8fa022852058&quot;,&quot;spa&quot;:2}" crossorigin="anonymous"></script>
+
+
+<div class="jag8CityBio212023 facebook_like embed-responsive-trendmd AdBar contentwebpush ad-blocker-warning addthis_toolbox inplayer-ad util-bar-module-firefly-visible" style="position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; pointer-events: none;"><span></span></div></body></html>

@@ -4,6 +4,29 @@ Ordered by dependency graph. Stories in the same epic with no dependency on
 each other (noted inline) can run as parallel subagents since they touch
 disjoint files.
 
+## Epic 6 — Third-wave site adapters (iamexpat, djinni, arc_dev, freelancer_com,
+## guru, planet_interim, ictergezocht, wearedevelopers, working_nomads, freelancermap)
+
+Sourced from a fast triage of scrape-targets.md section 2 (~29 candidates
+checked). 5 are low-effort STATIC sites with real public listings; 5 need
+StealthyFetcher (one of those, working_nomads, turned out to have a public
+JSON API instead — cheaper than a browser, switched to STATIC). Fring was
+also triaged as a StealthyFetcher candidate but dropped entirely: every
+listing deep-links to a mobile-app invite gate, no real job pages exist.
+
+- [ ] E6-S01 IamExpat Jobs adapter (docs/tickets/E6-S01-iamexpat-adapter.md) — parallel-safe with E6-S02..S10
+- [ ] E6-S02 Djinni adapter (docs/tickets/E6-S02-djinni-adapter.md) — parallel-safe with E6-S01, E6-S03..S10
+- [ ] E6-S03 Arc.dev adapter (docs/tickets/E6-S03-arc-dev-adapter.md) — parallel-safe with E6-S01/S02, E6-S04..S10
+- [ ] E6-S04 Freelancer.com adapter (docs/tickets/E6-S04-freelancer-com-adapter.md) — parallel-safe with E6-S01..S03, E6-S05..S10
+- [ ] E6-S05 Guru adapter (docs/tickets/E6-S05-guru-adapter.md) — parallel-safe with E6-S01..S04, E6-S06..S10 (STEALTH: live site currently blocked by Incapsula on plain HTTP)
+- [ ] E6-S06 Planet Interim adapter (docs/tickets/E6-S06-planet-interim-adapter.md) — parallel-safe with E6-S01..S05, E6-S07..S10 (STEALTH, partial/gated fields)
+- [ ] E6-S07 ICTerGezocht adapter (docs/tickets/E6-S07-ictergezocht-adapter.md) — parallel-safe with E6-S01..S06, E6-S08..S10 (STEALTH + solve_cloudflare)
+- [ ] E6-S08 WeAreDevelopers adapter (docs/tickets/E6-S08-wearedevelopers-adapter.md) — parallel-safe with E6-S01..S07, E6-S09/S10 (STEALTH)
+- [ ] E6-S09 Working Nomads adapter (docs/tickets/E6-S09-working-nomads-adapter.md) — parallel-safe with E6-S01..S08, E6-S10 (STATIC via public JSON API)
+- [ ] E6-S10 freelancermap.de adapter (docs/tickets/E6-S10-freelancermap-adapter.md) — parallel-safe with E6-S01..S09 (STEALTH, assign to Sonnet: embedded-JSON extraction is more complex than the others)
+- [ ] E6-S11 Wire third-wave adapters into registry (docs/tickets/E6-S11-wire-registry-v3.md)
+- [ ] E6-S12 Extend integration test and README for third-wave sites (docs/tickets/E6-S12-integration-update.md)
+
 ## Epic 0 — Scaffolding
 
 - [x] E0-S01 Project scaffolding (pyproject.toml, package skeleton) (docs/tickets/E0-S01-project-scaffolding.md)
