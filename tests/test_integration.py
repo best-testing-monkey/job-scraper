@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Any, Iterator
 from unittest.mock import patch, MagicMock
+import contextlib
 import tempfile
 import re
 
@@ -19,6 +20,16 @@ from job_scraper.sites.harveynash import HarveyNashAdapter
 from job_scraper.sites.headfirst import HeadfirstAdapter
 from job_scraper.sites.sevenstars import SevenstarsAdapter
 from job_scraper.sites.circle8 import Circle8Adapter
+from job_scraper.sites.iamexpat import IamexpatAdapter
+from job_scraper.sites.djinni import DjinniAdapter
+from job_scraper.sites.arc_dev import ArcDevAdapter
+from job_scraper.sites.freelancer_com import FreelancerComAdapter
+from job_scraper.sites.guru import GuruAdapter
+from job_scraper.sites.planet_interim import PlanetInterimAdapter
+from job_scraper.sites.ictergezocht import IctergezochtAdapter
+from job_scraper.sites.wearedevelopers import WearedevelopersAdapter
+from job_scraper.sites.working_nomads import WorkingNomadsAdapter
+from job_scraper.sites.freelancermap import FreelancermapAdapter
 from job_scraper.sites.base import SiteAdapter
 
 
@@ -151,12 +162,101 @@ class FixtureAwareCircle8Adapter(Circle8Adapter):
                 yield stub
 
 
+class FixtureAwareIamexpatAdapter(IamexpatAdapter):
+    """Wrapper adapter that filters list_postings down to fixture-backed listings."""
+
+    def list_postings(self) -> Iterator[ListingStub]:
+        for stub in super().list_postings():
+            if stub.listing_id == "tLJWUBCWY1P8MBXMScbwRE":  # We have detail_tLJWUBCWY1P8MBXMScbwRE.html
+                yield stub
+
+
+class FixtureAwareDjinniAdapter(DjinniAdapter):
+    """Wrapper adapter that filters list_postings down to fixture-backed listings."""
+
+    def list_postings(self) -> Iterator[ListingStub]:
+        for stub in super().list_postings():
+            if stub.listing_id == "848723":  # We have detail_848723.html
+                yield stub
+
+
+class FixtureAwareFreelancerComAdapter(FreelancerComAdapter):
+    """Wrapper adapter that filters list_postings down to fixture-backed listings."""
+
+    def list_postings(self) -> Iterator[ListingStub]:
+        for stub in super().list_postings():
+            if stub.listing_id == "astrology-app-tester-required":  # We have detail_40724221.html
+                yield stub
+
+
+class FixtureAwareGuruAdapter(GuruAdapter):
+    """Wrapper adapter that filters list_postings down to fixture-backed listings."""
+
+    def list_postings(self) -> Iterator[ListingStub]:
+        for stub in super().list_postings():
+            # "2120954" is the only job actually present in listing.html.
+            # Our only saved guru detail fixture (detail_2101732.html) was
+            # captured from a different, separately-scraped posting — there's
+            # no overlap between the two fixtures' ids. We filter down to the
+            # real listing's job here and pair it with that detail fixture in
+            # fixture_fetch_page below; parse_detail takes listing_id from the
+            # stub, not from the HTML, so this is safe for exercising the
+            # pipeline end-to-end.
+            if stub.listing_id == "2120954":
+                yield stub
+
+
+class FixtureAwarePlanetInterimAdapter(PlanetInterimAdapter):
+    """Wrapper adapter that filters list_postings down to fixture-backed listings."""
+
+    def list_postings(self) -> Iterator[ListingStub]:
+        for stub in super().list_postings():
+            if stub.listing_id == "539572":  # We have detail_539572.html
+                yield stub
+
+
+class FixtureAwareIctergezochtAdapter(IctergezochtAdapter):
+    """Wrapper adapter that filters list_postings down to fixture-backed listings."""
+
+    def list_postings(self) -> Iterator[ListingStub]:
+        for stub in super().list_postings():
+            if stub.listing_id == "438712":  # We have detail_438712.html
+                yield stub
+
+
+class FixtureAwareWearedevelopersAdapter(WearedevelopersAdapter):
+    """Wrapper adapter that filters list_postings down to fixture-backed listings."""
+
+    def list_postings(self) -> Iterator[ListingStub]:
+        for stub in super().list_postings():
+            if stub.listing_id == "2904764":  # We have detail_2904764.html
+                yield stub
+
+
+class FixtureAwareWorkingNomadsAdapter(WorkingNomadsAdapter):
+    """Wrapper adapter that filters list_postings down to fixture-backed listings."""
+
+    def list_postings(self) -> Iterator[ListingStub]:
+        for stub in super().list_postings():
+            if stub.listing_id == "1843242":  # cached record already has full detail
+                yield stub
+
+
+class FixtureAwareFreelancermapAdapter(FreelancermapAdapter):
+    """Wrapper adapter that filters list_postings down to fixture-backed listings."""
+
+    def list_postings(self) -> Iterator[ListingStub]:
+        for stub in super().list_postings():
+            if stub.listing_id == "3051456":  # We have detail_test-automation-consultant-m-w-d-playwright.html
+                yield stub
+
+
 @pytest.fixture
 def fixture_fetch_page():
     """Create a monkeypatch function for fetch_page that returns fixture HTML
     for both listing-page and detail-page URLs."""
 
-    def mock_fetch_page(strategy: Any, url: str) -> Any:
+    def mock_fetch_page(strategy: Any, url: str, **kwargs: Any) -> Any:
         if url == ProActAdapter.LISTING_URL:
             return load_fixture("pro_act", "listing.html")
         if url == HeroAdapter.LISTING_URL:
@@ -175,6 +275,26 @@ def fixture_fetch_page():
             return load_fixture_bytes("sevenstars", "listing.html")
         if url == Circle8Adapter.LISTING_URL:
             return load_fixture_bytes("circle8", "listing.html")
+        if url == f"{IamexpatAdapter.LISTING_URL}?page=1":
+            return load_fixture_bytes("iamexpat", "listing.html")
+        if url == DjinniAdapter.LISTING_URL:
+            return load_fixture_bytes("djinni", "listing.html")
+        if url == ArcDevAdapter.LISTING_URL:
+            return load_fixture_bytes("arc_dev", "listing.html")
+        if url == FreelancerComAdapter.LISTING_URL:
+            return load_fixture_bytes("freelancer_com", "listing.html")
+        if url == GuruAdapter.LISTING_URL:
+            return load_fixture_bytes("guru", "listing.html")
+        if url == PlanetInterimAdapter.LISTING_URL:
+            return load_fixture_bytes("planet_interim", "listing.html")
+        if url == IctergezochtAdapter.LISTING_URL:
+            return load_fixture_bytes("ictergezocht", "listing.html")
+        if url == WearedevelopersAdapter.LISTING_URL:
+            return load_fixture_bytes("wearedevelopers", "listing.html")
+        if url == WorkingNomadsAdapter.LISTING_URL:
+            return load_fixture_bytes("working_nomads", "listing.json")
+        if url == FreelancermapAdapter.LISTING_URL:
+            return load_fixture_bytes("freelancermap", "listing.html")
         if "pro-act.nl" in url and "8887" in url:
             return load_fixture("pro_act", "detail_8887.html")
         elif "hero.eu" in url and "e98187b8" in url:
@@ -191,6 +311,26 @@ def fixture_fetch_page():
             return load_fixture_bytes("sevenstars", "detail_7S-004982.html")
         elif "circle8.nl" in url and "VNR-85422" in url:
             return load_fixture_bytes("circle8", "detail_VNR-85422.html")
+        elif "iamexpat.nl" in url and "tLJWUBCWY1P8MBXMScbwRE" in url:
+            return load_fixture_bytes("iamexpat", "detail_tLJWUBCWY1P8MBXMScbwRE.html")
+        elif "djinni.co" in url and "848723" in url:
+            return load_fixture_bytes("djinni", "detail_848723.html")
+        elif "pg2lgfgv87" in url:
+            return load_fixture_bytes("arc_dev", "detail_pg2lgfgv87.html")
+        elif "freelancer.com" in url and "astrology-app-tester-required" in url:
+            return load_fixture_bytes("freelancer_com", "detail_40724221.html")
+        elif "guru.com" in url and "2120954" in url:
+            return load_fixture_bytes("guru", "detail_2101732.html")
+        elif "planetinterim.nl" in url and "539572" in url:
+            return load_fixture_bytes("planet_interim", "detail_539572.html")
+        elif "ictergezocht.nl" in url and "438712" in url:
+            return load_fixture_bytes("ictergezocht", "detail_438712.html")
+        elif "wearedevelopers.com" in url and "2904764" in url:
+            return load_fixture_bytes("wearedevelopers", "detail_2904764.html")
+        elif "freelancermap.de" in url and "test-automation-consultant-m-w-d-playwright" in url:
+            return load_fixture_bytes(
+                "freelancermap", "detail_test-automation-consultant-m-w-d-playwright.html"
+            )
         # Return empty HTML for URLs we don't have fixtures for
         return "<html></html>"
 
@@ -208,7 +348,61 @@ ALL_SITE_IDS = [
     "headfirst",
     "sevenstars",
     "circle8",
+    "iamexpat",
+    "djinni",
+    "arc_dev",
+    "freelancer_com",
+    "guru",
+    "planet_interim",
+    "ictergezocht",
+    "wearedevelopers",
+    "working_nomads",
+    "freelancermap",
 ]
+
+
+_ALL_SITE_MODULES = (
+    "pro_act",
+    "hero",
+    "flexvalue",
+    "synprofs",
+    "tender_link",
+    "harveynash",
+    "headfirst",
+    "sevenstars",
+    "circle8",
+    "iamexpat",
+    "djinni",
+    "arc_dev",
+    "freelancer_com",
+    "guru",
+    "planet_interim",
+    "ictergezocht",
+    "wearedevelopers",
+    "working_nomads",
+    "freelancermap",
+)
+
+
+def _patch_all_sites(
+    stack: contextlib.ExitStack,
+    fake_registry: dict[str, Any],
+    fixture_fetch_page: Any,
+    stone_interim_response: MagicMock,
+) -> None:
+    """Enter every fixture-fetch patch needed for a full-registry run into
+    the given ExitStack. A single `with a, b, c, ...:` statement can't hold
+    this many context managers at once — CPython's compiler caps nested
+    blocks — so patches are entered dynamically instead."""
+    stack.enter_context(patch("job_scraper.pipeline.SITE_REGISTRY", fake_registry))
+    stack.enter_context(patch("job_scraper.pipeline.fetch_page", side_effect=fixture_fetch_page))
+    for module in _ALL_SITE_MODULES:
+        stack.enter_context(
+            patch(f"job_scraper.sites.{module}.fetch_page", side_effect=fixture_fetch_page)
+        )
+    stack.enter_context(
+        patch("job_scraper.sites.stone_interim.Fetcher.post", return_value=stone_interim_response)
+    )
 
 
 def test_integration_end_to_end(tmp_path: Path, fixture_fetch_page: Any) -> None:
@@ -230,6 +424,16 @@ def test_integration_end_to_end(tmp_path: Path, fixture_fetch_page: Any) -> None
         "headfirst": FixtureAwareHeadfirstAdapter,
         "sevenstars": FixtureAwareSevenstarsAdapter,
         "circle8": FixtureAwareCircle8Adapter,
+        "iamexpat": FixtureAwareIamexpatAdapter,
+        "djinni": FixtureAwareDjinniAdapter,
+        "arc_dev": ArcDevAdapter,
+        "freelancer_com": FixtureAwareFreelancerComAdapter,
+        "guru": FixtureAwareGuruAdapter,
+        "planet_interim": FixtureAwarePlanetInterimAdapter,
+        "ictergezocht": FixtureAwareIctergezochtAdapter,
+        "wearedevelopers": FixtureAwareWearedevelopersAdapter,
+        "working_nomads": FixtureAwareWorkingNomadsAdapter,
+        "freelancermap": FixtureAwareFreelancermapAdapter,
     }
 
     stone_interim_response = MagicMock()
@@ -237,24 +441,14 @@ def test_integration_end_to_end(tmp_path: Path, fixture_fetch_page: Any) -> None
         "stone_interim", "listing_api_GetOverviewItems.json"
     )
 
-    with patch("job_scraper.pipeline.SITE_REGISTRY", fake_registry), \
-         patch("job_scraper.pipeline.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.pro_act.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.hero.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.flexvalue.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.synprofs.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.tender_link.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.harveynash.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.headfirst.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.sevenstars.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.circle8.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.stone_interim.Fetcher.post", return_value=stone_interim_response):
+    with contextlib.ExitStack() as stack:
+        _patch_all_sites(stack, fake_registry, fixture_fetch_page, stone_interim_response)
         # ignore_robots=True: stone-interim.nl's WAF returns 403 to urllib's
         # default user agent when fetching robots.txt itself (unrelated to the
         # adapter's own fetch mechanics, which use scrapling and succeed fine),
         # which Python's robotparser treats as disallow-all. This test cares
         # about adapter/pipeline behavior against fixtures, not live robots.txt
-        # fetch results for 10 real domains.
+        # fetch results for 20 real domains.
         results_first = run(ALL_SITE_IDS, repo, str(jobs_dir), ignore_robots=True)
 
     # Assertions for first run
@@ -275,18 +469,8 @@ def test_integration_end_to_end(tmp_path: Path, fixture_fetch_page: Any) -> None
         assert any(f.exists() for f in site_files), f"{site_id} markdown files should exist"
 
     # Second run: run again with same fixtures, verify idempotence
-    with patch("job_scraper.pipeline.SITE_REGISTRY", fake_registry), \
-         patch("job_scraper.pipeline.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.pro_act.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.hero.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.flexvalue.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.synprofs.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.tender_link.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.harveynash.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.headfirst.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.sevenstars.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.circle8.fetch_page", side_effect=fixture_fetch_page), \
-         patch("job_scraper.sites.stone_interim.Fetcher.post", return_value=stone_interim_response):
+    with contextlib.ExitStack() as stack:
+        _patch_all_sites(stack, fake_registry, fixture_fetch_page, stone_interim_response)
         results_second = run(ALL_SITE_IDS, repo, str(jobs_dir), ignore_robots=True)
 
     # On the second run, nothing should change (idempotence)
