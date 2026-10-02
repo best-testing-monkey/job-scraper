@@ -164,3 +164,34 @@ def test_parse_detail_description_markdown(adapter, detail_fixture):
 
     # The fixture has multiple paragraphs with bold text
     assert "**" in posting.description  # Bold text should be preserved
+
+
+def test_source_url_is_human_ad_page(adapter, detail_fixture, listing_fixture):
+    import re
+    from job_scraper.core.models import ListingStub
+
+    pattern = re.compile(
+        r"^https://www\.iamexpat\.nl/career/jobs-netherlands/[a-z0-9-]+/[^/\s?#]+/[A-Za-z0-9]+$"
+    )
+    bad_parts = ("/apply", "/go/", "/api/", "/wp-json/", ".json", "?utm_", "/redirect")
+
+    stub = ListingStub(
+        listing_id="tLJWUBCWY1P8MBXMScbwRE",
+        detail_url="https://www.iamexpat.nl/career/jobs-netherlands/it-technology-positions/junior-devops-engineer-iam-ping-ds-idm/tLJWUBCWY1P8MBXMScbwRE",
+        title="Junior DevOps Engineer IAM (Ping DS/IDM)",
+    )
+    posting = adapter.parse_detail(stub, detail_fixture)
+    assert pattern.match(posting.source_url)
+    assert not any(b in posting.source_url for b in bad_parts)
+
+    def mock_fetch(strategy, url, **kwargs):
+        if "?page=" not in url or "?page=1" in url:
+            return listing_fixture
+        return b"<html></html>"
+
+    with patch("job_scraper.sites.iamexpat.fetch_page", side_effect=mock_fetch):
+        stubs = list(adapter.list_postings())
+    assert stubs
+    for s in stubs:
+        assert pattern.match(s.detail_url), s.detail_url
+        assert not any(b in s.detail_url for b in bad_parts)

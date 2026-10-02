@@ -86,3 +86,29 @@ class TestHeroParseDetail:
         )
         assert not any(l.startswith("## ") for l in posting.description.splitlines())  # No level-2 headers
         assert not any(l.rstrip() != l and l.rstrip() + "  " != l for l in posting.description.splitlines())  # No trailing whitespace except hard breaks
+
+
+def test_source_url_is_human_ad_page() -> None:
+    import re
+    from job_scraper.core.models import ListingStub
+
+    base = Path(__file__).parent / "fixtures" / "hero"
+    adapter = HeroAdapter()
+    pattern = re.compile(r"^https://hero\.eu/interim-opdrachten/[a-z0-9-]+-[0-9a-f]{8}$")
+    bad_parts = ("/apply", "/go/", "/api/", "/wp-json/", ".json", "?utm_", "/redirect")
+
+    stub = ListingStub(
+        listing_id="e98187b8",
+        detail_url="https://hero.eu/interim-opdrachten/cloud-engineer-e98187b8",
+        title="Cloud Engineer",
+    )
+    posting = adapter.parse_detail(stub, (base / "detail_e98187b8.html").read_text(encoding="utf-8"))
+    assert pattern.match(posting.source_url)
+    assert not any(b in posting.source_url for b in bad_parts)
+
+    with patch("job_scraper.sites.hero.fetch_page", return_value=(base / "listing.html").read_text(encoding="utf-8")):
+        stubs = list(adapter.list_postings())
+    assert stubs
+    for s in stubs:
+        assert pattern.match(s.detail_url), s.detail_url
+        assert not any(b in s.detail_url for b in bad_parts)

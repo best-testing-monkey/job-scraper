@@ -90,3 +90,29 @@ def test_parse_detail_description_markdown():
     # Verify form boilerplate is not included
     assert "Interesse?" not in posting.description, "Description should not include form sections"
     assert "loondienst" not in posting.description, "Description should not include form options"
+
+
+def test_source_url_is_human_ad_page():
+    import re
+
+    pattern = re.compile(r"^https://pro-act\.nl/vacatures/[a-z0-9-]+-\d+/$")
+    bad_parts = ("/apply", "/go/", "/api/", "/wp-json/", ".json", "?utm_", "/redirect")
+    adapter = ProActAdapter()
+
+    detail_html = Path("tests/fixtures/pro_act/detail_8887.html").read_text()
+    stub = ListingStub(
+        listing_id="8887",
+        detail_url="https://pro-act.nl/vacatures/agile-coach-8887/",
+        title="Agile Coach",
+    )
+    posting = adapter.parse_detail(stub, detail_html)
+    assert pattern.match(posting.source_url)
+    assert not any(b in posting.source_url for b in bad_parts)
+
+    listing_html = Path("tests/fixtures/pro_act/listing.html").read_text()
+    with patch("job_scraper.sites.pro_act.fetch_page", return_value=listing_html):
+        stubs = list(adapter.list_postings())
+    assert stubs
+    for s in stubs:
+        assert pattern.match(s.detail_url), s.detail_url
+        assert not any(b in s.detail_url for b in bad_parts)

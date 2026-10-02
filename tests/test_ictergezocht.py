@@ -67,3 +67,31 @@ def test_parse_detail(mock_fetch: object) -> None:
     for line in posting.description.splitlines():
         if not line.endswith("  "):
             assert line == line.rstrip()
+
+
+@patch("job_scraper.sites.ictergezocht.fetch_page")
+def test_source_url_is_human_ad_page(mock_fetch: object) -> None:
+    import re
+
+    pattern = re.compile(r"^https://www\.ictergezocht\.nl/ict-vacature/\d+-[a-z0-9-]+/$")
+    bad_parts = ("/apply", "/go/", "/api/", "/wp-json/", ".json", "?utm_", "/redirect")
+
+    with open("tests/fixtures/ictergezocht/detail_438712.html", "rb") as f:
+        detail_html = f.read()
+    stub = ListingStub(
+        listing_id="438712",
+        detail_url="https://www.ictergezocht.nl/ict-vacature/438712-senior-functioneel-beheerder-met-rijksoverheid-ervaring/",
+        title="Senior Functioneel Beheerder met Rijksoverheid ervaring",
+    )
+    adapter = IctergezochtAdapter()
+    posting = adapter.parse_detail(stub, detail_html)
+    assert pattern.match(posting.source_url)
+    assert not any(b in posting.source_url for b in bad_parts)
+
+    with open("tests/fixtures/ictergezocht/listing.html", "rb") as f:
+        mock_fetch.return_value = f.read()
+    stubs = list(adapter.list_postings())
+    assert stubs
+    for s in stubs:
+        assert pattern.match(s.detail_url), s.detail_url
+        assert not any(b in s.detail_url for b in bad_parts)
