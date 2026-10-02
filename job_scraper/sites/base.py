@@ -44,6 +44,10 @@ class SiteAdapter(ABC):
     """File extension for the raw saved detail page (see raw_export.write).
     Override to "json" for adapters whose detail fetch returns a JSON API
     response rather than an HTML page."""
+    screenshot_selector: ClassVar[str | None] = None
+    """CSS selector (valid for both Playwright and soupsieve/bs4 — no :contains())
+    matching exactly ONE element that wraps only the job description; None means
+    no screenshots for this site."""
 
     @abstractmethod
     def list_postings(self) -> Iterator[ListingStub]: ...
