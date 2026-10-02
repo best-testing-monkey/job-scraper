@@ -318,6 +318,8 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
+    { name = "patchright" },
+    { name = "playwright" },
     { name = "pytest" },
     { name = "scrapling", extra = ["fetchers"] },
 ]
@@ -330,6 +332,8 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "beautifulsoup4" },
+    { name = "patchright", specifier = ">=1.63.0" },
+    { name = "playwright", specifier = ">=1.63.0" },
     { name = "pytest" },
     { name = "scrapling", extras = ["fetchers"] },
 ]

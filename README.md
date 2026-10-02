@@ -75,6 +75,16 @@ gets the full list back from a single API call. A future site with genuine
 multi-page listings would need pagination handling added to its own
 adapter.
 
+## Screenshots (browser requirements)
+
+Playwright 1.63 expects Chromium revision 1243, whose executable is `/home/baz/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome`, and that file exists.
+
+Patchright 1.63 resolves the same executable, `/home/baz/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome`, and that file exists.
+
+Scrapling's `StealthyFetcher` launches patchright Chromium (not Camoufox) via `patchright.sync_api`, so it shares the `~/.cache/ms-playwright` install; the screenshot feature needs a second browser download: no.
+
+If a browser is missing, run `uv run playwright install chromium` (warning: `~/.cache/*` physically lands on the crowded `/media/baz/MonkeyWorks` drive and the download is hundreds of MB).
+
 ## robots.txt
 
 Every scrape checks `robots.txt` before touching a site, and skips it if

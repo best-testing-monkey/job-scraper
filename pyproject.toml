@@ -11,6 +11,8 @@ dependencies = [
     "scrapling[fetchers]",
     "pytest",
     "beautifulsoup4",
+    "playwright>=1.63.0",
+    "patchright>=1.63.0",
 ]
 
 [dependency-groups]
