@@ -172,3 +172,119 @@ def test_rebuild_multiple_sites(temp_db, monkeypatch, capsys):
         called_sites = [call[0][0] for call in mock_rebuild.call_args_list]
         assert "pro_act" in called_sites
         assert "hero" in called_sites
+
+
+def test_scrape_help(monkeypatch, capsys):
+    """Test that scrape --help shows the screenshot options"""
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "scrape", "--help"])
+
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "--screenshots-dir" in captured.out
+    assert "--no-screenshots" in captured.out
+
+
+def test_scrape_default_screenshots_dir(temp_db, monkeypatch, capsys):
+    """Test scrape --site pro_act passes default screenshots_dir to run"""
+    repo, db_path = temp_db
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "scrape", "--site", "pro_act", "--db", db_path])
+
+    with patch("job_scraper.cli.run") as mock_run:
+        mock_run.return_value = {"pro_act": {"new": 1, "updated": 0, "errors": 0, "skipped": 0}}
+
+        main()
+
+        # Verify run was called with default screenshots_dir
+        mock_run.assert_called_once()
+        call_kwargs = mock_run.call_args[1]
+        assert call_kwargs["screenshots_dir"] == "screenshots/"
+
+
+def test_scrape_custom_screenshots_dir(temp_db, monkeypatch, capsys):
+    """Test scrape --site pro_act --screenshots-dir /tmp/s passes custom dir to run"""
+    repo, db_path = temp_db
+    monkeypatch.setattr(sys, "argv", [
+        "job_scraper", "scrape",
+        "--site", "pro_act",
+        "--db", db_path,
+        "--screenshots-dir", "/tmp/s"
+    ])
+
+    with patch("job_scraper.cli.run") as mock_run:
+        mock_run.return_value = {"pro_act": {"new": 1, "updated": 0, "errors": 0, "skipped": 0}}
+
+        main()
+
+        # Verify run was called with custom screenshots_dir
+        mock_run.assert_called_once()
+        call_kwargs = mock_run.call_args[1]
+        assert call_kwargs["screenshots_dir"] == "/tmp/s"
+
+
+def test_scrape_no_screenshots(temp_db, monkeypatch, capsys):
+    """Test scrape --site pro_act --no-screenshots passes None for screenshots_dir"""
+    repo, db_path = temp_db
+    monkeypatch.setattr(sys, "argv", [
+        "job_scraper", "scrape",
+        "--site", "pro_act",
+        "--db", db_path,
+        "--no-screenshots"
+    ])
+
+    with patch("job_scraper.cli.run") as mock_run:
+        mock_run.return_value = {"pro_act": {"new": 1, "updated": 0, "errors": 0, "skipped": 0}}
+
+        main()
+
+        # Verify run was called with screenshots_dir=None
+        mock_run.assert_called_once()
+        call_kwargs = mock_run.call_args[1]
+        assert call_kwargs["screenshots_dir"] is None
+
+
+def test_scrape_raw_dir_unchanged(temp_db, monkeypatch, capsys):
+    """Test scrape respects --raw-dir and --no-raw as before"""
+    repo, db_path = temp_db
+    monkeypatch.setattr(sys, "argv", [
+        "job_scraper", "scrape",
+        "--site", "pro_act",
+        "--db", db_path,
+        "--raw-dir", "custom_raw/",
+        "--no-screenshots"
+    ])
+
+    with patch("job_scraper.cli.run") as mock_run:
+        mock_run.return_value = {"pro_act": {"new": 1, "updated": 0, "errors": 0, "skipped": 0}}
+
+        main()
+
+        # Verify run was called with custom raw_dir
+        mock_run.assert_called_once()
+        call_kwargs = mock_run.call_args[1]
+        assert call_kwargs["raw_dir"] == "custom_raw/"
+        assert call_kwargs["screenshots_dir"] is None
+
+
+def test_scrape_no_raw_still_works(temp_db, monkeypatch, capsys):
+    """Test scrape --no-raw still passes raw_dir=None"""
+    repo, db_path = temp_db
+    monkeypatch.setattr(sys, "argv", [
+        "job_scraper", "scrape",
+        "--site", "pro_act",
+        "--db", db_path,
+        "--no-raw"
+    ])
+
+    with patch("job_scraper.cli.run") as mock_run:
+        mock_run.return_value = {"pro_act": {"new": 1, "updated": 0, "errors": 0, "skipped": 0}}
+
+        main()
+
+        # Verify run was called with raw_dir=None
+        mock_run.assert_called_once()
+        call_kwargs = mock_run.call_args[1]
+        assert call_kwargs["raw_dir"] is None
+        assert call_kwargs["screenshots_dir"] == "screenshots/"

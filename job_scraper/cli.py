@@ -46,6 +46,17 @@ def main() -> None:
         help="Bypass the robots.txt check (only use for sites you have "
         "explicit permission to scrape)",
     )
+    scrape_parser.add_argument(
+        "--screenshots-dir",
+        default="screenshots/",
+        help="Path to screenshots directory (default: screenshots/); pass "
+        "--no-screenshots to skip screenshot capture entirely",
+    )
+    scrape_parser.add_argument(
+        "--no-screenshots",
+        action="store_true",
+        help="Skip taking screenshots (screenshot capture is on by default)",
+    )
 
     rebuild_parser = subparsers.add_parser("rebuild", help="Rebuild jobs from raw pages")
     rebuild_parser.add_argument(
@@ -99,8 +110,9 @@ def handle_scrape(args: argparse.Namespace) -> None:
 
     repo = JobRepository(args.db)
     raw_dir = None if args.no_raw else args.raw_dir
+    screenshots_dir = None if args.no_screenshots else args.screenshots_dir
     results = run(
-        site_ids, repo, args.jobs_dir, ignore_robots=args.ignore_robots, raw_dir=raw_dir
+        site_ids, repo, args.jobs_dir, ignore_robots=args.ignore_robots, raw_dir=raw_dir, screenshots_dir=screenshots_dir
     )
 
     for site_id, counters in results.items():
