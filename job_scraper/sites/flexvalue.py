@@ -3,6 +3,7 @@ from typing import Any, Iterator
 
 from bs4 import BeautifulSoup
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import FetchStrategy, SiteAdapter, fetch_page
@@ -106,24 +107,19 @@ class FlexValueAdapter(SiteAdapter):
         )
 
     def _extract_description(self, job_description: Any) -> str:
-        table = job_description.find("table")
-        text_parts = []
+        html_parts = []
 
         for elem in job_description.children:
             if isinstance(elem, str):
-                text = elem.strip()
-                if text:
-                    text_parts.append(text)
+                html_parts.append(elem)
             elif elem.name == "table":
                 continue
-            elif elem.name in ["b", "strong", "br", "span", "i"]:
-                text = elem.get_text(strip=True)
-                if text:
-                    text_parts.append(text)
+            else:
+                html_parts.append(str(elem))
 
-        full_text = " ".join(text_parts)
-        full_text = re.sub(r"\s+", " ", full_text)
-        return full_text.strip()
+        full_html = "".join(html_parts)
+        wrapped_html = f"<div>{full_html}</div>"
+        return html_to_markdown(wrapped_html)
 
     def _extract_client(self, job_description: Any) -> str | None:
         text = job_description.get_text()

@@ -76,3 +76,19 @@ def test_parse_detail_2101732() -> None:
     assert "Show more" not in posting.description
     assert "skills" in posting.extra_fields
     assert len(posting.extra_fields["skills"]) > 0
+
+    # Verify description structure - has multiple paragraphs
+    assert "\n\n" in posting.description
+
+    # Check for list items
+    lines = posting.description.splitlines()
+    has_list = any(l.startswith("1. ") or l.startswith("- ") for l in lines)
+    assert has_list, "Description should have list items"
+
+    # Check no level-2 headings (reserved for page structure)
+    assert not any(l.startswith("## ") for l in lines)
+
+    # Check for trailing whitespace (except hard breaks)
+    for line in lines:
+        if not line.endswith("  "):
+            assert line == line.rstrip(), f"Line has trailing whitespace: {repr(line)}"

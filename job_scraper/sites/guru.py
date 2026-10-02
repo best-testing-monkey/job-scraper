@@ -4,6 +4,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
@@ -128,11 +129,11 @@ class GuruAdapter(SiteAdapter):
         description = ""
         desc_elem = soup.find("pre", class_="jobDetails__description")
         if desc_elem:
-            description = desc_elem.get_text()
-            # Strip the trailing "... <a href='/login.aspx?...'>Show more</a>" boilerplate
-            # Look for the pattern and remove everything from "..." onward
-            if " ... " in description:
-                description = description.split(" ... ")[0].strip()
+            # Extract the inner HTML before the " ... " boilerplate
+            inner_html = str(desc_elem.decode_contents())
+            if " ... " in inner_html:
+                inner_html = inner_html.split(" ... ")[0].strip()
+            description = html_to_markdown(inner_html)
 
         # Extract location and jobLocationType from JSON-LD
         location = self._extract_location_from_json_ld(soup)

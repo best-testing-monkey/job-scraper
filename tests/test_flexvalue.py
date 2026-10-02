@@ -68,3 +68,31 @@ def test_parse_detail() -> None:
     assert posting.client == "Belastingdienst"
     assert posting.category is None
     assert posting.rate is None
+
+
+def test_parse_detail_description_structure() -> None:
+    detail_html = load_fixture("detail_1065407.html")
+    adapter = FlexValueAdapter()
+
+    from job_scraper.core.models import ListingStub
+    stub = ListingStub(
+        listing_id="1065407",
+        detail_url="https://aanvragen.flexvalue.nl/careers/6605/jobs/1065407-Java-Devops-Engineer",
+        title="Java Devops Engineer",
+    )
+
+    posting = adapter.parse_detail(stub, detail_html)
+
+    # Verify description structure
+    assert posting.description
+    assert "**Belastingdienst**" in posting.description
+    assert "**Java Devops Engineer**" in posting.description
+    assert "**" in posting.description  # Has bold text
+
+    # Check no level-2 headings (reserved for page structure)
+    assert not any(l.startswith("## ") for l in posting.description.splitlines())
+
+    # Check for trailing whitespace (except hard breaks)
+    for line in posting.description.splitlines():
+        if not line.endswith("  "):
+            assert line == line.rstrip(), f"Line has trailing whitespace: {repr(line)}"
