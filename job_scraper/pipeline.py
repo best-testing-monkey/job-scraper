@@ -1,10 +1,13 @@
+import sys
 from datetime import datetime
+from pathlib import Path
 
 from job_scraper.core.db import JobRepository
 from job_scraper.core.filters import apply_dedup, is_excluded
-from job_scraper.core.markdown_export import write
+from job_scraper.core.markdown_export import screenshot_relpath, stem_for, write
 from job_scraper.core.raw_export import write as write_raw
 from job_scraper.core.robots import robots_allowed
+from job_scraper.core.screenshots import capture_element
 from job_scraper.sites.base import FetchStrategy, SiteAdapter, fetch_page
 from job_scraper.sites.registry import SITE_REGISTRY
 
@@ -15,6 +18,7 @@ def run_site(
     jobs_dir: str,
     run_started_at: str,
     raw_dir: str | None = None,
+    screenshots_dir: str | None = None,
 ) -> dict:
     """For each ListingStub from adapter.list_postings(): fetch its detail
     page via fetch_page(adapter.fetch_strategy, stub.detail_url); if
@@ -33,7 +37,15 @@ def run_site(
     repo.mark_stale_not_seen_since(adapter.site_id, run_started_at).
     Returns a dict of counters: {"seen": int, "excluded": int,
     "duplicates": int, "written": int, "stale_marked": int}."""
-    counters = {"seen": 0, "excluded": 0, "duplicates": 0, "written": 0, "stale_marked": 0}
+    counters = {
+        "seen": 0,
+        "excluded": 0,
+        "duplicates": 0,
+        "written": 0,
+        "stale_marked": 0,
+        "screenshots_taken": 0,
+        "screenshots_failed": 0,
+    }
 
     for stub in adapter.list_postings():
         counters["seen"] += 1
@@ -54,7 +66,27 @@ def run_site(
             repo.set_duplicate_of(posting.site_id, posting.listing_id, dup_id)
             counters["duplicates"] += 1
         elif changed:
-            write(posting, jobs_dir)
+            screenshot = None
+            if screenshots_dir and adapter.screenshot_selector:
+                stem = stem_for(posting)
+                out_path = Path(screenshots_dir) / f"{stem}.png"
+                try:
+                    ok = capture_element(
+                        posting.source_url,
+                        adapter.screenshot_selector,
+                        str(out_path),
+                        stealth=adapter.fetch_strategy == FetchStrategy.STEALTH,
+                    )
+                except Exception as exc:
+                    print(f"Warning: screenshot failed for {stem}: {exc}", file=sys.stderr)
+                    ok = False
+                if ok:
+                    counters["screenshots_taken"] += 1
+                else:
+                    counters["screenshots_failed"] += 1
+                if ok or out_path.exists():
+                    screenshot = screenshot_relpath(stem)
+            write(posting, jobs_dir, screenshot=screenshot)
             counters["written"] += 1
 
     stale_count = repo.mark_stale_not_seen_since(adapter.site_id, run_started_at)
@@ -69,6 +101,7 @@ def run(
     jobs_dir: str,
     ignore_robots: bool = False,
     raw_dir: str | None = None,
+    screenshots_dir: str | None = None,
 ) -> dict[str, dict]:
     """For each site_id: if not in SITE_REGISTRY, skip with a printed
     warning (to stderr) and continue. If robots_allowed(adapter.base_url) is
@@ -77,8 +110,6 @@ def run(
     the bypass is always visible in the run's output, not silent). Otherwise
     instantiate the adapter and call run_site(..., raw_dir=raw_dir). Returns
     {site_id: counters_dict} for every site actually run."""
-    import sys
-
     results = {}
 
     for site_id in site_ids:
@@ -104,7 +135,14 @@ def run(
                 continue
 
         run_started_at = datetime.now().isoformat()
-        counters = run_site(adapter, repo, jobs_dir, run_started_at, raw_dir=raw_dir)
+        counters = run_site(
+            adapter,
+            repo,
+            jobs_dir,
+            run_started_at,
+            raw_dir=raw_dir,
+            screenshots_dir=screenshots_dir,
+        )
         results[site_id] = counters
 
     return results

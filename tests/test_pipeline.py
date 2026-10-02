@@ -238,3 +238,106 @@ def test_list_sites_command() -> None:
         text=True,
     )
     assert result.returncode == 0
+
+
+# --- screenshots (E13-S24) ---
+
+_STEM1 = "fake-site-job-1-python-developer"
+
+
+def _run_shots(tmp_path: Path, adapter: SiteAdapter, shots: str | None, **patch_kw: Any):
+    repo = JobRepository(str(tmp_path / "test.db"))
+    with (
+        patch("job_scraper.pipeline.fetch_page", return_value=None),
+        patch("job_scraper.pipeline.capture_element", **patch_kw) as cap,
+    ):
+        counters = run_site(
+            adapter, repo, str(tmp_path / "jobs"), "2023-01-01T00:00:00", screenshots_dir=shots
+        )
+    return counters, cap
+
+
+class ShotAdapter(FakeAdapter):
+    screenshot_selector = "div.desc"
+
+
+def test_screenshot_success(tmp_path: Path) -> None:
+    shots = str(tmp_path / "shots")
+    counters, cap = _run_shots(tmp_path, ShotAdapter(), shots, return_value=True)
+    assert cap.call_args_list[0].args[2] == f"{shots}/{_STEM1}.png"
+    assert cap.call_args_list[0].args[:2] == ("https://fake-site.example.com/job/1", "div.desc")
+    md = (tmp_path / "jobs" / f"{_STEM1}.md").read_text()
+    assert f"- Screenshot: screenshots/{_STEM1}.png" in md
+    assert counters["screenshots_taken"] == 2
+    assert counters["screenshots_failed"] == 0
+
+
+def test_screenshot_false(tmp_path: Path) -> None:
+    counters, _ = _run_shots(tmp_path, ShotAdapter(), str(tmp_path / "shots"), return_value=False)
+    md = (tmp_path / "jobs" / f"{_STEM1}.md").read_text()
+    assert "- Screenshot:" not in md
+    assert counters["written"] == 2
+    assert counters["screenshots_failed"] == 2
+
+
+def test_screenshot_raises(tmp_path: Path) -> None:
+    counters, _ = _run_shots(
+        tmp_path, ShotAdapter(), str(tmp_path / "shots"), side_effect=RuntimeError("boom")
+    )
+    assert counters["written"] == 2
+    assert counters["screenshots_failed"] == 2
+
+
+def test_screenshot_existing_png_kept(tmp_path: Path) -> None:
+    shots = tmp_path / "shots"
+    shots.mkdir()
+    (shots / f"{_STEM1}.png").write_bytes(b"png")
+    _run_shots(tmp_path, ShotAdapter(), str(shots), return_value=False)
+    md = (tmp_path / "jobs" / f"{_STEM1}.md").read_text()
+    assert f"- Screenshot: screenshots/{_STEM1}.png" in md
+
+
+def test_screenshot_dir_none_no_capture(tmp_path: Path) -> None:
+    counters, cap = _run_shots(tmp_path, ShotAdapter(), None, return_value=True)
+    cap.assert_not_called()
+    assert counters["screenshots_taken"] == 0
+    assert counters["screenshots_failed"] == 0
+
+
+def test_screenshot_no_selector_no_capture(tmp_path: Path) -> None:
+    _, cap = _run_shots(tmp_path, FakeAdapter(), str(tmp_path / "shots"), return_value=True)
+    cap.assert_not_called()
+
+
+def test_screenshot_stealth_flag(tmp_path: Path) -> None:
+    class StealthShot(ShotAdapter):
+        fetch_strategy = FetchStrategy.STEALTH
+
+    _, cap = _run_shots(tmp_path, StealthShot(), str(tmp_path / "s1"), return_value=True)
+    assert all(c.kwargs["stealth"] is True for c in cap.call_args_list)
+    (tmp_path / "b").mkdir()
+    _, cap = _run_shots(tmp_path / "b", ShotAdapter(), str(tmp_path / "s2"), return_value=True)
+    assert all(c.kwargs["stealth"] is False for c in cap.call_args_list)
+
+
+def test_screenshot_not_for_excluded_or_duplicates(tmp_path: Path) -> None:
+    # FakeAdapter: job-2 excluded -> only 2 captures, none for job-2
+    _, cap = _run_shots(tmp_path, ShotAdapter(), str(tmp_path / "shots"), return_value=True)
+    urls = [c.args[0] for c in cap.call_args_list]
+    assert "https://fake-site.example.com/job/2" not in urls
+
+    class DupAdapter(ShotAdapter):
+        def list_postings(self) -> Iterator[ListingStub]:
+            yield ListingStub("a", "https://x/a", "Same Title")
+            yield ListingStub("b", "https://x/b", "Same Title")
+
+        def parse_detail(self, stub: ListingStub, page: Any) -> JobPosting:
+            return JobPosting(
+                site_id=self.site_id, listing_id=stub.listing_id, source_url=stub.detail_url,
+                title="Same Title", client="Acme", description="desc",
+            )
+
+    (tmp_path / "d").mkdir()
+    counters, cap = _run_shots(tmp_path / "d", DupAdapter(), str(tmp_path / "s3"), return_value=True)
+    assert counters["duplicates"] == 1
+    assert cap.call_count == 1
