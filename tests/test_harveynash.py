@@ -145,3 +145,13 @@ def test_screenshot_selector_matches_description_element(fixture: str) -> None:
     assert "Je werkt samen met je collega's van het Congestie Office" in els[0].get_text()
     assert els[0].find(["nav", "header", "footer", "form"]) is None
     assert "cookie" not in els[0].get_text().lower()
+
+
+def test_screenshot_hide_selectors_valid() -> None:
+    from bs4 import BeautifulSoup
+
+    assert HarveyNashAdapter.screenshot_hide_selectors == ("div.social-share",)
+    html = Path("tests/fixtures/harveynash/detail_299204.html").read_text()
+    soup = BeautifulSoup(html, "html.parser")
+    post = soup.select_one(HarveyNashAdapter.screenshot_selector)
+    assert post.select_one("div.social-share") is not None

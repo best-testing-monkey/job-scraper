@@ -118,8 +118,14 @@ def test_source_url_is_human_ad_page():
         assert not any(b in s.detail_url for b in bad_parts)
 
 
-def test_screenshot_selector_is_none_blocked() -> None:
-    # BLOCKED: the description and the application form are siblings inside
-    # div.content-wrapper (no element wraps only the ad), so no selector can
-    # screenshot the description without the form.
-    assert ProActAdapter.screenshot_selector is None
+def test_screenshot_selector_wrapper_and_hidden_form() -> None:
+    from bs4 import BeautifulSoup
+
+    html = Path("tests/fixtures/pro_act/detail_8887.html").read_text()
+    soup = BeautifulSoup(html, "html.parser")
+    els = soup.select(ProActAdapter.screenshot_selector)
+    assert len(els) == 1
+    assert els[0].select_one("div.contact-info") is not None
+    assert "div.contact-info" in ProActAdapter.screenshot_hide_selectors
+    for sel in ProActAdapter.screenshot_hide_selectors:
+        soup.select(sel)

@@ -13,6 +13,7 @@ class IctergezochtAdapter(SiteAdapter):
     base_url: str = "https://www.ictergezocht.nl"
     fetch_strategy: FetchStrategy = FetchStrategy.STEALTH
     screenshot_selector = "div.vacancy-full-text-dom"
+    screenshot_hide_selectors = ("#cookieyes-banner",)
     LISTING_URL: str = "https://www.ictergezocht.nl/ict-vacatures/"
 
     def list_postings(self) -> Iterator[ListingStub]:

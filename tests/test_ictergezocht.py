@@ -109,3 +109,13 @@ def test_screenshot_selector_matches_description_element() -> None:
     assert "Wil jij bijdragen aan de rijksoverheid die slimmer, efficiënter" in els[0].get_text()
     assert els[0].find(["nav", "header", "footer", "form"]) is None
     assert "cookie" not in els[0].get_text().lower()
+
+
+def test_screenshot_hide_selectors_valid() -> None:
+    from bs4 import BeautifulSoup
+
+    assert IctergezochtAdapter.screenshot_hide_selectors == ("#cookieyes-banner",)
+    html = (Path(__file__).parent / "fixtures" / "ictergezocht/detail_438712.html").read_text()
+    soup = BeautifulSoup(html, "html.parser")
+    for sel in IctergezochtAdapter.screenshot_hide_selectors:
+        soup.select(sel)

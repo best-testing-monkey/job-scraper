@@ -304,6 +304,14 @@ def test_screenshot_dir_none_no_capture(tmp_path: Path) -> None:
     assert counters["screenshots_failed"] == 0
 
 
+def test_screenshot_hide_selectors_passed(tmp_path: Path) -> None:
+    class HideShot(ShotAdapter):
+        screenshot_hide_selectors = ("div.form", "#banner")
+
+    _, cap = _run_shots(tmp_path, HideShot(), str(tmp_path / "shots"), return_value=True)
+    assert cap.call_args_list[0].kwargs["hide_selectors"] == HideShot.screenshot_hide_selectors
+
+
 def test_screenshot_no_selector_no_capture(tmp_path: Path) -> None:
     _, cap = _run_shots(tmp_path, FakeAdapter(), str(tmp_path / "shots"), return_value=True)
     cap.assert_not_called()

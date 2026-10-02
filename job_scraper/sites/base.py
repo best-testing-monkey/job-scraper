@@ -48,6 +48,10 @@ class SiteAdapter(ABC):
     """CSS selector (valid for both Playwright and soupsieve/bs4 — no :contains())
     matching exactly ONE element that wraps only the job description; None means
     no screenshots for this site."""
+    screenshot_hide_selectors: ClassVar[tuple[str, ...]] = ()
+    """CSS selectors (valid for both Playwright and soupsieve/bs4) of elements to
+    hide (cookie banners, consent dialogs, apply forms, share bars) before the
+    element screenshot is taken; empty means hide only the generic overlays."""
 
     @abstractmethod
     def list_postings(self) -> Iterator[ListingStub]: ...

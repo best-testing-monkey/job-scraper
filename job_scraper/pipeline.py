@@ -76,6 +76,7 @@ def run_site(
                         adapter.screenshot_selector,
                         str(out_path),
                         stealth=adapter.fetch_strategy == FetchStrategy.STEALTH,
+                        hide_selectors=adapter.screenshot_hide_selectors,
                     )
                 except Exception as exc:
                     print(f"Warning: screenshot failed for {stem}: {exc}", file=sys.stderr)

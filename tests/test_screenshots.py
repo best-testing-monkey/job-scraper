@@ -64,3 +64,68 @@ def test_never_raises_when_playwright_fails(tmp_path, caplog):
 @pytest.mark.enable_socket
 def test_browser_available_returns_bool():
     assert isinstance(browser_available(), bool)
+
+
+_OVERLAY = (
+    '<div id="CybotCookiebotDialog" style="position:fixed;inset:0;background:red"></div>'
+)
+_JOB_TEXT = '<p style="height:100px;margin:0;background:#00f">Job text</p>'
+_FORM = '<div class="contact-info" style="height:150px;background:#0f0">Apply</div>'
+
+
+@pytest.mark.enable_socket
+@needs_browser
+def test_hide_selectors_hide_overlay_and_form(tmp_path):
+    import zlib
+
+    full = tmp_path / "full.html"
+    full.write_text(
+        f'<body style="overflow:hidden">{_OVERLAY}'
+        f'<div id="job" style="width:600px">{_JOB_TEXT}{_FORM}</div></body>'
+    )
+    plain = tmp_path / "plain.html"
+    plain.write_text(f'<div id="job" style="width:600px">{_JOB_TEXT}</div>')
+    out1, out2 = tmp_path / "o1.png", tmp_path / "o2.png"
+    assert capture_element(
+        full.as_uri(), "#job", str(out1), hide_selectors=("div.contact-info",)
+    )
+    assert capture_element(plain.as_uri(), "#job", str(out2))
+    h1 = struct.unpack(">II", out1.read_bytes()[16:24])[1]
+    h2 = struct.unpack(">II", out2.read_bytes()[16:24])[1]
+    assert abs(h1 - h2) <= 2
+    # no pure-red pixel anywhere: decode the PNG (8-bit RGB/RGBA, non-interlaced)
+    data = out1.read_bytes()
+    width, height, depth, ctype = struct.unpack(">IIBB", data[16:26])
+    assert depth == 8 and ctype in (2, 6)
+    bpp = 3 if ctype == 2 else 4
+    idat, pos = b"", 8
+    while pos < len(data):
+        n, typ = struct.unpack(">I4s", data[pos : pos + 8])
+        if typ == b"IDAT":
+            idat += data[pos + 8 : pos + 8 + n]
+        pos += 12 + n
+    raw = zlib.decompress(idat)
+    stride = width * bpp
+    prev = bytearray(stride)
+    for y in range(height):
+        row = bytearray(raw[y * (stride + 1) + 1 : (y + 1) * (stride + 1)])
+        ft = raw[y * (stride + 1)]
+        for i in range(stride):
+            a = row[i - bpp] if i >= bpp else 0
+            b = prev[i]
+            c = prev[i - bpp] if i >= bpp else 0
+            if ft == 1:
+                row[i] = (row[i] + a) & 255
+            elif ft == 2:
+                row[i] = (row[i] + b) & 255
+            elif ft == 3:
+                row[i] = (row[i] + (a + b) // 2) & 255
+            elif ft == 4:
+                p = a + b - c
+                pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
+                pr = a if pa <= pb and pa <= pc else (b if pb <= pc else c)
+                row[i] = (row[i] + pr) & 255
+        prev = row
+        for x in range(width):
+            r, g, bl = row[x * bpp : x * bpp + 3]
+            assert not (r > 200 and g < 60 and bl < 60), "red overlay pixel found"

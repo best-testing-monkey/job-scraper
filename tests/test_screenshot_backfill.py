@@ -12,6 +12,7 @@ MD = "# T\n\n- Source: https://x.test/{n}\n- Client: C\n\n## Description\n\nBody
 class FakeAdapter:
     site_id = "fake"
     screenshot_selector = "div.x"
+    screenshot_hide_selectors = ()
     fetch_strategy = FetchStrategy.STATIC
 
 
@@ -50,7 +51,7 @@ def test_all_success(env):
         "skipped_no_selector": 0,
     }
     assert cap.call_args_list[0].args[:2] == ("https://x.test/a", "div.x")
-    assert cap.call_args_list[0].kwargs == {"stealth": False}
+    assert cap.call_args_list[0].kwargs == {"stealth": False, "hide_selectors": ()}
     text = (env[0] / "fake-a-t.md").read_text()
     assert "- Screenshot: screenshots/fake-a-t.png" in text
     assert "Screenshot" not in (env[0] / "other-1-t.md").read_text()
@@ -89,11 +90,18 @@ def test_no_selector(env, monkeypatch):
     cap.assert_not_called()
 
 
+def test_hide_selectors_passed(env, monkeypatch):
+    monkeypatch.setattr(FakeAdapter, "screenshot_hide_selectors", ("div.form", "#banner"))
+    with patch.object(sb, "capture_element", return_value=True) as cap:
+        run(env)
+    assert cap.call_args.kwargs["hide_selectors"] == FakeAdapter.screenshot_hide_selectors
+
+
 def test_stealth_flag(env, monkeypatch):
     monkeypatch.setattr(FakeAdapter, "fetch_strategy", FetchStrategy.STEALTH)
     with patch.object(sb, "capture_element", return_value=True) as cap:
         run(env)
-    assert cap.call_args.kwargs == {"stealth": True}
+    assert cap.call_args.kwargs == {"stealth": True, "hide_selectors": ()}
 
 
 def test_idempotent_single_line(env):

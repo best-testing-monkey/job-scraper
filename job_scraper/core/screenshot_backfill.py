@@ -61,7 +61,13 @@ def backfill_screenshots(
             time.sleep(delay)
         counts["attempted"] += 1
         try:
-            ok = capture_element(match.group(1).strip(), selector, str(png), stealth=stealth)
+            ok = capture_element(
+                match.group(1).strip(),
+                selector,
+                str(png),
+                stealth=stealth,
+                hide_selectors=adapter.screenshot_hide_selectors,
+            )
         except Exception as exc:  # noqa: BLE001 - one failure must not stop the run
             print(f"Screenshot failed for {md.name}: {exc}", file=sys.stderr)
             ok = False

@@ -14,6 +14,7 @@ class HarveyNashAdapter(SiteAdapter):
     site_id: str = "harveynash"
     base_url: str = "https://www.harveynash.nl"
     screenshot_selector = "div.post-content"
+    screenshot_hide_selectors = ("div.social-share",)
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
     LISTING_URL: str = "https://www.harveynash.nl/sitemap.xml"
 

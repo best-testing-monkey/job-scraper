@@ -137,3 +137,13 @@ def test_all_registered_adapters_have_valid_screenshot_selector() -> None:
         )
         if isinstance(selector, str):
             assert len(selector) > 0, f"{adapter_class} screenshot_selector must not be empty"
+
+
+def test_screenshot_hide_selectors_default_and_tuple_for_all_adapters() -> None:
+    from job_scraper.sites.registry import SITE_REGISTRY
+
+    assert SiteAdapter.screenshot_hide_selectors == ()
+    for adapter_class in SITE_REGISTRY.values():
+        sel = adapter_class.screenshot_hide_selectors
+        assert isinstance(sel, tuple), f"{adapter_class} hide selectors must be a tuple"
+        assert all(isinstance(s, str) and s for s in sel)

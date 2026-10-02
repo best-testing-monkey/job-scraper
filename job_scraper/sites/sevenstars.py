@@ -14,6 +14,7 @@ class SevenstarsAdapter(SiteAdapter):
     site_id: str = "sevenstars"
     base_url: str = "https://www.sevenstars.nl"
     screenshot_selector = "div.c-vacancy-paragraph__body-text.job-description"
+    screenshot_hide_selectors = ("#CybotCookiebotDialog",)
     fetch_strategy: FetchStrategy = FetchStrategy.STEALTH
     LISTING_URL: str = "https://www.sevenstars.nl/opdrachten"
 

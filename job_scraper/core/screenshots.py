@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Sequence
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
@@ -11,6 +12,15 @@ from playwright.sync_api import sync_playwright
 logger = logging.getLogger(__name__)
 
 _VIEWPORT = {"width": 1280, "height": 1600}
+
+GENERIC_HIDE_SELECTORS: tuple[str, ...] = (
+    "#CybotCookiebotDialog",
+    "#cookieyes-banner",
+    "#onetrust-banner-sdk",
+    ".cookie-banner",
+    '[id*="cookie-consent" i]',
+    '[class*="cookie-consent" i]',
+)
 
 
 def browser_available() -> bool:
@@ -29,8 +39,12 @@ def capture_element(
     *,
     stealth: bool = False,
     timeout_ms: int = 30000,
+    hide_selectors: Sequence[str] = (),
 ) -> bool:
     """Save a PNG of only the first element matching ``selector``.
+
+    Elements matching GENERIC_HIDE_SELECTORS + ``hide_selectors`` are hidden
+    first (display: none) and page scrolling is unlocked.
 
     Never raises: on any failure logs a warning, removes a partial file and
     returns False.
@@ -46,6 +60,10 @@ def capture_element(
             try:
                 page = browser.new_page(viewport=_VIEWPORT)
                 page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
+                hide = [s for s in (*GENERIC_HIDE_SELECTORS, *hide_selectors) if s]
+                css = f"{', '.join(hide)} {{ display: none !important; }}\n"
+                css += "html, body { overflow: auto !important; }"
+                page.add_style_tag(content=css)
                 page.wait_for_selector(selector, timeout=timeout_ms)
                 page.locator(selector).first.screenshot(path=out_path)
             finally:

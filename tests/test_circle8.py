@@ -126,3 +126,13 @@ def test_screenshot_selector_matches_description_element(fixture: str) -> None:
     assert "De professional heeft de zelfstandige opdracht om het overleg te initiëren" in els[0].get_text()
     assert els[0].find(["nav", "header", "footer", "form"]) is None
     assert "cookie" not in els[0].get_text().lower()
+
+
+def test_screenshot_hide_selectors_valid() -> None:
+    from bs4 import BeautifulSoup
+
+    assert Circle8Adapter.screenshot_hide_selectors == ("#CybotCookiebotDialog",)
+    html = (Path(__file__).parent / "fixtures" / "circle8/detail_VNR-85422.html").read_text()
+    soup = BeautifulSoup(html, "html.parser")
+    for sel in Circle8Adapter.screenshot_hide_selectors:
+        soup.select(sel)
