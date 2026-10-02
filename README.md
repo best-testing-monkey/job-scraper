@@ -30,6 +30,15 @@ uv run python -m job_scraper rebuild --site all
 
 Note: `working_nomads`, `tender_link` and `stone_interim` cannot be rebuilt (re-scrape instead, as they cache data during `list_postings`).
 
+Backfill screenshots for existing jobs:
+
+```bash
+uv run python -m job_scraper screenshots --site all
+uv run python -m job_scraper screenshots --site pro_act --missing-only
+```
+
+Screenshots are taken at scrape time by default; this command back-fills existing jobs (`--missing-only` skips ones that already have a PNG).
+
 ## Currently supported sites
 
 - `pro_act` — Pro-Act IT (pro-act.nl/vacatures)

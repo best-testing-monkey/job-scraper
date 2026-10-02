@@ -4,6 +4,8 @@ import sys
 
 from job_scraper.core.db import JobRepository
 from job_scraper.core.rebuild import rebuild_site, NOT_REBUILDABLE
+from job_scraper.core.screenshot_backfill import backfill_screenshots
+from job_scraper.core.screenshots import browser_available
 from job_scraper.pipeline import run
 from job_scraper.sites.registry import SITE_REGISTRY
 
@@ -82,6 +84,29 @@ def main() -> None:
         "(default: raw/)",
     )
 
+    screenshots_parser = subparsers.add_parser("screenshots", help="Backfill screenshots for existing jobs")
+    screenshots_parser.add_argument(
+        "--site",
+        action="append",
+        dest="sites",
+        help="Site ID to capture screenshots for (repeatable, or use 'all')",
+    )
+    screenshots_parser.add_argument(
+        "--missing-only",
+        action="store_true",
+        help="Skip jobs that already have a screenshot",
+    )
+    screenshots_parser.add_argument(
+        "--jobs-dir",
+        default="jobs/",
+        help="Path to jobs directory (default: jobs/)",
+    )
+    screenshots_parser.add_argument(
+        "--screenshots-dir",
+        default="screenshots/",
+        help="Path to screenshots directory (default: screenshots/)",
+    )
+
     subparsers.add_parser("list-sites", help="List all available sites")
 
     args = parser.parse_args()
@@ -90,6 +115,8 @@ def main() -> None:
         handle_scrape(args)
     elif args.command == "rebuild":
         handle_rebuild(args)
+    elif args.command == "screenshots":
+        handle_screenshots(args)
     elif args.command == "list-sites":
         handle_list_sites()
     else:
@@ -143,6 +170,35 @@ def handle_rebuild(args: argparse.Namespace) -> None:
 
         counters = rebuild_site(site_id, repo, args.jobs_dir, args.raw_dir)
         print(f"{site_id}: {json.dumps(counters)}")
+
+
+def handle_screenshots(args: argparse.Namespace) -> None:
+    if not browser_available():
+        print('No Playwright Chromium found; see README "Screenshots (browser requirements)"', file=sys.stderr)
+        sys.exit(1)
+
+    if not args.sites:
+        print("Error: --site is required (use --site all for all sites)", file=sys.stderr)
+        sys.exit(1)
+
+    site_ids: list[str] = []
+    if args.sites == ["all"]:
+        site_ids = sorted(SITE_REGISTRY.keys())
+    else:
+        site_ids = args.sites
+
+    for site_id in site_ids:
+        try:
+            counters = backfill_screenshots(
+                site_id,
+                args.jobs_dir,
+                args.screenshots_dir,
+                missing_only=args.missing_only,
+            )
+            print(f"{site_id}: {json.dumps(counters)}")
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
 
 
 def handle_list_sites() -> None:

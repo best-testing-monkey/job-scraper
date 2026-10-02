@@ -2,7 +2,7 @@ import sys
 import json
 import pytest
 from unittest.mock import patch, MagicMock
-from job_scraper.cli import main, handle_rebuild
+from job_scraper.cli import main, handle_rebuild, handle_screenshots
 from job_scraper.core.db import JobRepository
 from job_scraper.sites.registry import SITE_REGISTRY
 
@@ -288,3 +288,206 @@ def test_scrape_no_raw_still_works(temp_db, monkeypatch, capsys):
         call_kwargs = mock_run.call_args[1]
         assert call_kwargs["raw_dir"] is None
         assert call_kwargs["screenshots_dir"] == "screenshots/"
+
+
+def test_screenshots_help(monkeypatch, capsys):
+    """Test that screenshots --help shows the expected options"""
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "screenshots", "--help"])
+
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "--site" in captured.out
+    assert "--missing-only" in captured.out
+    assert "--jobs-dir" in captured.out
+    assert "--screenshots-dir" in captured.out
+
+
+def test_screenshots_browser_not_available(monkeypatch, capsys):
+    """Test screenshots exits 1 if browser_available() is False"""
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "screenshots", "--site", "pro_act"])
+
+    with patch("job_scraper.cli.browser_available", return_value=False):
+        with patch("job_scraper.cli.backfill_screenshots") as mock_backfill:
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+            assert exc_info.value.code == 1
+            mock_backfill.assert_not_called()
+
+            captured = capsys.readouterr()
+            assert "No Playwright Chromium found" in captured.err
+            assert 'Screenshots (browser requirements)' in captured.err
+
+
+def test_screenshots_single_site(monkeypatch, capsys):
+    """Test screenshots --site pro_act calls backfill_screenshots once"""
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "screenshots", "--site", "pro_act"])
+
+    with patch("job_scraper.cli.browser_available", return_value=True):
+        with patch("job_scraper.cli.backfill_screenshots") as mock_backfill:
+            mock_backfill.return_value = {
+                "attempted": 5,
+                "captured": 4,
+                "failed": 1,
+                "skipped_existing": 0,
+                "skipped_no_selector": 0,
+            }
+
+            main()
+
+            # Verify backfill_screenshots was called once with correct args
+            assert mock_backfill.call_count == 1
+            call_args = mock_backfill.call_args
+            assert call_args[0][0] == "pro_act"
+            assert call_args[0][1] == "jobs/"
+            assert call_args[0][2] == "screenshots/"
+            assert call_args[1]["missing_only"] is False
+
+            # Verify output format
+            captured = capsys.readouterr()
+            assert "pro_act:" in captured.out
+            line = captured.out.strip()
+            json_str = line.split(": ", 1)[1]
+            output_json = json.loads(json_str)
+            assert output_json["attempted"] == 5
+
+
+def test_screenshots_missing_only(monkeypatch, capsys):
+    """Test screenshots --missing-only passes the flag to backfill_screenshots"""
+    monkeypatch.setattr(sys, "argv", [
+        "job_scraper", "screenshots",
+        "--site", "pro_act",
+        "--missing-only"
+    ])
+
+    with patch("job_scraper.cli.browser_available", return_value=True):
+        with patch("job_scraper.cli.backfill_screenshots") as mock_backfill:
+            mock_backfill.return_value = {
+                "attempted": 2,
+                "captured": 2,
+                "failed": 0,
+                "skipped_existing": 3,
+                "skipped_no_selector": 0,
+            }
+
+            main()
+
+            # Verify missing_only=True was passed
+            call_args = mock_backfill.call_args
+            assert call_args[1]["missing_only"] is True
+
+
+def test_screenshots_custom_paths(monkeypatch, capsys):
+    """Test screenshots with custom --jobs-dir and --screenshots-dir"""
+    monkeypatch.setattr(sys, "argv", [
+        "job_scraper", "screenshots",
+        "--site", "pro_act",
+        "--jobs-dir", "custom_jobs/",
+        "--screenshots-dir", "custom_screenshots/"
+    ])
+
+    with patch("job_scraper.cli.browser_available", return_value=True):
+        with patch("job_scraper.cli.backfill_screenshots") as mock_backfill:
+            mock_backfill.return_value = {
+                "attempted": 0,
+                "captured": 0,
+                "failed": 0,
+                "skipped_existing": 0,
+                "skipped_no_selector": 5,
+            }
+
+            main()
+
+            # Verify custom paths were passed
+            call_args = mock_backfill.call_args
+            assert call_args[0][1] == "custom_jobs/"
+            assert call_args[0][2] == "custom_screenshots/"
+
+
+def test_screenshots_site_all(monkeypatch, capsys):
+    """Test screenshots --site all runs for all sites"""
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "screenshots", "--site", "all"])
+
+    with patch("job_scraper.cli.browser_available", return_value=True):
+        with patch("job_scraper.cli.backfill_screenshots") as mock_backfill:
+            mock_backfill.return_value = {
+                "attempted": 0,
+                "captured": 0,
+                "failed": 0,
+                "skipped_existing": 0,
+                "skipped_no_selector": 0,
+            }
+
+            main()
+
+            # Verify backfill_screenshots was called for all sites
+            all_sites = sorted(SITE_REGISTRY.keys())
+            called_sites = [call[0][0] for call in mock_backfill.call_args_list]
+            assert len(called_sites) == len(all_sites)
+            assert set(called_sites) == set(all_sites)
+            # Verify they were called in sorted order
+            assert called_sites == all_sites
+
+
+def test_screenshots_without_site_fails(monkeypatch, capsys):
+    """Test screenshots without --site exits with code 1"""
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "screenshots"])
+
+    with patch("job_scraper.cli.browser_available", return_value=True):
+        with patch("job_scraper.cli.backfill_screenshots") as mock_backfill:
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+            assert exc_info.value.code == 1
+            mock_backfill.assert_not_called()
+
+            captured = capsys.readouterr()
+            assert "Error: --site is required" in captured.err
+
+
+def test_screenshots_unknown_site_fails(monkeypatch, capsys):
+    """Test screenshots with unknown site ID exits with code 1"""
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "screenshots", "--site", "nonexistent_site"])
+
+    with patch("job_scraper.cli.browser_available", return_value=True):
+        with patch("job_scraper.cli.backfill_screenshots") as mock_backfill:
+            mock_backfill.side_effect = ValueError("Unknown site_id: nonexistent_site")
+
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+            assert exc_info.value.code == 1
+
+            captured = capsys.readouterr()
+            assert "Error: Unknown site_id: nonexistent_site" in captured.err
+
+
+def test_screenshots_multiple_sites(monkeypatch, capsys):
+    """Test screenshots with multiple --site arguments"""
+    monkeypatch.setattr(sys, "argv", [
+        "job_scraper", "screenshots",
+        "--site", "pro_act",
+        "--site", "hero"
+    ])
+
+    with patch("job_scraper.cli.browser_available", return_value=True):
+        with patch("job_scraper.cli.backfill_screenshots") as mock_backfill:
+            mock_backfill.return_value = {
+                "attempted": 0,
+                "captured": 0,
+                "failed": 0,
+                "skipped_existing": 0,
+                "skipped_no_selector": 0,
+            }
+
+            main()
+
+            # Verify backfill_screenshots was called for both sites
+            assert mock_backfill.call_count == 2
+
+            called_sites = [call[0][0] for call in mock_backfill.call_args_list]
+            assert "pro_act" in called_sites
+            assert "hero" in called_sites
