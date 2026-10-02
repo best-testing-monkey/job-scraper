@@ -1,8 +1,10 @@
 import json
+import sys
 from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
 from job_scraper.core.html_markdown import html_to_markdown
+from job_scraper.core.markdown_export import slugify
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
@@ -59,7 +61,7 @@ class WorkingNomadsAdapter(SiteAdapter):
         posting = JobPosting(
             site_id=self.site_id,
             listing_id=stub.listing_id,
-            source_url=stub.detail_url,
+            source_url=self._human_url(page, title, client, stub.listing_id),
             title=title,
             client=client,
             category=tags,
@@ -73,6 +75,43 @@ class WorkingNomadsAdapter(SiteAdapter):
             extra_fields=extra_fields,
         )
         return posting
+
+    def _human_url(self, page: Any, title: str, client: str, listing_id: str) -> str:
+        canonical = self._canonical(page)
+        if canonical:
+            return canonical
+        base = f"{slugify(title)}-{slugify(client)}"
+        return self._resolve_human_url(base, listing_id)
+
+    def _canonical(self, page: Any) -> str | None:
+        if not page:
+            return None
+        link = BeautifulSoup(page, "html.parser").find("link", rel="canonical")
+        href = link.get("href", "") if link else ""
+        if isinstance(href, str) and href.startswith(f"{self.base_url}/jobs/"):
+            return href
+        return None
+
+    def _resolve_human_url(self, base: str, listing_id: str) -> str:
+        candidates = [
+            f"{self.base_url}/jobs/{base}",
+            f"{self.base_url}/jobs/{base}-{listing_id}",
+        ]
+        # fetch_page exposes only the body, not the final URL. The wrong slug
+        # silently redirects to the /jobs index, so a candidate is valid only
+        # if the page it serves declares that candidate as its canonical URL.
+        for candidate in candidates:
+            try:
+                page = fetch_page(self.fetch_strategy, candidate)
+            except Exception:
+                break
+            if (self._canonical(page) or "").rstrip("/") == candidate:
+                return candidate
+        print(
+            f"working_nomads: could not verify human URL for {listing_id}",
+            file=sys.stderr,
+        )
+        return candidates[1]
 
     def _extract_listing_id(self, url: str) -> str | None:
         if "/job/go/" in url:
