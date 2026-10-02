@@ -118,12 +118,8 @@ class FreelancerComAdapter(SiteAdapter):
                 # Element has HTML structure - use decode_contents
                 description = html_to_markdown(desc_elem.decode_contents())
             else:
-                # Plain text - use a placeholder for & so it goes through plain text path
-                text = desc_elem.get_text()
-                amp_placeholder = "\x00AMP\x00"
-                text_processed = text.replace("&", amp_placeholder)
-                result = html_to_markdown(text_processed)
-                description = result.replace(amp_placeholder, "&")
+                # Plain text - force the plain path so & and < are kept literally
+                description = html_to_markdown(desc_elem.get_text(), plain=True)
 
         # Extract category from fl-tag[fltrackinglabel="ProjectViewLoggedOut-SkillTag"]
         category = None

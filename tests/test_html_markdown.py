@@ -280,3 +280,20 @@ class TestGoldenFile:
 
         result = html_to_markdown(sample_html)
         assert result == expected_md
+
+
+class TestPlainFlag:
+    def test_plain_keeps_ampersand_and_tags_literal(self):
+        assert html_to_markdown("R&D &amp; <b>x</b>", plain=True) == "R&D &amp; <b>x</b>"
+
+    def test_plain_paragraphs_and_hard_breaks(self):
+        assert html_to_markdown("a & b\nc\n\nd", plain=True) == "a & b  \nc\n\nd"
+
+    def test_plain_escapes_heading_and_collapses_whitespace(self):
+        assert html_to_markdown("# Title  &   more", plain=True) == "\\# Title & more"
+
+    def test_plain_empty(self):
+        assert html_to_markdown("  ", plain=True) == ""
+
+    def test_default_still_html(self):
+        assert html_to_markdown("<p>a &amp; b</p>") == "a & b"

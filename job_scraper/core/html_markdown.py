@@ -5,7 +5,7 @@ from typing import Optional
 from bs4 import BeautifulSoup, NavigableString, Tag
 
 
-def html_to_markdown(html: Optional[str]) -> str:
+def html_to_markdown(html: Optional[str], *, plain: bool = False) -> str:
     """Convert an HTML fragment (or plain text) into clean Markdown.
 
     Rules:
@@ -20,13 +20,14 @@ def html_to_markdown(html: Optional[str]) -> str:
     - Entities are decoded; \\xa0 becomes a space; whitespace collapses to one space.
     - Lines starting with # get # backslash-escaped (\\#) to prevent headings.
     - Plain text with no < or & is split on blank lines into paragraphs.
+    - plain=True forces the plain-text path regardless of < or & (entities not decoded).
     - Output never starts/ends with whitespace/newlines and never has three consecutive newlines.
     """
     if not html or not html.strip():
         return ""
 
     # Check if input is plain text (no < or &)
-    if "<" not in html and "&" not in html:
+    if plain or ("<" not in html and "&" not in html):
         return _convert_plain_text(html)
 
     soup = BeautifulSoup(html, "html.parser")
