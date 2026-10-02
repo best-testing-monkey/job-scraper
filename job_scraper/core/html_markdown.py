@@ -89,14 +89,38 @@ def _convert_plain_text(text: str) -> str:
     return output
 
 
+_BLOCK_TAGS = {
+    "p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "table", "blockquote",
+}
+
+
+def _is_block(node: Tag) -> bool:
+    """True if the tag is a block element or contains one (so it cannot join an inline run)."""
+    name = node.name.lower() if node.name else ""
+    if name in _BLOCK_TAGS:
+        return True
+    return node.find(list(_BLOCK_TAGS)) is not None
+
+
 def _process_nodes(nodes: list, blocks: list, indent_level: int) -> None:
-    """Process a list of nodes and append blocks to the blocks list."""
+    """Process a list of nodes and append blocks to the blocks list.
+
+    Consecutive inline content (text nodes and inline tags) is collected into
+    its own paragraph block, in document order.
+    """
+    run: list = []
+
+    def flush() -> None:
+        if run:
+            text = _inline_text(run)
+            if text:
+                blocks.append(text)
+            run.clear()
+
     for node in nodes:
         if isinstance(node, NavigableString):
-            text = str(node).strip()
-            if text and not text.startswith("<!--"):
-                # Will be handled by parent tag
-                pass
+            if type(node) is NavigableString:
+                run.append(node)
             continue
 
         if not isinstance(node, Tag):
@@ -106,58 +130,70 @@ def _process_nodes(nodes: list, blocks: list, indent_level: int) -> None:
 
         if tag_name in ["script", "style"]:
             continue
-        elif tag_name == "p":
-            blocks.append(_extract_inline_text(node))
-        elif tag_name in ["div"]:
-            # Check if it has block-level children
-            has_block_children = any(
-                isinstance(child, Tag) and child.name.lower() in [
-                    "p", "div", "h1", "h2", "h3", "h4", "h5", "h6",
-                    "ul", "ol", "table", "blockquote"
-                ]
-                for child in node.children
-            )
+        if not _is_block(node):
+            run.append(node)
+            continue
 
-            if has_block_children:
-                _process_nodes(list(node.children), blocks, indent_level)
-            else:
-                # Treat as a paragraph
-                text = _extract_inline_text(node)
-                if text:
-                    blocks.append(text)
-        elif tag_name in ["h1", "h2", "h3"]:
-            text = _extract_inline_text(node)
-            if text:
-                blocks.append(f"### {text}")
-        elif tag_name in ["h4", "h5", "h6"]:
-            text = _extract_inline_text(node)
-            if text:
-                blocks.append(f"#### {text}")
-        elif tag_name == "ul":
-            list_block = _process_list(node, indent_level, ordered=False)
-            if list_block:
-                blocks.append(list_block)
-        elif tag_name == "ol":
-            list_block = _process_list(node, indent_level, ordered=True)
-            if list_block:
-                blocks.append(list_block)
-        elif tag_name == "table":
-            table_block = _process_table(node)
-            if table_block:
-                blocks.append(table_block)
-        elif tag_name == "br":
-            # Handled in inline context
-            pass
-        else:
-            # For other tags, process children
+        flush()
+        _process_block(node, tag_name, blocks, indent_level)
+    flush()
+
+
+def _process_block(node: Tag, tag_name: str, blocks: list, indent_level: int) -> None:
+    if tag_name == "p":
+        blocks.append(_extract_inline_text(node))
+    elif tag_name in ["div"]:
+        # Check if it has block-level children
+        has_block_children = any(
+            isinstance(child, Tag) and child.name.lower() in [
+                "p", "div", "h1", "h2", "h3", "h4", "h5", "h6",
+                "ul", "ol", "table", "blockquote"
+            ]
+            for child in node.children
+        )
+
+        if has_block_children:
             _process_nodes(list(node.children), blocks, indent_level)
+        else:
+            # Treat as a paragraph
+            text = _extract_inline_text(node)
+            if text:
+                blocks.append(text)
+    elif tag_name in ["h1", "h2", "h3"]:
+        text = _extract_inline_text(node)
+        if text:
+            blocks.append(f"### {text}")
+    elif tag_name in ["h4", "h5", "h6"]:
+        text = _extract_inline_text(node)
+        if text:
+            blocks.append(f"#### {text}")
+    elif tag_name == "ul":
+        list_block = _process_list(node, indent_level, ordered=False)
+        if list_block:
+            blocks.append(list_block)
+    elif tag_name == "ol":
+        list_block = _process_list(node, indent_level, ordered=True)
+        if list_block:
+            blocks.append(list_block)
+    elif tag_name == "table":
+        table_block = _process_table(node)
+        if table_block:
+            blocks.append(table_block)
+    else:
+        # Other containers: process children
+        _process_nodes(list(node.children), blocks, indent_level)
 
 
 def _extract_inline_text(node: Tag) -> str:
     """Extract inline text from a node, handling <br>, <strong>, etc."""
+    return _inline_text(node.children)
+
+
+def _inline_text(nodes) -> str:
+    """Render a sequence of inline nodes as one paragraph of Markdown text."""
     parts = []
 
-    for child in node.children:
+    for child in nodes:
         if isinstance(child, NavigableString):
             text = str(child)
             text = unescape(text)

@@ -297,3 +297,21 @@ class TestPlainFlag:
 
     def test_default_still_html(self):
         assert html_to_markdown("<p>a &amp; b</p>") == "a & b"
+
+
+class TestBareTopLevelText:
+    @pytest.mark.parametrize(
+        "html,expected",
+        [
+            ("a &amp; b", "a & b"),
+            ("Hello<br>world", "Hello  \nworld"),
+            ("Intro text<ul><li>x</li></ul>tail", "Intro text\n\n- x\n\ntail"),
+            ("<p>ok</p>trailing bare", "ok\n\ntrailing bare"),
+            ("R&amp;D role &lt;remote&gt;", "R&D role <remote>"),
+            ("<div>lead<p>para</p>tail</div>", "lead\n\npara\n\ntail"),
+            ("<b>Bold</b> lead<p>x</p>", "**Bold** lead\n\nx"),
+            ("#tag intro<p>x</p>", "\\#tag intro\n\nx"),
+        ],
+    )
+    def test_bare_text_kept(self, html, expected):
+        assert html_to_markdown(html) == expected
