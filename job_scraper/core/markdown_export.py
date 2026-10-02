@@ -18,7 +18,17 @@ def filename_for(posting: JobPosting) -> str:
     return f"{posting.site_id}-{posting.listing_id}-{slugify(posting.title)}.md"
 
 
-def render(posting: JobPosting) -> str:
+def stem_for(posting: JobPosting) -> str:
+    """Returns the file stem (filename without .md extension) for the posting."""
+    return filename_for(posting)[:-3]
+
+
+def screenshot_relpath(stem: str) -> str:
+    """Returns the relative path for a screenshot file given its stem."""
+    return f"screenshots/{stem}.png"
+
+
+def render(posting: JobPosting, screenshot: str | None = None) -> str:
     """Returns the full markdown text: '# {title}' header, then one
     '- {Field}: {value}' bullet per populated field in this order: Source
     (= source_url), Client, Category, Level, Status, Location, Workplace,
@@ -26,9 +36,10 @@ def render(posting: JobPosting) -> str:
     Duration, Posted (= posted_date), Experience, Skills (comma-joined if
     non-empty). Skip any field that is None/empty (don't render a bullet
     for it at all). Then render one '- {Key}: {value}' bullet per entry in
-    extra_fields (in insertion order), then a blank line, '## Description',
-    a blank line, description text. If scrape_note is set, append a blank
-    line, '## Scrape note', a blank line, scrape_note text."""
+    extra_fields (in insertion order). If screenshot is a non-empty string,
+    add a '- Screenshot: {screenshot}' bullet. Then a blank line,
+    '## Description', a blank line, description text. If scrape_note is set,
+    append a blank line, '## Scrape note', a blank line, scrape_note text."""
     lines = []
 
     lines.append(f"# {posting.title}")
@@ -60,6 +71,9 @@ def render(posting: JobPosting) -> str:
     for key, value in posting.extra_fields.items():
         lines.append(f"- {key}: {value}")
 
+    if screenshot and screenshot != "":
+        lines.append(f"- Screenshot: {screenshot}")
+
     lines.append("")
     lines.append("## Description")
     lines.append("")
@@ -74,13 +88,68 @@ def render(posting: JobPosting) -> str:
     return "\n".join(lines)
 
 
-def write(posting: JobPosting, jobs_dir: str) -> str:
-    """Ensures jobs_dir exists, writes render(posting) to
+def write(posting: JobPosting, jobs_dir: str, screenshot: str | None = None) -> str:
+    """Ensures jobs_dir exists, writes render(posting, screenshot) to
     jobs_dir/filename_for(posting), returns the full path written."""
     jobs_path = Path(jobs_dir)
     jobs_path.mkdir(parents=True, exist_ok=True)
 
     file_path = jobs_path / filename_for(posting)
-    file_path.write_text(render(posting))
+    file_path.write_text(render(posting, screenshot))
 
     return str(file_path)
+
+
+def set_screenshot_line(md_path: str, screenshot: str) -> bool:
+    """Updates or inserts a '- Screenshot: {screenshot}' line in a markdown file.
+
+    If the file already has a '- Screenshot:' line, replace its value.
+    Otherwise, insert the bullet after the last consecutive '- ' bullet in the
+    header block (lines between '# title' and the blank line before
+    '## Description'). Returns True if the file content changed, False if it
+    already had exactly that line. Idempotent."""
+    file_path = Path(md_path)
+    original_content = file_path.read_text()
+    lines = original_content.split("\n")
+
+    target_line = f"- Screenshot: {screenshot}"
+
+    # Find existing screenshot line
+    screenshot_idx = None
+    for i, line in enumerate(lines):
+        if line.startswith("- Screenshot:"):
+            screenshot_idx = i
+            break
+
+    if screenshot_idx is not None:
+        # Replace existing line
+        if lines[screenshot_idx] == target_line:
+            return False
+        lines[screenshot_idx] = target_line
+    else:
+        # Find the blank line before ## Description
+        description_idx = None
+        for i, line in enumerate(lines):
+            if line == "## Description":
+                description_idx = i
+                break
+
+        if description_idx is None:
+            return False
+
+        # Find the last consecutive bullet before description
+        insert_idx = description_idx - 2  # -1 for blank line, -1 to insert before it
+
+        # Ensure we're inserting after a bullet
+        if insert_idx >= 0 and lines[insert_idx].startswith("- "):
+            insert_idx += 1
+            lines.insert(insert_idx, target_line)
+        else:
+            return False
+
+    new_content = "\n".join(lines)
+    if new_content == original_content:
+        return False
+
+    file_path.write_text(new_content)
+    return True

@@ -1,8 +1,17 @@
+import re
 from pathlib import Path
 
 import pytest
 
-from job_scraper.core.markdown_export import filename_for, render, slugify, write
+from job_scraper.core.markdown_export import (
+    filename_for,
+    render,
+    screenshot_relpath,
+    set_screenshot_line,
+    slugify,
+    stem_for,
+    write,
+)
 from job_scraper.core.models import JobPosting
 
 
@@ -54,6 +63,43 @@ class TestFilenameFor:
         result = filename_for(posting)
         assert result.startswith("example-site-12345-")
         assert result.endswith(".md")
+
+
+class TestStemFor:
+    def test_stem_for_basic(self) -> None:
+        posting = JobPosting(
+            site_id="freelapp",
+            listing_id="508877",
+            source_url="https://freelapp.nl/freelance-opdracht/tester/508877",
+            title="Tester (RVO, remote in Nederland)",
+            client="Rijksdienst voor Ondernemend Nederland (RVO)",
+        )
+        result = stem_for(posting)
+        assert result == "freelapp-508877-tester-rvo-remote-in-nederland"
+        assert not result.endswith(".md")
+
+    def test_stem_for_no_extension(self) -> None:
+        posting = JobPosting(
+            site_id="example",
+            listing_id="123",
+            source_url="https://example.com",
+            title="Test Job",
+        )
+        result = stem_for(posting)
+        assert not result.endswith(".md")
+
+
+class TestScreenshotRelpath:
+    def test_screenshot_relpath_basic(self) -> None:
+        result = screenshot_relpath("freelapp-508877-tester-rvo")
+        assert result == "screenshots/freelapp-508877-tester-rvo.png"
+
+    def test_screenshot_relpath_format(self) -> None:
+        stem = "example-123-test-job"
+        result = screenshot_relpath(stem)
+        assert result.startswith("screenshots/")
+        assert result.endswith(".png")
+        assert stem in result
 
 
 class TestRender:
@@ -262,6 +308,109 @@ class TestRender:
         result = render(posting)
         assert "## Scrape note" not in result
 
+    def test_render_with_screenshot(self) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test",
+            description="Test",
+        )
+        result = render(posting, screenshot="screenshots/test-123-test.png")
+        assert "- Screenshot: screenshots/test-123-test.png" in result
+
+    def test_render_without_screenshot(self) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test",
+            description="Test",
+        )
+        result = render(posting, screenshot=None)
+        assert "- Screenshot:" not in result
+
+    def test_render_empty_screenshot_string(self) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test",
+            description="Test",
+        )
+        result = render(posting, screenshot="")
+        assert "- Screenshot:" not in result
+
+    def test_render_screenshot_position_after_extra_fields(self) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test",
+            description="Test",
+            extra_fields={"Custom Field": "Custom Value"},
+        )
+        result = render(posting, screenshot="screenshots/test.png")
+        lines = result.split("\n")
+
+        extra_idx = next(i for i, line in enumerate(lines) if "Custom Field:" in line)
+        screenshot_idx = next(i for i, line in enumerate(lines) if "Screenshot:" in line)
+        description_idx = next(i for i, line in enumerate(lines) if line == "## Description")
+
+        assert extra_idx < screenshot_idx < description_idx
+
+    def test_render_screenshot_before_description(self) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test",
+            description="Test",
+        )
+        result = render(posting, screenshot="screenshots/test.png")
+        lines = result.split("\n")
+
+        screenshot_idx = next(i for i, line in enumerate(lines) if "Screenshot:" in line)
+        description_idx = next(i for i, line in enumerate(lines) if line == "## Description")
+
+        # Should be: screenshot, blank line, description
+        assert lines[screenshot_idx].startswith("- Screenshot:")
+        assert lines[screenshot_idx + 1] == ""
+        assert lines[screenshot_idx + 2] == "## Description"
+
+    def test_render_byte_identical_without_screenshot(self) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test",
+            description="Test",
+        )
+        result_without = render(posting)
+        result_with_none = render(posting, screenshot=None)
+
+        assert result_without == result_with_none
+
+    def test_render_app_regex_matches_screenshot(self) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test",
+            description="Test",
+        )
+        result = render(posting, screenshot="screenshots/x.png")
+
+        # App regex from ticket
+        app_regex = r"^- (\w[\w ]*):\s*(.+)$"
+
+        for line in result.split("\n"):
+            if "Screenshot:" in line:
+                match = re.match(app_regex, line)
+                assert match is not None
+                assert match.group(1) == "Screenshot"
+                assert match.group(2) == "screenshots/x.png"
+
 
 class TestWrite:
     def test_write_creates_directory(self, tmp_path: Path) -> None:
@@ -326,3 +475,140 @@ class TestWrite:
 
         assert Path(result).exists()
         assert jobs_dir.exists()
+
+    def test_write_with_screenshot(self, tmp_path: Path) -> None:
+        jobs_dir = tmp_path / "jobs"
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+
+        result = write(posting, str(jobs_dir), screenshot="screenshots/test.png")
+        file_path = Path(result)
+        content = file_path.read_text()
+
+        assert "- Screenshot: screenshots/test.png" in content
+        assert content == render(posting, screenshot="screenshots/test.png")
+
+
+class TestSetScreenshotLine:
+    def test_set_screenshot_line_insert_new(self, tmp_path: Path) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting))
+
+        result = set_screenshot_line(str(md_path), "screenshots/test.png")
+
+        assert result is True
+        content = md_path.read_text()
+        assert "- Screenshot: screenshots/test.png" in content
+
+    def test_set_screenshot_line_replace_existing(self, tmp_path: Path) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting, screenshot="screenshots/old.png"))
+
+        result = set_screenshot_line(str(md_path), "screenshots/new.png")
+
+        assert result is True
+        content = md_path.read_text()
+        assert "- Screenshot: screenshots/new.png" in content
+        assert "screenshots/old.png" not in content
+
+    def test_set_screenshot_line_idempotent(self, tmp_path: Path) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting, screenshot="screenshots/test.png"))
+
+        # First call should return False because it's already there
+        result = set_screenshot_line(str(md_path), "screenshots/test.png")
+        assert result is False
+
+        content = md_path.read_text()
+        assert "- Screenshot: screenshots/test.png" in content
+
+    def test_set_screenshot_line_insert_position(self, tmp_path: Path) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+            extra_fields={"Custom": "Value"},
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting))
+
+        set_screenshot_line(str(md_path), "screenshots/test.png")
+
+        content = md_path.read_text()
+        lines = content.split("\n")
+
+        custom_idx = next(i for i, line in enumerate(lines) if "Custom:" in line)
+        screenshot_idx = next(i for i, line in enumerate(lines) if "Screenshot:" in line)
+        description_idx = next(i for i, line in enumerate(lines) if line == "## Description")
+
+        # Screenshot should be after custom field and before description
+        assert custom_idx < screenshot_idx < description_idx
+
+    def test_set_screenshot_line_preserves_description(self, tmp_path: Path) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description text here.",
+            scrape_note="Scrape note here.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting))
+
+        set_screenshot_line(str(md_path), "screenshots/test.png")
+
+        content = md_path.read_text()
+        assert "Test description text here." in content
+        assert "Scrape note here." in content
+
+    def test_set_screenshot_line_app_regex_match(self, tmp_path: Path) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting))
+
+        set_screenshot_line(str(md_path), "screenshots/test-123-test.png")
+
+        content = md_path.read_text()
+        app_regex = r"^- (\w[\w ]*):\s*(.+)$"
+
+        for line in content.split("\n"):
+            if "Screenshot:" in line:
+                match = re.match(app_regex, line)
+                assert match is not None
+                assert match.group(1) == "Screenshot"
+                assert match.group(2) == "screenshots/test-123-test.png"
