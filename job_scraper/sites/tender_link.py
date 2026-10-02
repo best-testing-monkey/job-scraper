@@ -3,6 +3,7 @@ import re
 from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
@@ -96,11 +97,10 @@ class TenderLinkAdapter(SiteAdapter):
         ]:
             text = vacancy.get(field, "")
             if text:
-                soup = BeautifulSoup(text, "html.parser")
-                stripped = soup.get_text(separator=" ", strip=True)
-                if stripped:
-                    parts.append(stripped)
-        return " ".join(parts)
+                converted = html_to_markdown(text)
+                if converted:
+                    parts.append(converted)
+        return "\n\n".join(parts)
 
     def _extract_rate(self, vacancy: dict[str, Any]) -> str | None:
         min_salary = vacancy.get("minSalary")

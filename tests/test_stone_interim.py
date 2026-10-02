@@ -67,3 +67,30 @@ def test_parse_detail_4893() -> None:
     assert posting.category == "Technology"
     assert posting.rate is None
     assert len(posting.description) > 0
+
+
+def test_parse_detail_description_markdown() -> None:
+    detail_data = load_fixture_bytes("detail_4893_api_GetVacancy.json")
+    adapter = StoneInterimAdapter()
+
+    stub = ListingStub(
+        listing_id="4893",
+        detail_url="https://www.stone-interim.nl/api/v1/WordPress/GetVacancy/4893",
+        title="Interim Supply Chain Manager",
+    )
+
+    posting = adapter.parse_detail(stub, detail_data)
+
+    # Verify description uses Markdown formatting (multiple sections joined by blank lines)
+    assert "\n\n" in posting.description, "Description should have multiple sections separated by blank lines"
+
+    # Verify no ## headings (only ### and deeper)
+    assert not any(l.startswith("## ") for l in posting.description.splitlines()), "Description should not have ## headings"
+
+    # Verify no trailing whitespace except for hard breaks
+    for line in posting.description.splitlines():
+        if not line.endswith("  "):  # Allow hard breaks (two spaces)
+            assert line == line.rstrip(), f"Line has trailing whitespace: {repr(line)}"
+
+    # Verify non-empty
+    assert posting.description.strip(), "Description should not be empty"

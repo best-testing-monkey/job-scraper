@@ -2,6 +2,7 @@ import json
 from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
@@ -41,7 +42,7 @@ class WorkingNomadsAdapter(SiteAdapter):
         tags = job.get("tags", "")
         location = job.get("location", "")
         posted_date = job.get("pub_date", "")
-        description = self._strip_html_tags(job.get("description", ""))
+        description = html_to_markdown(job.get("description", ""))
         category_name = job.get("category_name", "")
         # Working Nomads is a remote-jobs-only board by definition (its
         # location field is a timezone constraint, e.g. "Time zone: CET
@@ -80,7 +81,3 @@ class WorkingNomadsAdapter(SiteAdapter):
                 job_id = parts[1].rstrip("/")
                 return job_id
         return None
-
-    def _strip_html_tags(self, html: str) -> str:
-        soup = BeautifulSoup(html, "html.parser")
-        return soup.get_text(separator=" ", strip=True)

@@ -192,3 +192,22 @@ def test_parse_detail_ignores_page_argument() -> None:
     posting2 = adapter.parse_detail(stubs[2], b"ignored page 2")
     assert posting1.title == posting2.title
     assert posting1.client == posting2.client
+
+
+def test_parse_detail_description_markdown() -> None:
+    adapter = WorkingNomadsAdapter()
+    fixture = load_fixture()
+    with patch("job_scraper.sites.working_nomads.fetch_page", return_value=fixture):
+        stubs = list(adapter.list_postings())
+    posting = adapter.parse_detail(stubs[2], None)
+
+    # Verify no ## headings (only ### and deeper)
+    assert not any(l.startswith("## ") for l in posting.description.splitlines()), "Description should not have ## headings"
+
+    # Verify no trailing whitespace except for hard breaks
+    for line in posting.description.splitlines():
+        if not line.endswith("  "):  # Allow hard breaks (two spaces)
+            assert line == line.rstrip(), f"Line has trailing whitespace: {repr(line)}"
+
+    # Verify non-empty
+    assert posting.description.strip(), "Description should not be empty"

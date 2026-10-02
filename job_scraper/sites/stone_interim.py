@@ -4,6 +4,7 @@ from typing import Any, ClassVar, Iterator
 
 from scrapling.fetchers import Fetcher
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy
@@ -119,22 +120,8 @@ class StoneInterimAdapter(SiteAdapter):
         for field in ["IntroInformation", "VacancyInformation", "OfferInformation", "Requirements", "CompanyInformation"]:
             text = cr.get(field, "")
             if text:
-                description_parts.append(text)
+                converted = html_to_markdown(text)
+                if converted:
+                    description_parts.append(converted)
 
-        full_text = " ".join(description_parts)
-        full_text = self._strip_html(full_text)
-        full_text = re.sub(r"\s+", " ", full_text)
-        return full_text.strip()
-
-    def _strip_html(self, text: str) -> str:
-        text = re.sub(r"<[^>]+>", "", text)
-        text = re.sub(r"&nbsp;", " ", text)
-        text = re.sub(r"&quot;", '"', text)
-        text = re.sub(r"&apos;", "'", text)
-        text = re.sub(r"&amp;", "&", text)
-        text = re.sub(r"&ldquo;", '"', text)
-        text = re.sub(r"&rdquo;", '"', text)
-        text = re.sub(r"&rsquo;", "'", text)
-        text = re.sub(r"&eacute;", "é", text)
-        text = re.sub(r"&#\d+;", "", text)
-        return text
+        return "\n\n".join(description_parts)

@@ -73,3 +73,30 @@ def test_parse_detail_full_fields():
     assert posting.rate == "Bespreekbaar"
     assert posting.extra_fields.get("employment_type") == "Interim"
     assert posting.extra_fields.get("expires_at") == "2026-10-02T23:59:59.999Z"
+
+
+def test_parse_detail_description_markdown():
+    adapter = HarveyNashAdapter()
+    detail_html = Path("tests/fixtures/harveynash/detail_299204.html").read_text()
+    stub = ListingStub(
+        listing_id="299204",
+        detail_url="https://www.harveynash.nl/vacatures/299204-Expert-gasregelvermogen-Weert",
+        title="Expert (gas)regelvermogen Weert",
+    )
+    posting = adapter.parse_detail(stub, detail_html)
+
+    # Verify description uses Markdown formatting
+    assert "\n\n" in posting.description, "Description should have multiple paragraphs"
+    assert "**" in posting.description, "Description should have bold text"
+    assert "- " in posting.description, "Description should have list items"
+
+    # Verify no ## headings (only ### and deeper)
+    assert not any(l.startswith("## ") for l in posting.description.splitlines()), "Description should not have ## headings"
+
+    # Verify no trailing whitespace except for hard breaks
+    for line in posting.description.splitlines():
+        if not line.endswith("  "):  # Allow hard breaks (two spaces)
+            assert line == line.rstrip(), f"Line has trailing whitespace: {repr(line)}"
+
+    # Verify non-empty
+    assert posting.description.strip(), "Description should not be empty"

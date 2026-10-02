@@ -4,6 +4,7 @@ from typing import Any, Iterator
 
 from bs4 import BeautifulSoup
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
@@ -104,8 +105,8 @@ class HarveyNashAdapter(SiteAdapter):
             if salary_low and salary_high and (float(salary_low) > 0 or float(salary_high) > 0):
                 rate = f"{salary_low}-{salary_high}"
 
-        # Strip HTML tags from description
-        description = self._strip_html(description_html)
+        # Convert HTML description to Markdown
+        description = html_to_markdown(description_html)
 
         extra_fields = {}
         if employment_type:
@@ -132,13 +133,6 @@ class HarveyNashAdapter(SiteAdapter):
         )
 
         return posting
-
-    def _strip_html(self, html_text: str) -> str:
-        soup = BeautifulSoup(html_text, "html.parser")
-        text = soup.get_text(separator=" ", strip=True)
-        # Normalize whitespace
-        text = re.sub(r"\s+", " ", text)
-        return text
 
     def _extract_workplace_signal(self, description_html: str) -> str | None:
         """Extract workplace type signal from the HTML description.
