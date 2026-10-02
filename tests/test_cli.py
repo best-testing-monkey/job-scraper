@@ -11,7 +11,7 @@ from job_scraper.sites.registry import SITE_REGISTRY
 def temp_db(tmp_path):
     db_file = tmp_path / "test.db"
     repo = JobRepository(str(db_file))
-    yield repo
+    yield repo, str(db_file)
     repo.conn.close()
 
 
@@ -32,7 +32,8 @@ def test_rebuild_help(capsys, monkeypatch):
 
 def test_rebuild_single_site(temp_db, monkeypatch, capsys):
     """Test rebuild --site pro_act calls rebuild_site once"""
-    monkeypatch.setattr(sys, "argv", ["job_scraper", "rebuild", "--site", "pro_act", "--db", str(temp_db.conn)])
+    repo, db_path = temp_db
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "rebuild", "--site", "pro_act", "--db", db_path])
 
     with patch("job_scraper.cli.rebuild_site") as mock_rebuild:
         mock_rebuild.return_value = {"rebuilt": 5, "skipped_no_db": 1, "skipped_duplicate": 0, "excluded": 0, "errors": 0}
@@ -61,7 +62,8 @@ def test_rebuild_single_site(temp_db, monkeypatch, capsys):
 
 def test_rebuild_site_all_skips_not_rebuildable(temp_db, monkeypatch, capsys):
     """Test rebuild --site all skips NOT_REBUILDABLE sites"""
-    monkeypatch.setattr(sys, "argv", ["job_scraper", "rebuild", "--site", "all", "--db", str(temp_db.conn)])
+    repo, db_path = temp_db
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "rebuild", "--site", "all", "--db", db_path])
 
     with patch("job_scraper.cli.rebuild_site") as mock_rebuild:
         mock_rebuild.return_value = {"rebuilt": 0, "skipped_no_db": 0, "skipped_duplicate": 0, "excluded": 0, "errors": 0}
@@ -89,7 +91,8 @@ def test_rebuild_site_all_skips_not_rebuildable(temp_db, monkeypatch, capsys):
 
 def test_rebuild_not_rebuildable_explicit_fails(temp_db, monkeypatch, capsys):
     """Test rebuild --site working_nomads exits with code 1"""
-    monkeypatch.setattr(sys, "argv", ["job_scraper", "rebuild", "--site", "working_nomads", "--db", str(temp_db.conn)])
+    repo, db_path = temp_db
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "rebuild", "--site", "working_nomads", "--db", db_path])
 
     with patch("job_scraper.cli.rebuild_site") as mock_rebuild:
         with pytest.raises(SystemExit) as exc_info:
@@ -107,7 +110,8 @@ def test_rebuild_not_rebuildable_explicit_fails(temp_db, monkeypatch, capsys):
 
 def test_rebuild_without_site_fails(temp_db, monkeypatch, capsys):
     """Test rebuild without --site exits with code 1"""
-    monkeypatch.setattr(sys, "argv", ["job_scraper", "rebuild", "--db", str(temp_db.conn)])
+    repo, db_path = temp_db
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "rebuild", "--db", db_path])
 
     with patch("job_scraper.cli.rebuild_site") as mock_rebuild:
         with pytest.raises(SystemExit) as exc_info:
@@ -125,10 +129,11 @@ def test_rebuild_without_site_fails(temp_db, monkeypatch, capsys):
 
 def test_rebuild_with_custom_paths(temp_db, monkeypatch, capsys):
     """Test rebuild respects custom --jobs-dir and --raw-dir"""
+    repo, db_path = temp_db
     monkeypatch.setattr(sys, "argv", [
         "job_scraper", "rebuild",
         "--site", "pro_act",
-        "--db", str(temp_db.conn),
+        "--db", db_path,
         "--jobs-dir", "custom_jobs/",
         "--raw-dir", "custom_raw/"
     ])
@@ -146,11 +151,12 @@ def test_rebuild_with_custom_paths(temp_db, monkeypatch, capsys):
 
 def test_rebuild_multiple_sites(temp_db, monkeypatch, capsys):
     """Test rebuild with multiple --site arguments"""
+    repo, db_path = temp_db
     monkeypatch.setattr(sys, "argv", [
         "job_scraper", "rebuild",
         "--site", "pro_act",
         "--site", "hero",
-        "--db", str(temp_db.conn)
+        "--db", db_path
     ])
 
     with patch("job_scraper.cli.rebuild_site") as mock_rebuild:
