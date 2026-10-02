@@ -95,3 +95,7 @@ def test_source_url_is_human_ad_page():
     posting = adapter.parse_detail(stub, _fixture_bytes())
     assert posting.source_url == overview
     assert posting.extra_fields["apply_url"].startswith("https://striive.com/")
+
+
+def test_screenshot_selector_is_none() -> None:
+    assert HeadfirstAdapter.screenshot_selector is None

@@ -13,6 +13,12 @@ class WearedevelopersAdapter(SiteAdapter):
     site_id: str = "wearedevelopers"
     base_url: str = "https://www.wearedevelopers.com"
     fetch_strategy: FetchStrategy = FetchStrategy.STEALTH
+    # First section holding a prose body = "Job description" (Requirements/About
+    # sections reuse the same classes and follow it). Needs :has() (Playwright + soupsieve).
+    screenshot_selector = (
+        "section:has(> div.prose-base-content)"
+        ":not(section:has(> div.prose-base-content) ~ section)"
+    )
     LISTING_URL: str = "https://www.wearedevelopers.com/jobs?country=all&q=QA"
 
     def list_postings(self) -> Iterator[ListingStub]:

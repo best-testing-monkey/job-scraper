@@ -79,6 +79,7 @@ class HeadfirstAdapter(SiteAdapter):
     site_id: str = "headfirst"
     base_url: str = "https://www.headfirst.nl"
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
+    screenshot_selector = None  # no description scraped; source_url may be an overview page
     LISTING_URL: str = "https://www.headfirst.nl/vind-opdrachten/"
 
     def list_postings(self) -> Iterator[ListingStub]:

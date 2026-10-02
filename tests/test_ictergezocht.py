@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import patch
 
 from job_scraper.core.models import ListingStub
@@ -95,3 +96,16 @@ def test_source_url_is_human_ad_page(mock_fetch: object) -> None:
     for s in stubs:
         assert pattern.match(s.detail_url), s.detail_url
         assert not any(b in s.detail_url for b in bad_parts)
+
+
+def test_screenshot_selector_matches_description_element() -> None:
+    from bs4 import BeautifulSoup
+
+    adapter = IctergezochtAdapter()
+    assert adapter.screenshot_selector
+    html = Path("tests/fixtures/ictergezocht/detail_438712.html").read_text()
+    els = BeautifulSoup(html, "html.parser").select(adapter.screenshot_selector)
+    assert len(els) == 1
+    assert "Wil jij bijdragen aan de rijksoverheid die slimmer, efficiënter" in els[0].get_text()
+    assert els[0].find(["nav", "header", "footer", "form"]) is None
+    assert "cookie" not in els[0].get_text().lower()

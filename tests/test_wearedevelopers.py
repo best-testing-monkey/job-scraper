@@ -213,3 +213,26 @@ def test_source_url_is_human_ad_page(
         assert re.match(pattern, posting.source_url), posting.source_url
         assert not any(f in posting.source_url for f in forbidden)
         assert posting.source_url == canonical
+
+
+@pytest.mark.parametrize(
+    ("fixture", "snippet"),
+    [
+        ("detail_1343363.html", "the consultancy has no dedicated QA function yet."),
+        ("detail_2203015.html", "ólida en automatización de pruebas de regresión en SAP"),
+        ("detail_2904764.html", "Still doing manual testing without seeing the bigger picture?"),
+    ],
+)
+def test_screenshot_selector_matches_description_element(fixture: str, snippet: str) -> None:
+    from pathlib import Path
+
+    from bs4 import BeautifulSoup
+
+    adapter = WearedevelopersAdapter()
+    assert adapter.screenshot_selector
+    html = (Path(__file__).parent / "fixtures" / "wearedevelopers" / fixture).read_text()
+    els = BeautifulSoup(html, "html.parser").select(adapter.screenshot_selector)
+    assert len(els) == 1
+    assert snippet in els[0].get_text()
+    assert els[0].find(["nav", "header", "footer", "form"]) is None
+    assert "cookie" not in els[0].get_text().lower()

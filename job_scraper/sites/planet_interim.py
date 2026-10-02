@@ -12,6 +12,7 @@ class PlanetInterimAdapter(SiteAdapter):
     site_id: str = "planet_interim"
     base_url: str = "https://planetinterim.nl"
     fetch_strategy: FetchStrategy = FetchStrategy.STEALTH
+    screenshot_selector = None  # description requires a login and is not scraped
     LISTING_URL: str = "https://planetinterim.nl/vind-interim-opdrachten"
 
     def list_postings(self) -> Iterator[ListingStub]:

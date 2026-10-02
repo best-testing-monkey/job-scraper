@@ -88,3 +88,7 @@ def test_source_url_is_human_ad_page() -> None:
     for s in stubs:
         assert pattern.match(s.detail_url), s.detail_url
         assert not any(b in s.detail_url for b in bad_parts)
+
+
+def test_screenshot_selector_is_none() -> None:
+    assert PlanetInterimAdapter.screenshot_selector is None
