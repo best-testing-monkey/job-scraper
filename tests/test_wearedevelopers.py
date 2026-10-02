@@ -182,3 +182,34 @@ def test_adapter_constants(adapter: WearedevelopersAdapter) -> None:
     assert adapter.site_id == "wearedevelopers"
     assert adapter.base_url == "https://www.wearedevelopers.com"
     assert adapter.fetch_strategy.value == "stealth"
+
+
+def test_source_url_is_human_ad_page(
+    adapter: WearedevelopersAdapter, listing_html: bytes
+) -> None:
+    import re
+    from pathlib import Path
+
+    from job_scraper.core.models import ListingStub
+
+    # "/ext/" is WeAreDevelopers' real ad path: every detail fixture's
+    # canonical/og:url uses it (the apply button points off-site instead).
+    pattern = r"^https://www\.wearedevelopers\.com/jobs/ext/\d+-[a-z0-9-]+$"
+    forbidden = ["/apply", "/go/", "/api/", "/wp-json/", ".json", "?utm_", "/redirect"]
+
+    with patch("job_scraper.sites.wearedevelopers.fetch_page", return_value=listing_html):
+        stubs = list(adapter.list_postings())
+    for s in stubs:
+        assert re.match(pattern, s.detail_url), s.detail_url
+        assert not any(f in s.detail_url for f in forbidden)
+
+    fixtures = Path("tests/fixtures/wearedevelopers")
+    for detail_file in sorted(fixtures.glob("detail_*.html")):
+        page = detail_file.read_bytes()
+        listing_id = detail_file.stem.split("_")[1]
+        canonical = re.search(rb'rel="canonical" href="([^"]+)"', page).group(1).decode()
+        stub = ListingStub(listing_id=listing_id, detail_url=canonical, title="t")
+        posting = adapter.parse_detail(stub, page)
+        assert re.match(pattern, posting.source_url), posting.source_url
+        assert not any(f in posting.source_url for f in forbidden)
+        assert posting.source_url == canonical

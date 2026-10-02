@@ -153,3 +153,36 @@ def test_parse_detail_description_markdown() -> None:
 
     # Verify non-empty
     assert posting.description.strip(), "Description should not be empty"
+
+
+def test_source_url_is_human_ad_page() -> None:
+    import re
+
+    adapter = SevenstarsAdapter()
+    pattern = r"^https://www\.sevenstars\.nl/opdracht/[a-z0-9-]+_7S-\d+$"
+    forbidden = ["/apply", "/go/", "/api/", "/wp-json/", ".json", "?utm_", "/redirect"]
+
+    detail_html = Path("tests/fixtures/sevenstars/detail_7S-004982.html").read_bytes()
+    stub = ListingStub(
+        listing_id="7S-004982",
+        detail_url="https://www.sevenstars.nl/opdracht/agilecoach_7S-004982",
+        title="Agile Coach",
+    )
+    posting = adapter.parse_detail(stub, detail_html)
+    assert re.match(pattern, posting.source_url)
+    assert not any(f in posting.source_url for f in forbidden)
+    # Matches the detail page's own canonical URL.
+    assert posting.source_url.encode() in detail_html
+
+    listing_html = Path("tests/fixtures/sevenstars/listing.html").read_bytes()
+    empty = b'<html><body><div class="c-lister-pagination__wrapper"></div></body></html>'
+    pages = iter([listing_html])
+    with patch(
+        "job_scraper.sites.sevenstars.fetch_page",
+        side_effect=lambda s, u: next(pages, empty),
+    ):
+        stubs = list(adapter.list_postings())
+    assert stubs
+    for s in stubs:
+        assert re.match(pattern, s.detail_url), s.detail_url
+        assert not any(f in s.detail_url for f in forbidden)

@@ -166,3 +166,32 @@ def test_parse_detail_description_markdown() -> None:
 
     # Verify non-empty
     assert posting.description.strip(), "Description should not be empty"
+
+
+def test_source_url_is_human_ad_page() -> None:
+    import re
+
+    adapter = TenderLinkAdapter()
+    pattern = r"^https://tender-link\.nl/vacature/[a-z0-9-]+/$"
+    forbidden = ["/apply", "/go/", "/api/", "/wp-json/", ".json", "?utm_", "/redirect"]
+
+    with patch("job_scraper.sites.tender_link.fetch_page", return_value=load_fixture()):
+        stubs = list(adapter.list_postings())
+    for s in stubs:
+        assert re.match(pattern, s.detail_url), s.detail_url
+        assert not any(f in s.detail_url for f in forbidden)
+
+    posting = adapter.parse_detail(stubs[0], None)
+    assert posting.source_url == "https://tender-link.nl/vacature/brp-specialist-33345/"
+    assert re.match(pattern, posting.source_url)
+    assert not any(f in posting.source_url for f in forbidden)
+    # LIMITATION (pinned): the API slug has no SEO suffix, so this URL 301-redirects
+    # to the page's canonical URL (detail_33345.html carries ".../brp-specialist-soest-
+    # detachering-33345/"). Same ad id, so it still lands on the ad page.
+    detail = (
+        Path(__file__).parent / "fixtures" / "tender_link" / "detail_33345.html"
+    ).read_text()
+    canonical = re.search(r'rel="canonical" href="([^"]+)"', detail).group(1)
+    assert canonical != posting.source_url
+    assert canonical.rstrip("/").rsplit("-", 1)[1] == "33345"
+    assert posting.source_url.rstrip("/").rsplit("-", 1)[1] == "33345"

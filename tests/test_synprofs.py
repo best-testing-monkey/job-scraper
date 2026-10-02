@@ -168,3 +168,31 @@ def test_parse_detail_description_markdown(adapter: SynprofsAdapter, detail_html
 
     # Verify non-empty
     assert posting.description.strip(), "Description should not be empty"
+
+
+def test_source_url_is_human_ad_page(
+    adapter: SynprofsAdapter, listing_xml: bytes, detail_html: bytes, monkeypatch
+) -> None:
+    import re
+
+    import job_scraper.sites.synprofs
+
+    pattern = r"^https://www\.synprofs\.nl/opdracht/[a-z0-9-]+-\d+/$"
+    forbidden = ["/apply", "/go/", "/api/", "/wp-json/", ".json", "?utm_", "/redirect"]
+
+    monkeypatch.setattr(
+        job_scraper.sites.synprofs, "fetch_page", lambda strategy, url: listing_xml
+    )
+    stubs = list(adapter.list_postings())
+    assert stubs
+    for s in stubs:
+        assert re.match(pattern, s.detail_url), s.detail_url
+        assert not any(f in s.detail_url for f in forbidden)
+
+    stub = next(s for s in stubs if s.listing_id == "6930")
+    posting = adapter.parse_detail(stub, detail_html)
+    assert posting.source_url == "https://www.synprofs.nl/opdracht/senior-tester-6930/"
+    assert re.match(pattern, posting.source_url)
+    assert not any(f in posting.source_url for f in forbidden)
+    # Matches the detail page's own canonical URL.
+    assert f'rel="canonical" href="{posting.source_url}"'.encode() in detail_html
