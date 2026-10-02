@@ -196,3 +196,16 @@ def test_source_url_is_human_ad_page(
     assert not any(f in posting.source_url for f in forbidden)
     # Matches the detail page's own canonical URL.
     assert f'rel="canonical" href="{posting.source_url}"'.encode() in detail_html
+
+
+def test_screenshot_selector_matches_description_element(fixtures_dir: Path) -> None:
+    from bs4 import BeautifulSoup
+
+    adapter = SynprofsAdapter()
+    assert adapter.screenshot_selector
+    html = (fixtures_dir / "detail_6930.html").read_text(encoding="utf-8")
+    els = BeautifulSoup(html, "html.parser").select(adapter.screenshot_selector)
+    assert len(els) == 1
+    assert "Inzet van een senior tester die tevens ketentesten kan organiseren en uitvoeren" in els[0].get_text()
+    assert els[0].find(["nav", "header", "footer", "form"]) is None
+    assert "cookie" not in els[0].get_text().lower()

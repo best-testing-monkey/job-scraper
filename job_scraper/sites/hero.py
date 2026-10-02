@@ -13,6 +13,7 @@ class HeroAdapter(SiteAdapter):
     site_id = "hero"
     base_url = "https://hero.eu"
     fetch_strategy = FetchStrategy.STATIC
+    screenshot_selector = "div.hero-requisition-body"
     LISTING_URL = "https://hero.eu/interim-opdrachten"
 
     def list_postings(self) -> Iterator[ListingStub]:

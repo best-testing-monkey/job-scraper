@@ -13,6 +13,7 @@ class FlexValueAdapter(SiteAdapter):
     site_id = "flexvalue"
     base_url = "https://aanvragen.flexvalue.nl"
     fetch_strategy = FetchStrategy.STATIC
+    screenshot_selector = "div.job-description"
     LISTING_URL = "https://aanvragen.flexvalue.nl/careers/6605"
 
     def list_postings(self) -> Iterator[ListingStub]:

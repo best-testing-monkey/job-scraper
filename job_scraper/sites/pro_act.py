@@ -12,6 +12,7 @@ class ProActAdapter(SiteAdapter):
     site_id: str = "pro_act"
     base_url: str = "https://pro-act.nl"
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
+    screenshot_selector = None  # BLOCKED: no element wraps only the ad (form is a child of content-wrapper)
     LISTING_URL: str = "https://pro-act.nl/vacatures"
 
     def list_postings(self) -> Iterator[ListingStub]:

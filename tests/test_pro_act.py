@@ -116,3 +116,10 @@ def test_source_url_is_human_ad_page():
     for s in stubs:
         assert pattern.match(s.detail_url), s.detail_url
         assert not any(b in s.detail_url for b in bad_parts)
+
+
+def test_screenshot_selector_is_none_blocked() -> None:
+    # BLOCKED: the description and the application form are siblings inside
+    # div.content-wrapper (no element wraps only the ad), so no selector can
+    # screenshot the description without the form.
+    assert ProActAdapter.screenshot_selector is None

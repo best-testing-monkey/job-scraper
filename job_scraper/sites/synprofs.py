@@ -14,6 +14,7 @@ class SynprofsAdapter(SiteAdapter):
     site_id: str = "synprofs"
     base_url: str = "https://www.synprofs.nl"
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
+    screenshot_selector = "div.sd-sdcx-components-vacancies-parts-publication-text"
     LISTING_URL: str = "https://www.synprofs.nl/vacancy-sitemap.xml"
 
     def list_postings(self) -> Iterator[ListingStub]:

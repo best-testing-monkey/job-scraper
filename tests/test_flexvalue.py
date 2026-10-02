@@ -119,3 +119,16 @@ def test_parse_detail_source_url_is_public_ad_page() -> None:
     )
     assert "?" not in posting.source_url
     assert posting.description
+
+
+def test_screenshot_selector_matches_description_element() -> None:
+    from bs4 import BeautifulSoup
+
+    adapter = FlexValueAdapter()
+    assert adapter.screenshot_selector
+    html = load_fixture("detail_1065407.html")
+    els = BeautifulSoup(html, "html.parser").select(adapter.screenshot_selector)
+    assert len(els) == 1
+    assert "Als senior Containerplatform engineer help jij onze ontwikkelteams om soepel en veilig software te leveren." in els[0].get_text()
+    assert els[0].find(["nav", "header", "footer", "form"]) is None
+    assert "cookie" not in els[0].get_text().lower()
