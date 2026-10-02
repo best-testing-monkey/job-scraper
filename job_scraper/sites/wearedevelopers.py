@@ -3,6 +3,7 @@ from typing import Any, Iterator
 
 from bs4 import BeautifulSoup
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
@@ -115,5 +116,5 @@ class WearedevelopersAdapter(SiteAdapter):
             if h2.get_text(strip=True) == "Job description":
                 next_div = h2.find_next("div", class_="prose-base-content")
                 if next_div:
-                    return next_div.get_text(strip=True)
+                    return html_to_markdown(str(next_div))
         return ""

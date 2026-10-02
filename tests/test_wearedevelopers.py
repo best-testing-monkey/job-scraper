@@ -77,6 +77,15 @@ def test_parse_detail_description(
     assert len(posting.description) > 0
     assert "Mission" in posting.description or "QA" in posting.description
 
+    # Verify Markdown conversion
+    # Verify no lines start with ## (only ### or deeper allowed)
+    assert not any(l.startswith("## ") for l in posting.description.splitlines())
+
+    # Verify no trailing whitespace (except for hard breaks which use "  \n")
+    for line in posting.description.splitlines():
+        if not line.endswith("  "):
+            assert line == line.rstrip()
+
 
 def test_parse_detail_scrape_note(
     adapter: WearedevelopersAdapter, detail_html: bytes

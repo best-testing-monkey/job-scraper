@@ -136,3 +136,31 @@ def test_parse_detail_duration_and_hours(adapter, detail_fixture):
     assert posting.duration is not None
     assert posting.hours is not None
     assert posting.workplace is None  # No explicit workplace signal in fixture
+
+
+def test_parse_detail_description_markdown(adapter, detail_fixture):
+    """Test that description is converted to Markdown."""
+    from job_scraper.core.models import ListingStub
+
+    stub = ListingStub(
+        listing_id="tLJWUBCWY1P8MBXMScbwRE",
+        detail_url="https://example.com",
+        title="Test",
+    )
+
+    posting = adapter.parse_detail(stub, detail_fixture)
+
+    # Verify description is non-empty
+    assert posting.description
+    assert len(posting.description) > 0
+
+    # Verify no lines start with ## (only ### or deeper allowed)
+    assert not any(l.startswith("## ") for l in posting.description.splitlines())
+
+    # Verify no trailing whitespace (except for hard breaks which use "  \n")
+    for line in posting.description.splitlines():
+        if not line.endswith("  "):
+            assert line == line.rstrip()
+
+    # The fixture has multiple paragraphs with bold text
+    assert "**" in posting.description  # Bold text should be preserved

@@ -4,6 +4,7 @@ from urllib.parse import urljoin, urlparse, parse_qs
 
 from bs4 import BeautifulSoup
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
@@ -110,7 +111,7 @@ class IamexpatAdapter(SiteAdapter):
 
         # Extract description from .BodyCenter_main__Sz_2E
         desc_elem = soup.find("div", class_="BodyCenter_main__Sz_2E")
-        description = desc_elem.get_text(strip=True) if desc_elem else ""
+        description = html_to_markdown(str(desc_elem)) if desc_elem else ""
 
         # Location-only: classify_workplace() has no negation handling, and
         # scanning the full free-text description risks false positives at

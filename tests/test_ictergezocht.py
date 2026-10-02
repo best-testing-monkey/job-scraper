@@ -53,3 +53,17 @@ def test_parse_detail(mock_fetch: object) -> None:
     assert posting.scrape_note
     assert "pagination" in posting.scrape_note.lower()
     assert posting.extra_fields.get("contract_type") == "Loondienst (vast)"
+
+    # Verify Markdown conversion
+    # The fixture has multiple paragraphs, headings, and lists
+    assert "\n\n" in posting.description  # Multiple paragraphs
+    assert any(l.startswith("### ") for l in posting.description.splitlines())  # Headings preserved
+    assert any(l.startswith("- ") or l.startswith("1. ") for l in posting.description.splitlines())  # List items
+
+    # Verify no lines start with ## (only ### or deeper allowed)
+    assert not any(l.startswith("## ") for l in posting.description.splitlines())
+
+    # Verify no trailing whitespace (except for hard breaks which use "  \n")
+    for line in posting.description.splitlines():
+        if not line.endswith("  "):
+            assert line == line.rstrip()

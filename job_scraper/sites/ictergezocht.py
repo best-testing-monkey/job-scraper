@@ -2,6 +2,7 @@ from typing import Any, Iterator
 
 from bs4 import BeautifulSoup
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
@@ -186,5 +187,5 @@ class IctergezochtAdapter(SiteAdapter):
     def _extract_description(self, soup: BeautifulSoup) -> str:
         description_elem = soup.find("div", class_="vacancy-full-text-dom")
         if description_elem:
-            return description_elem.get_text(strip=True)
+            return html_to_markdown(str(description_elem))
         return ""
