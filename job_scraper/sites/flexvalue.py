@@ -94,7 +94,7 @@ class FlexValueAdapter(SiteAdapter):
         return JobPosting(
             site_id=self.site_id,
             listing_id=stub.listing_id,
-            source_url=stub.detail_url,
+            source_url=re.sub(r"^http://", "https://", stub.detail_url),
             title=title,
             client=client,
             category=None,

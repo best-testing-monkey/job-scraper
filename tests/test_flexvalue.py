@@ -96,3 +96,26 @@ def test_parse_detail_description_structure() -> None:
     for line in posting.description.splitlines():
         if not line.endswith("  "):
             assert line == line.rstrip(), f"Line has trailing whitespace: {repr(line)}"
+
+
+def test_parse_detail_source_url_is_public_ad_page() -> None:
+    import re
+
+    from job_scraper.core.models import ListingStub
+
+    detail_html = load_fixture("detail_1065407.html")
+    adapter = FlexValueAdapter()
+    stub = ListingStub(
+        listing_id="1065407",
+        detail_url="http://aanvragen.flexvalue.nl/careers/6605/jobs/1065407-Java-Devops-Engineer",
+        title="Java Devops Engineer",
+    )
+
+    posting = adapter.parse_detail(stub, detail_html)
+
+    assert re.match(
+        r"^https://aanvragen\.flexvalue\.nl/careers/\d+/jobs/\d+-[^/]+$",
+        posting.source_url,
+    )
+    assert "?" not in posting.source_url
+    assert posting.description

@@ -34,7 +34,7 @@ Note: `working_nomads`, `tender_link` and `stone_interim` cannot be rebuilt (re-
 
 - `pro_act` — Pro-Act IT (pro-act.nl/vacatures)
 - `hero` — Hero Interim (hero.eu/interim-opdrachten)
-- `flexvalue` — FlexValue (aanvragen.flexvalue.nl/careers)
+- `flexvalue` — FlexValue (aanvragen.flexvalue.nl/careers); job URLs point at the public careers-portal ad page; the apply form lives under `/apply`
 - `synprofs` — Synprofs (synprofs.nl, via its vacancy sitemap)
 - `stone_interim` — Stone Interim (stone-interim.nl, via its JSON API)
 - `tender_link` — Tender-Link (tender-link.nl, via its JSON API)
