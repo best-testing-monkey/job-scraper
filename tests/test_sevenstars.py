@@ -127,3 +127,29 @@ def test_parse_detail():
 
     # Check that validThrough is in extra_fields
     assert "validThrough" in posting.extra_fields
+
+
+def test_parse_detail_description_markdown() -> None:
+    adapter = SevenstarsAdapter()
+    detail_html = Path("tests/fixtures/sevenstars/detail_7S-004982.html").read_bytes()
+    stub = ListingStub(
+        listing_id="7S-004982",
+        detail_url="https://www.sevenstars.nl/opdracht/agilecoach_7S-004982",
+        title="Agile Coach",
+    )
+    posting = adapter.parse_detail(stub, detail_html)
+
+    # Verify description uses html_to_markdown (not plain text stripping)
+    # The fixture has malformed HTML (nested <p> tags), so we check for what IS converted
+    assert "**" in posting.description, "Description should have bold text"
+
+    # Verify no ## headings (only ### and deeper, or none in this fixture)
+    assert not any(l.startswith("## ") for l in posting.description.splitlines()), "Description should not have ## headings"
+
+    # Verify no trailing whitespace except for hard breaks
+    for line in posting.description.splitlines():
+        if not line.endswith("  "):  # Allow hard breaks (two spaces)
+            assert line == line.rstrip(), f"Line has trailing whitespace: {repr(line)}"
+
+    # Verify non-empty
+    assert posting.description.strip(), "Description should not be empty"

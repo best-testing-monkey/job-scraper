@@ -1,34 +1,13 @@
 import json
 import re
 from typing import Any, Iterator
-from html.parser import HTMLParser
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
-
-
-class MLStripper(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__()
-        self.reset()
-        self.strict = False
-        self.convert_charrefs = True
-        self.text: list[str] = []
-
-    def handle_data(self, d: str) -> None:
-        self.text.append(d)
-
-    def get_data(self) -> str:
-        return "".join(self.text)
-
-
-def strip_html_tags(html: str) -> str:
-    s = MLStripper()
-    s.feed(html)
-    return s.get_data()
 
 
 class SevenstarsAdapter(SiteAdapter):
@@ -135,7 +114,7 @@ class SevenstarsAdapter(SiteAdapter):
 
                     raw_description = data.get("description", "")
                     if raw_description:
-                        description = strip_html_tags(raw_description)
+                        description = html_to_markdown(raw_description)
 
                     posted_date = data.get("datePosted")
 

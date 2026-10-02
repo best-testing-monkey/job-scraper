@@ -82,6 +82,30 @@ def test_parse_detail_job_posting(adapter: DjinniAdapter, detail_html: bytes) ->
     assert posting.extra_fields.get("employmentType") == "FULL_TIME"
 
 
+def test_parse_detail_description_markdown(adapter: DjinniAdapter, detail_html: bytes) -> None:
+    stub = ListingStub(
+        listing_id="848723",
+        detail_url="https://djinni.co/jobs/848723-senior-manual-qa-engineer-warsaw-on-site/",
+        title="Senior Manual QA Engineer - Warsaw (On-site)",
+    )
+
+    posting = adapter.parse_detail(stub, detail_html)
+
+    # Verify description uses Markdown formatting (hard breaks from \n)
+    assert "\n\n" in posting.description, "Description should have multiple paragraphs separated by blank lines"
+
+    # Verify no ## headings (only ### and deeper)
+    assert not any(l.startswith("## ") for l in posting.description.splitlines()), "Description should not have ## headings"
+
+    # Verify no trailing whitespace except for hard breaks
+    for line in posting.description.splitlines():
+        if not line.endswith("  "):  # Allow hard breaks (two spaces)
+            assert line == line.rstrip(), f"Line has trailing whitespace: {repr(line)}"
+
+    # Verify non-empty
+    assert posting.description.strip(), "Description should not be empty"
+
+
 def test_parse_detail_workplace_options_list(
     adapter: DjinniAdapter, fixtures_dir: Path
 ) -> None:

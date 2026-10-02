@@ -4,6 +4,7 @@ from typing import Any, Iterator
 
 from bs4 import BeautifulSoup
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
@@ -65,7 +66,7 @@ class Circle8Adapter(SiteAdapter):
                 data = json.loads(script.string)
                 if isinstance(data, dict) and data.get("@type") == "JobPosting":
                     title = data.get("title", "")
-                    description = data.get("description", "")
+                    description = html_to_markdown(data.get("description", ""))
                     posted_date = data.get("datePosted")
                     location = (
                         data.get("jobLocation", {})

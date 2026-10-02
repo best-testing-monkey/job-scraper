@@ -64,3 +64,25 @@ def test_parse_detail_vnr_85422() -> None:
     assert len(posting.description) > 0
     assert posting.scrape_note is not None
     assert "Page 1" in posting.scrape_note or "page 1" in posting.scrape_note.lower()
+
+
+def test_parse_detail_description_markdown() -> None:
+    adapter = Circle8Adapter()
+    detail_html = Path("tests/fixtures/circle8/detail_VNR-85422.html").read_bytes()
+    stub = ListingStub(
+        listing_id="VNR-85422",
+        detail_url="https://www.circle8.nl/opdracht/adviseur-ggd-ghor_VNR-85422",
+        title="Adviseur GGD-GHOR",
+    )
+    posting = adapter.parse_detail(stub, detail_html)
+
+    # Verify description uses Markdown formatting
+    assert posting.description.strip(), "Description should not be empty"
+
+    # Verify no ## headings (only ### and deeper)
+    assert not any(l.startswith("## ") for l in posting.description.splitlines()), "Description should not have ## headings"
+
+    # Verify no trailing whitespace except for hard breaks
+    for line in posting.description.splitlines():
+        if not line.endswith("  "):  # Allow hard breaks (two spaces)
+            assert line == line.rstrip(), f"Line has trailing whitespace: {repr(line)}"

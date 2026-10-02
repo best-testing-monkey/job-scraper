@@ -3,6 +3,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
@@ -100,7 +101,7 @@ class DjinniAdapter(SiteAdapter):
 
         valid_through = ld_json.get("validThrough")
 
-        description = ld_json.get("description", "")
+        description = html_to_markdown(ld_json.get("description", ""))
 
         posting = JobPosting(
             site_id=self.site_id,
