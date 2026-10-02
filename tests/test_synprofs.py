@@ -141,3 +141,30 @@ def test_parse_detail_hours_and_duration(adapter: SynprofsAdapter, detail_html: 
 
     # Verify workplace is Hybrid
     assert posting.workplace == "Hybrid"
+
+
+def test_parse_detail_description_markdown(adapter: SynprofsAdapter, detail_html: bytes) -> None:
+    stub = ListingStub(
+        listing_id="6930",
+        detail_url="https://www.synprofs.nl/opdracht/senior-tester-6930/",
+        title="Senior Tester",
+    )
+
+    posting = adapter.parse_detail(stub, detail_html)
+
+    # Verify description uses Markdown formatting
+    assert "\n\n" in posting.description, "Description should have multiple paragraphs"
+    assert any(l.startswith("- ") for l in posting.description.splitlines()), "Description should have list items"
+    assert any(l.startswith("### ") for l in posting.description.splitlines()), "Description should have headings"
+    assert "**" in posting.description, "Description should have bold text"
+
+    # Verify no ## headings (only ### and deeper)
+    assert not any(l.startswith("## ") for l in posting.description.splitlines()), "Description should not have ## headings"
+
+    # Verify no trailing whitespace except for hard breaks
+    for line in posting.description.splitlines():
+        if not line.endswith("  "):  # Allow hard breaks (two spaces)
+            assert line == line.rstrip(), f"Line has trailing whitespace: {repr(line)}"
+
+    # Verify non-empty
+    assert posting.description.strip(), "Description should not be empty"

@@ -2,6 +2,7 @@ from typing import Any, Iterator
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
@@ -144,4 +145,4 @@ class ArcDevAdapter(SiteAdapter):
         tab = soup.find("div", {"id": "tab-job-details"})
         if not tab:
             return ""
-        return tab.get_text(separator=" ", strip=True)
+        return html_to_markdown(str(tab))

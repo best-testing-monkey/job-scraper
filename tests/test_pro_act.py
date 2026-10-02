@@ -60,3 +60,33 @@ def test_parse_detail_client_location_rate():
     assert posting.location == "hybride"
     assert posting.workplace == "Hybrid"
     assert posting.rate == "marktconform"
+
+
+def test_parse_detail_description_markdown():
+    adapter = ProActAdapter()
+    detail_html = Path("tests/fixtures/pro_act/detail_8887.html").read_text()
+    stub = ListingStub(
+        listing_id="8887",
+        detail_url="https://pro-act.nl/vacatures/agile-coach-8887/",
+        title="Agile Coach",
+    )
+    posting = adapter.parse_detail(stub, detail_html)
+
+    # Verify description uses Markdown formatting
+    assert "\n\n" in posting.description, "Description should have multiple paragraphs"
+    assert any(l.startswith("- ") for l in posting.description.splitlines()), "Description should have list items"
+
+    # Verify no ## headings (only ### and deeper)
+    assert not any(l.startswith("## ") for l in posting.description.splitlines()), "Description should not have ## headings"
+
+    # Verify no trailing whitespace except for hard breaks
+    for line in posting.description.splitlines():
+        if not line.endswith("  "):  # Allow hard breaks (two spaces)
+            assert line == line.rstrip(), f"Line has trailing whitespace: {repr(line)}"
+
+    # Verify non-empty
+    assert posting.description.strip(), "Description should not be empty"
+
+    # Verify form boilerplate is not included
+    assert "Interesse?" not in posting.description, "Description should not include form sections"
+    assert "loondienst" not in posting.description, "Description should not include form options"

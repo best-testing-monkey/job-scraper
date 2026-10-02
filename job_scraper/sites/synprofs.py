@@ -4,6 +4,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
@@ -198,15 +199,12 @@ class SynprofsAdapter(SiteAdapter):
             if not container:
                 continue
 
-            # Get text from the container
-            text = container.get_text(separator=" ", strip=True)
+            # Convert each container separately to preserve formatting
+            text = html_to_markdown(str(container))
             if text:
                 description_parts.append(text)
 
-        # Join all parts with newlines
-        description = "\n".join(description_parts)
-
-        # Clean up excessive whitespace
-        description = re.sub(r"\s+", " ", description).strip()
+        # Join all parts with blank lines
+        description = "\n\n".join(description_parts)
 
         return description

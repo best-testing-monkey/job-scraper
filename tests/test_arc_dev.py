@@ -73,3 +73,29 @@ def test_parse_detail_job_posting(adapter: ArcDevAdapter, detail_html: bytes) ->
     assert posting.workplace == "Fully Remote"
     assert posting.extra_fields.get("seniority") == "Senior"
     assert posting.extra_fields.get("visa") == "U.S. visa required"
+
+
+def test_parse_detail_description_markdown(adapter: ArcDevAdapter, detail_html: bytes) -> None:
+    stub = ListingStub(
+        listing_id="pg2lgfgv87",
+        detail_url="/remote-jobs/j/ladders-senior-software-engineer-test-core-pg2lgfgv87",
+        title="Senior Software Engineer, Test Core",
+    )
+
+    posting = adapter.parse_detail(stub, detail_html)
+
+    # Verify description uses Markdown formatting
+    assert "\n\n" in posting.description, "Description should have multiple paragraphs"
+    assert any(l.startswith("- ") for l in posting.description.splitlines()), "Description should have list items"
+    assert "**" in posting.description, "Description should have bold text"
+
+    # Verify no ## headings (only ### and deeper)
+    assert not any(l.startswith("## ") for l in posting.description.splitlines()), "Description should not have ## headings"
+
+    # Verify no trailing whitespace except for hard breaks
+    for line in posting.description.splitlines():
+        if not line.endswith("  "):  # Allow hard breaks (two spaces)
+            assert line == line.rstrip(), f"Line has trailing whitespace: {repr(line)}"
+
+    # Verify non-empty
+    assert posting.description.strip(), "Description should not be empty"

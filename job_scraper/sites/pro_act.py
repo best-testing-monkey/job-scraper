@@ -2,6 +2,7 @@ import re
 from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
@@ -151,22 +152,35 @@ class ProActAdapter(SiteAdapter):
         content_wrapper = section_content.find("div", class_="content-wrapper")
         if not content_wrapper:
             return ""
-        description = content_wrapper.get_text(separator=" ", strip=True)
-        description = re.sub(r"\s+", " ", description)
+
         # The page bundles the application form (employment-type radio
         # buttons, contact fields, etc.) into the same content block as the
-        # real job description. Keep only the "Opdrachtomschrijving" section,
-        # which is the actual job content — everything after "Interesse?"
-        # (or the next "Solliciteren" prompt) is form boilerplate that can
-        # spuriously trip the exclusion-keyword filter (e.g. an "In
-        # loondienst" radio option, not a statement about this job).
-        match = re.search(
-            r"Opdrachtomschrijving(.*?)(?:Interesse\?|Solliciteren)",
-            description,
-            re.DOTALL,
+        # real job description. Find where "Interesse?" appears and cut there.
+        interesse_elem = content_wrapper.find(
+            ["h1", "h2", "h3", "h4", "h5", "h6"],
+            string=lambda s: s and "Interesse?" in s,
         )
-        if match:
-            description = ("Opdrachtomschrijving" + match.group(1)).strip()
+
+        if interesse_elem:
+            # Find the parent of interesse_elem that is a direct child of content_wrapper
+            cut_child = interesse_elem
+            while cut_child.parent and cut_child.parent != content_wrapper:
+                cut_child = cut_child.parent
+
+            # Create a new fragment with only content up to the parent of Interesse
+            fragment = BeautifulSoup("<div></div>", "html.parser")
+            for child in content_wrapper.children:
+                if child == cut_child:
+                    break
+                if isinstance(child, str):
+                    if child.strip():
+                        fragment.div.append(child)
+                else:
+                    # Deep copy to avoid modifying original
+                    fragment.div.append(BeautifulSoup(str(child), "html.parser").contents[0])
+            content_wrapper = fragment.div
+
+        description = html_to_markdown(str(content_wrapper))
         return description
 
     def _normalize_workplace_signal(self, location: str | None) -> str | None:
