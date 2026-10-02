@@ -77,16 +77,18 @@ def test_rebuild_site_all_skips_not_rebuildable(temp_db, monkeypatch, capsys):
         # Check that working_nomads and tender_link are NOT in the called sites
         assert "working_nomads" not in called_sites
         assert "tender_link" not in called_sites
+        assert "stone_interim" not in called_sites
 
         # Check that other sites ARE in the called sites
         for site in all_sites:
-            if site not in ["working_nomads", "tender_link"]:
+            if site not in ["working_nomads", "tender_link", "stone_interim"]:
                 assert site in called_sites
 
         # Check stderr messages for skipped sites
         captured = capsys.readouterr()
         assert "Skipping working_nomads:" in captured.err
         assert "Skipping tender_link:" in captured.err
+        assert "Skipping stone_interim:" in captured.err
 
 
 def test_rebuild_not_rebuildable_explicit_fails(temp_db, monkeypatch, capsys):

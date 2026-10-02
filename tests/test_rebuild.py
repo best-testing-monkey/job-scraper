@@ -38,6 +38,13 @@ def test_rebuild_site_not_rebuildable_working_nomads(tmp_db: JobRepository, tmp_
         rebuild_site("working_nomads", tmp_db, jobs_dir, raw_dir)
 
 
+def test_rebuild_site_not_rebuildable_stone_interim(tmp_db: JobRepository, tmp_dirs: tuple) -> None:
+    jobs_dir, raw_dir, _ = tmp_dirs
+    assert "stone_interim" in NOT_REBUILDABLE
+    with pytest.raises(ValueError, match="stone_interim"):
+        rebuild_site("stone_interim", tmp_db, jobs_dir, raw_dir)
+
+
 def test_rebuild_site_not_rebuildable_tender_link(tmp_db: JobRepository, tmp_dirs: tuple) -> None:
     jobs_dir, raw_dir, _ = tmp_dirs
     with pytest.raises(ValueError, match="tender_link"):

@@ -1,5 +1,6 @@
 import json
 import re
+import urllib.parse
 from typing import Any, ClassVar, Iterator
 
 from scrapling.fetchers import Fetcher
@@ -16,6 +17,9 @@ class StoneInterimAdapter(SiteAdapter):
     fetch_strategy = FetchStrategy.STATIC
     raw_format: ClassVar[str] = "json"
     LISTING_API_URL = "https://www.stone-interim.nl/api/v1/WordPress/GetOverviewItems/"
+
+    def __init__(self) -> None:
+        self._link_cache: dict[str, str] = {}
 
     def list_postings(self) -> Iterator[ListingStub]:
         response = Fetcher.post(
@@ -44,6 +48,7 @@ class StoneInterimAdapter(SiteAdapter):
                 continue
 
             listing_id = match.group(1)
+            self._link_cache[listing_id] = urllib.parse.urljoin(self.base_url + "/", link_url)
             detail_url = f"https://www.stone-interim.nl/api/v1/WordPress/GetVacancy/{listing_id}"
 
             yield ListingStub(
@@ -53,6 +58,12 @@ class StoneInterimAdapter(SiteAdapter):
             )
 
     def parse_detail(self, stub: ListingStub, page: Any) -> JobPosting:
+        source_url = self._link_cache.get(stub.listing_id)
+        if source_url is None:
+            raise ValueError(
+                f"No human LinkUrl cached for stone_interim listing {stub.listing_id}; "
+                "list_postings must run first"
+            )
         data = json.loads(page)
         cr = data.get("ToVacancy", {}).get("CRVacancy", {})
 
@@ -95,7 +106,7 @@ class StoneInterimAdapter(SiteAdapter):
         posting = JobPosting(
             site_id=self.site_id,
             listing_id=stub.listing_id,
-            source_url=stub.detail_url,
+            source_url=source_url,
             title=title,
             client=client,
             category=category,

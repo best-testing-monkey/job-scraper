@@ -6,6 +6,9 @@ from job_scraper.sites.base import FetchStrategy
 from job_scraper.core.models import ListingStub
 
 
+LINK_4893 = "https://www.stone-interim.nl/opdrachten/id/4893/Interim+Supply+Chain+Manager/Interim/"
+
+
 def load_fixture_bytes(filename: str) -> bytes:
     fixture_path = Path(__file__).parent / "fixtures" / "stone_interim" / filename
     return fixture_path.read_bytes()
@@ -55,6 +58,7 @@ def test_parse_detail_4893() -> None:
         title="Interim Supply Chain Manager",
     )
 
+    adapter._link_cache["4893"] = LINK_4893
     posting = adapter.parse_detail(stub, detail_data)
 
     assert posting.title == "Interim Supply Chain Manager"
@@ -79,6 +83,7 @@ def test_parse_detail_description_markdown() -> None:
         title="Interim Supply Chain Manager",
     )
 
+    adapter._link_cache["4893"] = LINK_4893
     posting = adapter.parse_detail(stub, detail_data)
 
     # Verify description uses Markdown formatting (multiple sections joined by blank lines)
@@ -94,3 +99,52 @@ def test_parse_detail_description_markdown() -> None:
 
     # Verify non-empty
     assert posting.description.strip(), "Description should not be empty"
+
+
+def _list_stubs(adapter: StoneInterimAdapter) -> list[ListingStub]:
+    mock_response = MagicMock()
+    mock_response.body = load_fixture_bytes("listing_api_GetOverviewItems.json")
+    with patch("job_scraper.sites.stone_interim.Fetcher.post", return_value=mock_response):
+        return list(adapter.list_postings())
+
+
+def test_list_postings_detail_url_stays_api() -> None:
+    stubs = _list_stubs(StoneInterimAdapter())
+    assert stubs
+    assert all("/api/v1/WordPress/GetVacancy/" in s.detail_url for s in stubs)
+
+
+def test_source_url_is_exact_link_url_for_all_items() -> None:
+    import json
+
+    adapter = StoneInterimAdapter()
+    stubs = _list_stubs(adapter)
+    items = json.loads(load_fixture_bytes("listing_api_GetOverviewItems.json"))["Items"]
+    assert len(items) == 24 and len(stubs) == 24
+    detail = load_fixture_bytes("detail_4893_api_GetVacancy.json")
+    by_id = {s.listing_id: s for s in stubs}
+    for item in items:
+        listing_id = item["LinkUrl"].split("/id/")[1].split("/")[0]
+        posting = adapter.parse_detail(by_id[listing_id], detail)
+        assert posting.source_url == adapter.base_url + item["LinkUrl"]
+        assert "/api/" not in posting.source_url
+        assert "GetVacancy" not in posting.source_url
+
+
+def test_parse_detail_4893_source_url_human() -> None:
+    adapter = StoneInterimAdapter()
+    stub = next(s for s in _list_stubs(adapter) if s.listing_id == "4893")
+    posting = adapter.parse_detail(stub, load_fixture_bytes("detail_4893_api_GetVacancy.json"))
+    assert posting.source_url == LINK_4893
+
+
+def test_parse_detail_without_listing_raises() -> None:
+    import pytest
+
+    stub = ListingStub(
+        listing_id="4893",
+        detail_url="https://www.stone-interim.nl/api/v1/WordPress/GetVacancy/4893",
+        title="x",
+    )
+    with pytest.raises(ValueError, match="LinkUrl"):
+        StoneInterimAdapter().parse_detail(stub, load_fixture_bytes("detail_4893_api_GetVacancy.json"))

@@ -11,6 +11,7 @@ from job_scraper.sites.registry import SITE_REGISTRY
 NOT_REBUILDABLE: dict[str, str] = {
     "working_nomads": "Parse detail reads cache from list_postings (not saved)",
     "tender_link": "Parse detail reads cache from list_postings (not saved)",
+    "stone_interim": "parse_detail needs the human LinkUrl from the listing API response, which is not saved in raw/ — re-scrape instead",
 }
 
 

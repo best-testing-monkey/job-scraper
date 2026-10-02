@@ -28,7 +28,7 @@ Rebuild markdown from raw pages:
 uv run python -m job_scraper rebuild --site all
 ```
 
-Note: `working_nomads` and `tender_link` cannot be rebuilt (re-scrape instead, as they cache data during `list_postings`).
+Note: `working_nomads`, `tender_link` and `stone_interim` cannot be rebuilt (re-scrape instead, as they cache data during `list_postings`).
 
 ## Currently supported sites
 
