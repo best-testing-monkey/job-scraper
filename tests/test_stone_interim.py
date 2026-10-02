@@ -148,3 +148,13 @@ def test_parse_detail_without_listing_raises() -> None:
     )
     with pytest.raises(ValueError, match="LinkUrl"):
         StoneInterimAdapter().parse_detail(stub, load_fixture_bytes("detail_4893_api_GetVacancy.json"))
+
+
+def test_screenshot_selector_is_none_blocked() -> None:
+    # BLOCKED: the saved human page (detail_4893.html) is a client-rendered
+    # shell without the description, and raw/stone_interim has only JSON.
+    from bs4 import BeautifulSoup
+
+    assert StoneInterimAdapter().screenshot_selector is None
+    html = (Path(__file__).parent / "fixtures" / "stone_interim" / "detail_4893.html").read_text()
+    assert "Supply Chain afdeling" not in BeautifulSoup(html, "html.parser").get_text()

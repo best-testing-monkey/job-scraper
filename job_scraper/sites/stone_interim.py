@@ -14,6 +14,7 @@ from job_scraper.sites.base import SiteAdapter, FetchStrategy
 class StoneInterimAdapter(SiteAdapter):
     site_id = "stone_interim"
     base_url = "https://www.stone-interim.nl"
+    screenshot_selector = None  # BLOCKED: saved human page has no description (client-rendered)
     fetch_strategy = FetchStrategy.STATIC
     raw_format: ClassVar[str] = "json"
     LISTING_API_URL = "https://www.stone-interim.nl/api/v1/WordPress/GetOverviewItems/"

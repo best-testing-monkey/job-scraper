@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 from unittest.mock import patch
 
@@ -195,3 +196,20 @@ def test_source_url_is_human_ad_page() -> None:
     assert canonical != posting.source_url
     assert canonical.rstrip("/").rsplit("-", 1)[1] == "33345"
     assert posting.source_url.rstrip("/").rsplit("-", 1)[1] == "33345"
+
+
+@pytest.mark.parametrize(
+    "fixture",
+    ["detail_33345.html"],
+)
+def test_screenshot_selector_matches_description_element(fixture: str) -> None:
+    from bs4 import BeautifulSoup
+
+    adapter = TenderLinkAdapter()
+    assert adapter.screenshot_selector
+    html = (Path(__file__).parent / "fixtures" / "tender_link" / fixture).read_text()
+    els = BeautifulSoup(html, "html.parser").select(adapter.screenshot_selector)
+    assert len(els) == 1
+    assert "Wij zoeken een ervaren professional die snel zijn of haar weg vindt binnen Publiekszaken" in els[0].get_text()
+    assert els[0].find(["nav", "header", "footer", "form"]) is None
+    assert "cookie" not in els[0].get_text().lower()

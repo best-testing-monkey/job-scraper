@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 from unittest.mock import patch
 from job_scraper.sites.harveynash import HarveyNashAdapter
@@ -127,3 +128,20 @@ def test_source_url_is_human_ad_page():
     # Error path (no __NEXT_DATA__) still keeps the real ad URL.
     fallback = adapter.parse_detail(stub, "<html><body></body></html>")
     assert fallback.source_url == posting.source_url
+
+
+@pytest.mark.parametrize(
+    "fixture",
+    ["detail_299204.html"],
+)
+def test_screenshot_selector_matches_description_element(fixture: str) -> None:
+    from bs4 import BeautifulSoup
+
+    adapter = HarveyNashAdapter()
+    assert adapter.screenshot_selector
+    html = (Path(__file__).parent / "fixtures" / "harveynash" / fixture).read_text()
+    els = BeautifulSoup(html, "html.parser").select(adapter.screenshot_selector)
+    assert len(els) == 1
+    assert "Je werkt samen met je collega's van het Congestie Office" in els[0].get_text()
+    assert els[0].find(["nav", "header", "footer", "form"]) is None
+    assert "cookie" not in els[0].get_text().lower()

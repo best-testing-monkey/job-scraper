@@ -308,3 +308,20 @@ def test_all_listing_jobs_have_human_source_url() -> None:
         assert posting.source_url.startswith(BASE)
         assert "/job/go/" not in posting.source_url
         assert "/api/" not in posting.source_url
+
+
+@pytest.mark.parametrize(
+    "fixture",
+    ["detail_1785901.html"],
+)
+def test_screenshot_selector_matches_description_element(fixture: str) -> None:
+    from bs4 import BeautifulSoup
+
+    adapter = WorkingNomadsAdapter()
+    assert adapter.screenshot_selector
+    html = (Path(__file__).parent / "fixtures" / "working_nomads" / fixture).read_text()
+    els = BeautifulSoup(html, "html.parser").select(adapter.screenshot_selector)
+    assert len(els) == 1
+    assert "The objective of this project is to collect a large and diverse dataset" in els[0].get_text()
+    assert els[0].find(["nav", "header", "footer", "form"]) is None
+    assert "cookie" not in els[0].get_text().lower()

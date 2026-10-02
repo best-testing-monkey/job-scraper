@@ -13,6 +13,7 @@ from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 class WorkingNomadsAdapter(SiteAdapter):
     site_id: str = "working_nomads"
     base_url: str = "https://www.workingnomads.com"
+    screenshot_selector = "div.jd-desktop div.jd-description"
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
     LISTING_URL: str = "https://www.workingnomads.com/api/exposed_jobs/"
 

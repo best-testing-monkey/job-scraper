@@ -13,6 +13,7 @@ from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 class HarveyNashAdapter(SiteAdapter):
     site_id: str = "harveynash"
     base_url: str = "https://www.harveynash.nl"
+    screenshot_selector = "div.post-content"
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
     LISTING_URL: str = "https://www.harveynash.nl/sitemap.xml"
 

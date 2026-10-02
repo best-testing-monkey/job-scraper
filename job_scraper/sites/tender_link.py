@@ -12,6 +12,7 @@ from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 class TenderLinkAdapter(SiteAdapter):
     site_id: str = "tender_link"
     base_url: str = "https://tender-link.nl"
+    screenshot_selector = "div.sd-sdcx-components-vacancies-parts-publication-text"
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
     LISTING_URL: str = "https://tender-link.nl/wp-json/sdcx/v2/vacancies/all"
 
