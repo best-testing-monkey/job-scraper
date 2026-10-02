@@ -78,7 +78,11 @@ class TestHeroParseDetail:
         assert posting.location == "Maasland"
         assert posting.workplace == "Hybrid"
         assert posting.hours == "36 uur/week"
-        assert (
-            "Cloud Engineer voor het programma Grensverleggende IT"
-            in posting.description
+        assert posting.description == (
+            "Voor het Ministerie van Defensie zoeken wij een Cloud Engineer voor het "
+            "programma Grensverleggende IT. Je bouwt mee aan het Private Cloud Platform "
+            "en automatiseert de cloud orchestration met HPE Morpheus, Nutanix en "
+            "Terraform in een enterprise omgeving met hoge beveiligingseisen."
         )
+        assert not any(l.startswith("## ") for l in posting.description.splitlines())  # No level-2 headers
+        assert not any(l.rstrip() != l and l.rstrip() + "  " != l for l in posting.description.splitlines())  # No trailing whitespace except hard breaks

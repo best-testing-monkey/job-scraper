@@ -73,6 +73,10 @@ def test_parse_detail_test_automation_consultant() -> None:
     assert posting.hours is not None and "100%" in posting.hours
     assert posting.category is not None and "Playwright" in posting.category
     assert len(posting.description) > 0
+    assert "\n\n" in posting.description  # Multiple paragraphs
+    assert not any(l.startswith("## ") for l in posting.description.splitlines())  # No level-2 headers
+    assert any("- " in line for line in posting.description.splitlines())  # Has list items
+    assert "**" in posting.description  # Has bold text
     assert posting.scrape_note
     assert "paginat" in posting.scrape_note.lower()
     assert posting.client is None

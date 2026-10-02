@@ -3,6 +3,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
@@ -111,7 +112,18 @@ class FreelancerComAdapter(SiteAdapter):
         description = ""
         desc_elem = soup.find("p", class_="Project-description")
         if desc_elem:
-            description = desc_elem.get_text(strip=True)
+            # Check if element has nested HTML tags
+            has_nested_tags = any(hasattr(child, 'name') and child.name for child in desc_elem.children)
+            if has_nested_tags:
+                # Element has HTML structure - use decode_contents
+                description = html_to_markdown(desc_elem.decode_contents())
+            else:
+                # Plain text - use a placeholder for & so it goes through plain text path
+                text = desc_elem.get_text()
+                amp_placeholder = "\x00AMP\x00"
+                text_processed = text.replace("&", amp_placeholder)
+                result = html_to_markdown(text_processed)
+                description = result.replace(amp_placeholder, "&")
 
         # Extract category from fl-tag[fltrackinglabel="ProjectViewLoggedOut-SkillTag"]
         category = None

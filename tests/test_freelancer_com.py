@@ -87,9 +87,13 @@ def test_parse_detail() -> None:
     # Validate client is None
     assert posting.client is None
 
-    # Validate description is not empty
+    # Validate description is not empty and contains expected structure
     assert posting.description != ""
     assert "Astrology" in posting.description or "astrology" in posting.description
+    assert "\n\n" in posting.description  # Multiple paragraphs
+    assert not any(l.startswith("## ") for l in posting.description.splitlines())  # No level-2 headers
+    assert any(l.startswith("-") or l.startswith("*") for l in posting.description.splitlines())  # Has list markers
+    assert "**" in posting.description  # Has bold text
 
     # Validate category/skills
     assert posting.category is not None

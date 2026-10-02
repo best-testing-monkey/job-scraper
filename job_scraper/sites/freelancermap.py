@@ -4,6 +4,7 @@ from typing import Any, Iterator
 
 from bs4 import BeautifulSoup, Tag
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import FetchStrategy, SiteAdapter, fetch_page
@@ -121,7 +122,9 @@ class FreelancermapAdapter(SiteAdapter):
 
         description_elem = soup.select_one("div.project-body-description .ql-editor")
         description = (
-            description_elem.get_text(" ", strip=True) if description_elem else ""
+            html_to_markdown(description_elem.decode_contents())
+            if description_elem
+            else ""
         )
 
         extra_fields: dict[str, str] = {}

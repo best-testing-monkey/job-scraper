@@ -3,6 +3,7 @@ from typing import Any, Iterator
 
 from bs4 import BeautifulSoup
 
+from job_scraper.core.html_markdown import html_to_markdown
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import FetchStrategy, SiteAdapter, fetch_page
@@ -87,13 +88,11 @@ class HeroAdapter(SiteAdapter):
                         elif label.strip() == "Uren per week":
                             hours = value.strip()
 
-        # Extract description
+        # Extract description from the entire hero-requisition-body div
         description = ""
         desc_div = soup.find("div", class_="hero-requisition-body")
         if desc_div:
-            p = desc_div.find("p")
-            if p:
-                description = p.get_text(strip=True)
+            description = html_to_markdown(desc_div.decode_contents())
 
         # Normalize Dutch "Hybride" to English "Hybrid" for classification
         if werkvorm:
