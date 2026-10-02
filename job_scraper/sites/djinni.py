@@ -12,6 +12,7 @@ from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 class DjinniAdapter(SiteAdapter):
     site_id: str = "djinni"
     base_url: str = "https://djinni.co"
+    screenshot_selector = "div.job-post__description"
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
     LISTING_URL: str = "https://djinni.co/jobs/keyword-QA/"
 

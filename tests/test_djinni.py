@@ -159,3 +159,21 @@ def test_source_url_is_human_ad_page(
     )
     assert pattern.match(posting.source_url)
     assert not any(b in posting.source_url for b in BAD_FRAGMENTS)
+
+
+@pytest.mark.parametrize("fixture", ["detail_848723.html", "detail_850338.html"])
+def test_screenshot_selector_matches_description_element(fixture: str) -> None:
+    from bs4 import BeautifulSoup
+
+    adapter = DjinniAdapter()
+    assert adapter.screenshot_selector
+    html = (Path(__file__).parent / "fixtures" / "djinni" / fixture).read_text()
+    els = BeautifulSoup(html, "html.parser").select(adapter.screenshot_selector)
+    assert len(els) == 1
+    needles = {
+        "detail_848723.html": "Digis is a European IT company with 250+ specialists",
+        "detail_850338.html": "Own feature quality primarily through manual testing",
+    }
+    assert needles[fixture] in els[0].get_text()
+    assert els[0].find(["nav", "header", "footer", "form"]) is None
+    assert "cookie" not in els[0].get_text().lower()

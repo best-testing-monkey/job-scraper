@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 from unittest.mock import patch
 from job_scraper.sites.sevenstars import SevenstarsAdapter
@@ -186,3 +187,17 @@ def test_source_url_is_human_ad_page() -> None:
     for s in stubs:
         assert re.match(pattern, s.detail_url), s.detail_url
         assert not any(f in s.detail_url for f in forbidden)
+
+
+@pytest.mark.parametrize("fixture", ["detail_7S-004982.html"])
+def test_screenshot_selector_matches_description_element(fixture: str) -> None:
+    from bs4 import BeautifulSoup
+
+    adapter = SevenstarsAdapter()
+    assert adapter.screenshot_selector
+    html = (Path(__file__).parent / "fixtures" / "sevenstars" / fixture).read_text()
+    els = BeautifulSoup(html, "html.parser").select(adapter.screenshot_selector)
+    assert len(els) == 1
+    assert "Voor een grote organisatie in de regio Zwolle zoeken wij een ervaren" in els[0].get_text()
+    assert els[0].find(["nav", "header", "footer", "form"]) is None
+    assert "cookie" not in els[0].get_text().lower()

@@ -195,3 +195,17 @@ def test_source_url_is_human_ad_page(adapter, detail_fixture, listing_fixture):
     for s in stubs:
         assert pattern.match(s.detail_url), s.detail_url
         assert not any(b in s.detail_url for b in bad_parts)
+
+
+@pytest.mark.parametrize("fixture", ["detail_tLJWUBCWY1P8MBXMScbwRE.html"])
+def test_screenshot_selector_matches_description_element(fixture: str) -> None:
+    from bs4 import BeautifulSoup
+
+    adapter = IamexpatAdapter()
+    assert adapter.screenshot_selector
+    html = (Path(__file__).parent / "fixtures" / "iamexpat" / fixture).read_text()
+    els = BeautifulSoup(html, "html.parser").select(adapter.screenshot_selector)
+    assert len(els) == 1
+    assert "The department is organized according to agile principles in a SAFe value stream" in els[0].get_text()
+    assert els[0].find(["nav", "header", "footer", "form"]) is None
+    assert "cookie" not in els[0].get_text().lower()

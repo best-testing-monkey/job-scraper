@@ -13,6 +13,7 @@ from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 class Circle8Adapter(SiteAdapter):
     site_id: str = "circle8"
     base_url: str = "https://www.circle8.nl"
+    screenshot_selector = "div.c-vacancy-paragraph__body-text"
     fetch_strategy: FetchStrategy = FetchStrategy.STEALTH
     LISTING_URL: str = "https://www.circle8.nl/opdrachten"
 
