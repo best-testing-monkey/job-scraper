@@ -108,3 +108,22 @@ def test_parse_detail() -> None:
 
     # Validate workplace is Fully Remote (from "Remote project" text)
     assert posting.workplace == "Fully Remote"
+
+
+def test_source_url_is_human_ad_page() -> None:
+    import re
+
+    BAD_FRAGMENTS = ("/apply", "/go/", "/api/", "/wp-json/", ".json", "?utm_", "/redirect")
+    pattern = re.compile(r"^https://www\.freelancer\.com/projects/[a-z0-9-]+/[a-z0-9-]+$")
+    adapter = FreelancerComAdapter()
+    stub = ListingStub(
+        listing_id="astrology-app-tester-required",
+        detail_url="https://www.freelancer.com/projects/mobile-app-testing/astrology-app-tester-required",
+        title="Astrology App QA Tester Required",
+    )
+    posting = adapter.parse_detail(stub, load_fixture("detail_40724221.html"))
+    assert posting.source_url == (
+        "https://www.freelancer.com/projects/mobile-app-testing/astrology-app-tester-required"
+    )
+    assert pattern.match(posting.source_url)
+    assert not any(b in posting.source_url for b in BAD_FRAGMENTS)

@@ -99,3 +99,30 @@ def test_parse_detail_description_markdown(adapter: ArcDevAdapter, detail_html: 
 
     # Verify non-empty
     assert posting.description.strip(), "Description should not be empty"
+
+
+def test_source_url_is_human_ad_page(
+    adapter: ArcDevAdapter, listing_html: bytes, detail_html: bytes, monkeypatch
+) -> None:
+    import re
+
+    import job_scraper.sites.arc_dev
+
+    monkeypatch.setattr(
+        job_scraper.sites.arc_dev, "fetch_page", lambda strategy, url: listing_html
+    )
+    BAD_FRAGMENTS = ("/apply", "/go/", "/api/", "/wp-json/", ".json", "?utm_", "/redirect")
+    pattern = re.compile(r"^https://arc\.dev/remote-jobs/j/[a-z0-9-]+-[a-z0-9]{10}$")
+
+    stubs = list(adapter.list_postings())
+    assert stubs
+    for s in stubs:
+        assert pattern.match(s.detail_url)
+        assert not any(b in s.detail_url for b in BAD_FRAGMENTS)
+
+    posting = adapter.parse_detail(stubs[0], detail_html)
+    assert posting.source_url == (
+        "https://arc.dev/remote-jobs/j/ladders-senior-software-engineer-test-core-pg2lgfgv87"
+    )
+    assert pattern.match(posting.source_url)
+    assert not any(b in posting.source_url for b in BAD_FRAGMENTS)

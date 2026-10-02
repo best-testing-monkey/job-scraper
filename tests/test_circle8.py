@@ -86,3 +86,28 @@ def test_parse_detail_description_markdown() -> None:
     for line in posting.description.splitlines():
         if not line.endswith("  "):  # Allow hard breaks (two spaces)
             assert line == line.rstrip(), f"Line has trailing whitespace: {repr(line)}"
+
+
+def test_source_url_is_human_ad_page() -> None:
+    import re
+
+    BAD_FRAGMENTS = ("/apply", "/go/", "/api/", "/wp-json/", ".json", "?utm_", "/redirect")
+    pattern = re.compile(r"^https://www\.circle8\.nl/opdracht/[^/?#\s]+_VNR-\d+$")
+    adapter = Circle8Adapter()
+
+    listing_html = Path("tests/fixtures/circle8/listing.html").read_bytes()
+    with patch("job_scraper.sites.circle8.fetch_page", return_value=listing_html):
+        stubs = list(adapter.list_postings())
+    assert stubs
+    for s in stubs:
+        assert pattern.match(s.detail_url), s.detail_url
+        assert not any(b in s.detail_url for b in BAD_FRAGMENTS)
+
+    detail_html = Path("tests/fixtures/circle8/detail_VNR-85422.html").read_bytes()
+    stub = next(s for s in stubs if s.listing_id == "VNR-85422")
+    posting = adapter.parse_detail(stub, detail_html)
+    assert posting.source_url == (
+        "https://www.circle8.nl/opdracht/adviseur-ggd-ghor_VNR-85422"
+    )
+    assert pattern.match(posting.source_url)
+    assert not any(b in posting.source_url for b in BAD_FRAGMENTS)

@@ -126,3 +126,36 @@ def test_parse_detail_workplace_options_list(
 
     assert posting.location == "Ukraine"
     assert posting.workplace == "Fully Remote"
+
+
+def test_source_url_is_human_ad_page(
+    adapter: DjinniAdapter, listing_html: bytes, detail_html: bytes, monkeypatch
+) -> None:
+    import re
+
+    import job_scraper.sites.djinni
+
+    # Single listing page: stop pagination by serving the same page once.
+    calls = {"n": 0}
+
+    def mock_fetch_page(strategy, url):
+        calls["n"] += 1
+        return listing_html
+
+    monkeypatch.setattr(job_scraper.sites.djinni, "fetch_page", mock_fetch_page)
+    BAD_FRAGMENTS = ("/apply", "/go/", "/api/", "/wp-json/", ".json", "?utm_", "/redirect")
+    pattern = re.compile(r"^https://djinni\.co/jobs/\d+-[a-z0-9-]+/$")
+
+    stubs = list(adapter.list_postings())
+    assert stubs
+    for s in stubs:
+        assert pattern.match(s.detail_url), s.detail_url
+        assert not any(b in s.detail_url for b in BAD_FRAGMENTS)
+
+    stub = next(s for s in stubs if s.listing_id == "848723")
+    posting = adapter.parse_detail(stub, detail_html)
+    assert posting.source_url == (
+        "https://djinni.co/jobs/848723-senior-manual-qa-engineer-warsaw-on-site/"
+    )
+    assert pattern.match(posting.source_url)
+    assert not any(b in posting.source_url for b in BAD_FRAGMENTS)
