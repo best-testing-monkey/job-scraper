@@ -113,6 +113,42 @@ def test_run_site_basic(tmp_path: Path) -> None:
     assert (jobs_dir / "fake-site-job-3-contractor-role-no-zzp-niet-toegestaan-here.md").exists()
 
 
+def test_run_site_saves_raw_pages_when_raw_dir_given(tmp_path: Path) -> None:
+    db_path = tmp_path / "test.db"
+    jobs_dir = tmp_path / "jobs"
+    raw_dir = tmp_path / "raw"
+    repo = JobRepository(str(db_path))
+
+    adapter = FakeAdapter()
+
+    with patch("job_scraper.pipeline.fetch_page") as mock_fetch:
+        mock_fetch.return_value = b"<html>raw page</html>"
+        run_site(adapter, repo, str(jobs_dir), "2023-01-01T00:00:00", raw_dir=str(raw_dir))
+
+    # Raw pages are saved unconditionally, including for the excluded job-2
+    # posting — filtering logic can change later without losing the source.
+    assert (raw_dir / "fake-site" / "fake-site-job-1-python-developer.html").read_bytes() == (
+        b"<html>raw page</html>"
+    )
+    assert (raw_dir / "fake-site" / "fake-site-job-2-senior-developer.html").exists()
+    assert (raw_dir / "fake-site" / "fake-site-job-3-contractor-role-no-zzp-niet-toegestaan-here.html").exists()
+
+
+def test_run_site_skips_raw_storage_when_raw_dir_none(tmp_path: Path) -> None:
+    db_path = tmp_path / "test.db"
+    jobs_dir = tmp_path / "jobs"
+    raw_dir = tmp_path / "raw"
+    repo = JobRepository(str(db_path))
+
+    adapter = FakeAdapter()
+
+    with patch("job_scraper.pipeline.fetch_page") as mock_fetch:
+        mock_fetch.return_value = b"<html>raw page</html>"
+        run_site(adapter, repo, str(jobs_dir), "2023-01-01T00:00:00")
+
+    assert not raw_dir.exists()
+
+
 def test_run_site_with_duplicates(tmp_path: Path) -> None:
     db_path = tmp_path / "test.db"
     jobs_dir = tmp_path / "jobs"

@@ -40,6 +40,10 @@ class SiteAdapter(ABC):
     site_id: ClassVar[str]
     base_url: ClassVar[str]
     fetch_strategy: ClassVar[FetchStrategy] = FetchStrategy.STATIC
+    raw_format: ClassVar[str] = "html"
+    """File extension for the raw saved detail page (see raw_export.write).
+    Override to "json" for adapters whose detail fetch returns a JSON API
+    response rather than an HTML page."""
 
     @abstractmethod
     def list_postings(self) -> Iterator[ListingStub]: ...

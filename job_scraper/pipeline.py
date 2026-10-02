@@ -3,23 +3,33 @@ from datetime import datetime
 from job_scraper.core.db import JobRepository
 from job_scraper.core.filters import apply_dedup, is_excluded
 from job_scraper.core.markdown_export import write
+from job_scraper.core.raw_export import write as write_raw
 from job_scraper.core.robots import robots_allowed
 from job_scraper.sites.base import FetchStrategy, SiteAdapter, fetch_page
 from job_scraper.sites.registry import SITE_REGISTRY
 
 
 def run_site(
-    adapter: SiteAdapter, repo: JobRepository, jobs_dir: str, run_started_at: str
+    adapter: SiteAdapter,
+    repo: JobRepository,
+    jobs_dir: str,
+    run_started_at: str,
+    raw_dir: str | None = None,
 ) -> dict:
     """For each ListingStub from adapter.list_postings(): fetch its detail
-    page via fetch_page(adapter.fetch_strategy, stub.detail_url), call
-    adapter.parse_detail(stub, page), then: if is_excluded(posting): skip
-    (don't store). Otherwise: posting, dup_id = apply_dedup(posting, repo);
-    changed = repo.upsert(posting, seen_at=run_started_at); if dup_id is
-    not None: repo.set_duplicate_of(posting.site_id, posting.listing_id,
-    dup_id) — and do NOT export markdown for a duplicate, regardless of
-    `changed`. If not a duplicate and changed: call
-    markdown_export.write(posting, jobs_dir). After the loop, call
+    page via fetch_page(adapter.fetch_strategy, stub.detail_url); if
+    raw_dir is set, save the raw fetched bytes via raw_export.write(
+    posting, page, raw_dir) unconditionally (before exclusion/dedup), so
+    the raw page is captured regardless of downstream filtering — that
+    filtering logic can change later and raw storage shouldn't have to be
+    re-scraped to catch up. Then call adapter.parse_detail(stub, page),
+    then: if is_excluded(posting): skip (don't store markdown).
+    Otherwise: posting, dup_id = apply_dedup(posting, repo); changed =
+    repo.upsert(posting, seen_at=run_started_at); if dup_id is not None:
+    repo.set_duplicate_of(posting.site_id, posting.listing_id, dup_id) —
+    and do NOT export markdown for a duplicate, regardless of `changed`.
+    If not a duplicate and changed: call markdown_export.write(posting,
+    jobs_dir). After the loop, call
     repo.mark_stale_not_seen_since(adapter.site_id, run_started_at).
     Returns a dict of counters: {"seen": int, "excluded": int,
     "duplicates": int, "written": int, "stale_marked": int}."""
@@ -29,6 +39,9 @@ def run_site(
         counters["seen"] += 1
         page = fetch_page(adapter.fetch_strategy, stub.detail_url)
         posting = adapter.parse_detail(stub, page)
+
+        if raw_dir:
+            write_raw(posting, page, raw_dir, ext=adapter.raw_format)
 
         if is_excluded(posting):
             counters["excluded"] += 1
@@ -55,13 +68,14 @@ def run(
     repo: JobRepository,
     jobs_dir: str,
     ignore_robots: bool = False,
+    raw_dir: str | None = None,
 ) -> dict[str, dict]:
     """For each site_id: if not in SITE_REGISTRY, skip with a printed
     warning (to stderr) and continue. If robots_allowed(adapter.base_url) is
     False, skip with a printed warning and continue — unless ignore_robots
     is True, in which case the check is bypassed (with a printed notice, so
     the bypass is always visible in the run's output, not silent). Otherwise
-    instantiate the adapter and call run_site(...). Returns
+    instantiate the adapter and call run_site(..., raw_dir=raw_dir). Returns
     {site_id: counters_dict} for every site actually run."""
     import sys
 
@@ -90,7 +104,7 @@ def run(
                 continue
 
         run_started_at = datetime.now().isoformat()
-        counters = run_site(adapter, repo, jobs_dir, run_started_at)
+        counters = run_site(adapter, repo, jobs_dir, run_started_at, raw_dir=raw_dir)
         results[site_id] = counters
 
     return results

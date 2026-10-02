@@ -219,4 +219,5 @@ __marimo__/
 
 # Generated output
 jobs/
+raw/
 scraper.db

@@ -29,6 +29,17 @@ def main() -> None:
         help="Path to jobs directory (default: jobs/)",
     )
     scrape_parser.add_argument(
+        "--raw-dir",
+        default="raw/",
+        help="Path to raw fetched-page directory, one subfolder per site "
+        "(default: raw/); pass --no-raw to skip raw storage entirely",
+    )
+    scrape_parser.add_argument(
+        "--no-raw",
+        action="store_true",
+        help="Skip saving raw fetched pages (raw storage is on by default)",
+    )
+    scrape_parser.add_argument(
         "--ignore-robots",
         action="store_true",
         help="Bypass the robots.txt check (only use for sites you have "
@@ -60,7 +71,10 @@ def handle_scrape(args: argparse.Namespace) -> None:
         site_ids = args.sites
 
     repo = JobRepository(args.db)
-    results = run(site_ids, repo, args.jobs_dir, ignore_robots=args.ignore_robots)
+    raw_dir = None if args.no_raw else args.raw_dir
+    results = run(
+        site_ids, repo, args.jobs_dir, ignore_robots=args.ignore_robots, raw_dir=raw_dir
+    )
 
     for site_id, counters in results.items():
         print(f"{site_id}: {json.dumps(counters)}")
