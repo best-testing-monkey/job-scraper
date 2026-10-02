@@ -14,6 +14,7 @@ class GuruAdapter(SiteAdapter):
     site_id: str = "guru"
     base_url: str = "https://www.guru.com"
     fetch_strategy: FetchStrategy = FetchStrategy.STEALTH
+    screenshot_selector = "pre.jobDetails__description"
     LISTING_URL: str = "https://www.guru.com/d/jobs/"
 
     def list_postings(self) -> Iterator[ListingStub]:

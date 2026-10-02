@@ -12,6 +12,7 @@ class ArcDevAdapter(SiteAdapter):
     site_id: str = "arc_dev"
     base_url: str = "https://arc.dev"
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
+    screenshot_selector = "#tab-job-details"
     LISTING_URL: str = "https://arc.dev/remote-jobs/qa-engineer"
 
     def list_postings(self) -> Iterator[ListingStub]:

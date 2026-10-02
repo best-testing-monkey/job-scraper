@@ -13,6 +13,7 @@ class FreelancerComAdapter(SiteAdapter):
     site_id: str = "freelancer_com"
     base_url: str = "https://www.freelancer.com"
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
+    screenshot_selector = "p.Project-description"
     LISTING_URL: str = "https://www.freelancer.com/jobs/software-testing/"
 
     def list_postings(self) -> Iterator[ListingStub]:

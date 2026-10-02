@@ -63,6 +63,7 @@ class FreelancermapAdapter(SiteAdapter):
     site_id: str = "freelancermap"
     base_url: str = "https://www.freelancermap.de"
     fetch_strategy: FetchStrategy = FetchStrategy.STEALTH
+    screenshot_selector = "div.project-body-description"
     LISTING_URL: str = "https://www.freelancermap.de/projekte?query=Playwright"
 
     def list_postings(self) -> Iterator[ListingStub]:

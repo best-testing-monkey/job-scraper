@@ -126,3 +126,17 @@ def test_source_url_is_human_ad_page(
     )
     assert pattern.match(posting.source_url)
     assert not any(b in posting.source_url for b in BAD_FRAGMENTS)
+
+
+@pytest.mark.parametrize("fixture", ['detail_pg2lgfgv87.html'])
+def test_screenshot_selector_matches_description_element(fixture: str) -> None:
+    from bs4 import BeautifulSoup
+
+    adapter = ArcDevAdapter()
+    assert adapter.screenshot_selector
+    html = (Path(__file__).parent / "fixtures" / "arc_dev" / fixture).read_text()
+    els = BeautifulSoup(html, "html.parser").select(adapter.screenshot_selector)
+    assert len(els) == 1
+    assert "For our client, we are seeking a Senior Software Engineer, Test Core to join the team" in els[0].get_text()
+    assert els[0].find(["nav", "header", "footer", "form"]) is None
+    assert "cookie" not in els[0].get_text().lower()
