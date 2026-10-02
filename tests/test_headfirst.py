@@ -75,3 +75,23 @@ def test_parse_detail_duration_and_apply_url():
     assert posting.extra_fields.get("apply_url") == (
         "https://striive.com/nl/opdrachten?id=28ed2087-a156-462e-b89c-fccc6ff74a71"
     )
+
+
+def test_source_url_is_human_ad_page():
+    # LIMITATION: headfirst.nl has no per-ad page (/vind-opdrachten/<slug> and
+    # /vind-opdrachten/<id> return 404). The only per-ad link is the external
+    # broker's brokerUrl (striive.com), kept as extra_fields["apply_url"]. So
+    # source_url is explicitly the documented overview page.
+    overview = "https://www.headfirst.nl/vind-opdrachten/"
+    assert HeadfirstAdapter.LISTING_URL == overview
+    adapter = HeadfirstAdapter()
+    with patch(
+        "job_scraper.sites.headfirst.fetch_page", return_value=_fixture_bytes()
+    ):
+        stubs = list(adapter.list_postings())
+    assert all(stub.detail_url == overview for stub in stubs)
+
+    stub = next(s for s in stubs if s.listing_id == TARGET_ID)
+    posting = adapter.parse_detail(stub, _fixture_bytes())
+    assert posting.source_url == overview
+    assert posting.extra_fields["apply_url"].startswith("https://striive.com/")

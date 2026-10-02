@@ -92,3 +92,38 @@ def test_parse_detail_2101732() -> None:
     for line in lines:
         if not line.endswith("  "):
             assert line == line.rstrip(), f"Line has trailing whitespace: {repr(line)}"
+
+
+def test_source_url_is_human_ad_page() -> None:
+    import re
+
+    _FORBIDDEN = ("/apply", "/go/", "/api/", "/wp-json/", ".json", "?utm_", "/redirect")
+    shape = re.compile(r"^https://www\.guru\.com/jobs/[a-z0-9-]+/\d+$")
+    adapter = GuruAdapter()
+    listing_html = Path("tests/fixtures/guru/listing.html").read_bytes()
+
+    def mock_fetch(strategy: Any, url: str, **kwargs: Any) -> bytes:
+        if "pg/" in url:
+            return b"<html><body></body></html>"
+        return listing_html
+
+    with patch("job_scraper.sites.guru.fetch_page", side_effect=mock_fetch):
+        stubs = list(adapter.list_postings())
+    assert stubs
+    for stub in stubs:
+        assert shape.match(stub.detail_url), stub.detail_url
+        assert "SearchUrl" not in stub.detail_url
+
+    detail_html = Path("tests/fixtures/guru/detail_2101732.html").read_bytes()
+    stub = ListingStub(
+        listing_id="2101732",
+        detail_url="https://www.guru.com/jobs/automation-test-selenium-with-c/2101732",
+        title="Automation Test Selenium with C#",
+    )
+    posting = adapter.parse_detail(stub, detail_html)
+    # Matches the detail fixture's <link rel="canonical"> / og:url.
+    assert posting.source_url == (
+        "https://www.guru.com/jobs/automation-test-selenium-with-c/2101732"
+    )
+    assert shape.match(posting.source_url)
+    assert not any(bad in posting.source_url for bad in _FORBIDDEN)

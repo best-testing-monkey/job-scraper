@@ -102,3 +102,28 @@ def test_parse_detail_extra_fields_and_location() -> None:
     assert posting.extra_fields.get("start_date") == "ab sofort"
     assert posting.posted_date == "23.09.2026"
     assert posting.workplace == "Fully Remote"
+
+
+def test_source_url_is_human_ad_page() -> None:
+    import re
+
+    _FORBIDDEN = ("/apply", "/go/", "/api/", "/wp-json/", ".json", "?utm_", "/redirect")
+    shape = re.compile(r"^https://www\.freelancermap\.de/projekt/[a-z0-9-]+$")
+    adapter = FreelancermapAdapter()
+    with patch(
+        "job_scraper.sites.freelancermap.fetch_page", return_value=_listing_bytes()
+    ):
+        stubs = list(adapter.list_postings())
+    assert stubs
+    for stub in stubs:
+        assert shape.match(stub.detail_url), stub.detail_url
+
+    stub = next(s for s in stubs if s.listing_id == TARGET_ID)
+    posting = adapter.parse_detail(stub, _detail_bytes())
+    # Matches the detail fixture's <link rel="canonical"> / og:url.
+    assert posting.source_url == (
+        "https://www.freelancermap.de/projekt/"
+        "test-automation-consultant-m-w-d-playwright"
+    )
+    assert shape.match(posting.source_url)
+    assert not any(bad in posting.source_url for bad in _FORBIDDEN)

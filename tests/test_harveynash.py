@@ -100,3 +100,30 @@ def test_parse_detail_description_markdown():
 
     # Verify non-empty
     assert posting.description.strip(), "Description should not be empty"
+
+
+def test_source_url_is_human_ad_page():
+    import re
+
+    _FORBIDDEN = ("/apply", "/go/", "/api/", "/wp-json/", ".json", "?utm_", "/redirect")
+    shape = re.compile(r"^https://www\.harveynash\.nl/vacatures/\d+-[^/?#]+$")
+    adapter = HarveyNashAdapter()
+    sitemap_xml = Path("tests/fixtures/harveynash/sitemap.xml").read_text()
+    with patch("job_scraper.sites.harveynash.fetch_page", return_value=sitemap_xml):
+        stubs = list(adapter.list_postings())
+    assert stubs
+    for stub in stubs:
+        assert shape.match(stub.detail_url), stub.detail_url
+
+    stub = next(s for s in stubs if s.listing_id == "299204")
+    detail_html = Path("tests/fixtures/harveynash/detail_299204.html").read_text()
+    posting = adapter.parse_detail(stub, detail_html)
+    # Matches the detail fixture's <link rel="canonical"> / og:url.
+    assert posting.source_url == (
+        "https://www.harveynash.nl/vacatures/299204-Expert-gasregelvermogen-Weert"
+    )
+    assert not any(bad in posting.source_url for bad in _FORBIDDEN)
+
+    # Error path (no __NEXT_DATA__) still keeps the real ad URL.
+    fallback = adapter.parse_detail(stub, "<html><body></body></html>")
+    assert fallback.source_url == posting.source_url
