@@ -22,6 +22,14 @@ Scrape a single site:
 uv run python -m job_scraper scrape --site pro_act
 ```
 
+Rebuild markdown from raw pages:
+
+```bash
+uv run python -m job_scraper rebuild --site all
+```
+
+Note: `working_nomads` and `tender_link` cannot be rebuilt (re-scrape instead, as they cache data during `list_postings`).
+
 ## Currently supported sites
 
 - `pro_act` — Pro-Act IT (pro-act.nl/vacatures)

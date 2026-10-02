@@ -3,6 +3,7 @@ import json
 import sys
 
 from job_scraper.core.db import JobRepository
+from job_scraper.core.rebuild import rebuild_site, NOT_REBUILDABLE
 from job_scraper.pipeline import run
 from job_scraper.sites.registry import SITE_REGISTRY
 
@@ -46,12 +47,38 @@ def main() -> None:
         "explicit permission to scrape)",
     )
 
+    rebuild_parser = subparsers.add_parser("rebuild", help="Rebuild jobs from raw pages")
+    rebuild_parser.add_argument(
+        "--site",
+        action="append",
+        dest="sites",
+        help="Site ID to rebuild (repeatable, or use 'all')",
+    )
+    rebuild_parser.add_argument(
+        "--db",
+        default="scraper.db",
+        help="Path to database (default: scraper.db)",
+    )
+    rebuild_parser.add_argument(
+        "--jobs-dir",
+        default="jobs/",
+        help="Path to jobs directory (default: jobs/)",
+    )
+    rebuild_parser.add_argument(
+        "--raw-dir",
+        default="raw/",
+        help="Path to raw fetched-page directory, one subfolder per site "
+        "(default: raw/)",
+    )
+
     subparsers.add_parser("list-sites", help="List all available sites")
 
     args = parser.parse_args()
 
     if args.command == "scrape":
         handle_scrape(args)
+    elif args.command == "rebuild":
+        handle_rebuild(args)
     elif args.command == "list-sites":
         handle_list_sites()
     else:
@@ -77,6 +104,32 @@ def handle_scrape(args: argparse.Namespace) -> None:
     )
 
     for site_id, counters in results.items():
+        print(f"{site_id}: {json.dumps(counters)}")
+
+
+def handle_rebuild(args: argparse.Namespace) -> None:
+    if not args.sites:
+        print("Error: --site is required (use --site all for all sites)", file=sys.stderr)
+        sys.exit(1)
+
+    site_ids: list[str] = []
+    if args.sites == ["all"]:
+        site_ids = sorted(SITE_REGISTRY.keys())
+    else:
+        site_ids = args.sites
+
+    repo = JobRepository(args.db)
+
+    for site_id in site_ids:
+        if site_id in NOT_REBUILDABLE:
+            if args.sites == ["all"]:
+                print(f"Skipping {site_id}: {NOT_REBUILDABLE[site_id]}", file=sys.stderr)
+            else:
+                print(f"Error: {site_id} cannot be rebuilt from raw: {NOT_REBUILDABLE[site_id]}", file=sys.stderr)
+                sys.exit(1)
+            continue
+
+        counters = rebuild_site(site_id, repo, args.jobs_dir, args.raw_dir)
         print(f"{site_id}: {json.dumps(counters)}")
 
 
