@@ -99,6 +99,7 @@ def test_parse_detail(adapter, detail_fixture):
     assert posting.title == "Junior DevOps Engineer IAM (Ping DS/IDM)"
     assert posting.client == "Swisscom"
     assert posting.location == "Rotterdam"
+    assert posting.workplace is None  # No explicit workplace signal in fixture
     assert posting.posted_date and "September 24, 2026" in posting.posted_date
     assert posting.description  # non-empty
     assert posting.rate is None
@@ -116,6 +117,7 @@ def test_parse_detail_category_extracted(adapter, detail_fixture):
 
     posting = adapter.parse_detail(stub, detail_fixture)
     assert posting.category is not None
+    assert posting.workplace is None  # No explicit workplace signal in fixture
 
 
 def test_parse_detail_duration_and_hours(adapter, detail_fixture):
@@ -133,3 +135,4 @@ def test_parse_detail_duration_and_hours(adapter, detail_fixture):
     # Based on fixture: [1] is duration, [2] is hours
     assert posting.duration is not None
     assert posting.hours is not None
+    assert posting.workplace is None  # No explicit workplace signal in fixture

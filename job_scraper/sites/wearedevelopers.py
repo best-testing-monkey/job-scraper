@@ -4,6 +4,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
@@ -49,6 +50,8 @@ class WearedevelopersAdapter(SiteAdapter):
         title = h1_elem.get_text(strip=True) if h1_elem else stub.title
 
         location = self._get_meta_content(soup, "job:location")
+        workplace_badge = self._get_workplace_badge(soup)
+        workplace = classify_workplace(location, workplace_badge)
         posted_date = self._get_meta_content(soup, "job:posted_time")
         client = self._get_meta_content(soup, "og:article:author", is_property=True)
 
@@ -64,6 +67,7 @@ class WearedevelopersAdapter(SiteAdapter):
             title=title,
             client=client,
             location=location,
+            workplace=workplace,
             posted_date=posted_date,
             category=category,
             description=description,
@@ -91,6 +95,19 @@ class WearedevelopersAdapter(SiteAdapter):
     def _get_all_meta_content(self, soup: BeautifulSoup, name: str) -> list[str]:
         metas = soup.find_all("meta", {"name": name})
         return [meta.get("content") for meta in metas if meta.get("content")]
+
+    def _get_workplace_badge(self, soup: BeautifulSoup) -> str | None:
+        """Text of the site's workplace-type pill badge (e.g. "Remote"),
+        identified by its distinctive amber styling rather than by exact
+        class-list match, so minor Tailwind class reordering/additions
+        don't silently break extraction. Returns None if no such badge is
+        present (most postings show no badge at all, implying on-site/
+        unspecified — see classify_workplace, which treats "no signal" as
+        unknown rather than assuming on-site)."""
+        badge = soup.find(
+            "span", class_=lambda c: c and "bg-amber-500/10" in c and "text-amber-700" in c
+        )
+        return badge.get_text(strip=True) if badge else None
 
     def _extract_description(self, soup: BeautifulSoup) -> str:
         h2_elems = soup.find_all("h2")

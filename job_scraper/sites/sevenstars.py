@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
@@ -89,6 +90,32 @@ class SevenstarsAdapter(SiteAdapter):
 
             current_url = next_url
 
+    def _extract_workplace_from_description(self, description: str) -> str | None:
+        """Extract and normalize workplace type from job description.
+        Looks for Dutch workplace keywords and normalizes them to English.
+        Returns the normalized keyword (e.g. "Hybrid") or None if not found."""
+        if not description:
+            return None
+
+        # Normalize Dutch workplace keywords to English for classify_workplace
+        # Must be done before passing to classify_workplace since it only recognizes English
+        normalized_keywords = {
+            r"\bhybride\b": "Hybrid",
+            r"\bhybride\s+werken\b": "Hybrid",
+            r"\bthuis(?:werken|werk)\b": "Fully Remote",  # thuiswerken/thuiswerk
+            r"\bvolledig\s+remote\b": "Fully Remote",
+            r"\bwerken\s+vanuit\s+huis\b": "Fully Remote",
+            r"\bdeels\s+thuiswerken\b": "Hybrid",
+            r"\bop\s+locatie\b": "On-site",
+        }
+
+        description_lower = description.lower()
+        for pattern, keyword in normalized_keywords.items():
+            if re.search(pattern, description_lower, re.IGNORECASE):
+                return keyword
+
+        return None
+
     def parse_detail(self, stub: ListingStub, page: Any) -> JobPosting:
         soup = BeautifulSoup(page, "html.parser")
 
@@ -140,6 +167,10 @@ class SevenstarsAdapter(SiteAdapter):
             # Index 2 is hours
             hours = usp_values[2].get_text(strip=True)
 
+        # Extract and classify workplace
+        workplace_signal = self._extract_workplace_from_description(description)
+        workplace = classify_workplace(location, workplace_signal)
+
         # Build JobPosting
         posting = JobPosting(
             site_id=self.site_id,
@@ -147,6 +178,7 @@ class SevenstarsAdapter(SiteAdapter):
             source_url=stub.detail_url,
             title=title or "",
             location=location,
+            workplace=workplace,
             hours=hours,
             duration=duration,
             rate=rate,

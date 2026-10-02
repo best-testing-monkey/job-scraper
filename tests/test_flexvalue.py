@@ -57,6 +57,7 @@ def test_parse_detail() -> None:
     assert posting.listing_id == "1065407"
     assert posting.site_id == "flexvalue"
     assert posting.location == "Apeldoorn, Gelderland"
+    assert posting.workplace == "Fully Remote"
     assert posting.hours == "36"
     assert posting.duration is not None
     assert "12-10-2026" in posting.duration

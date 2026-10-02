@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
@@ -121,6 +122,10 @@ class FreelancerComAdapter(SiteAdapter):
             # Join all skill tags with "/"
             category = "/".join([tag.get_text(strip=True) for tag in skill_tags])
 
+        # Extract workplace from the IconText project details section
+        workplace_text = self._extract_workplace_text(soup)
+        workplace = classify_workplace(workplace_text)
+
         # Client is always None on Freelancer.com logged-out view
         client = None
 
@@ -135,7 +140,24 @@ class FreelancerComAdapter(SiteAdapter):
             duration=duration,
             posted_date=posted_date,
             description=description,
+            workplace=workplace,
             extra_fields={},
         )
 
         return posting
+
+    def _extract_workplace_text(self, soup: BeautifulSoup) -> str | None:
+        """Extract workplace text from the project details IconText columns.
+        Looks for text like 'Remote project', 'Hybrid project', etc."""
+        fl_cols = soup.find_all("fl-col", class_="IconText")
+        for col in fl_cols:
+            p = col.find("p")
+            if p:
+                text = p.get_text(strip=True)
+                # Check if this text contains workplace-related keywords
+                if any(
+                    keyword in text.lower()
+                    for keyword in ["remote", "hybrid", "on-site", "onsite"]
+                ):
+                    return text
+        return None

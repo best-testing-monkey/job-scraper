@@ -3,6 +3,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
@@ -50,6 +51,8 @@ class IctergezochtAdapter(SiteAdapter):
 
         client = self._extract_client(soup)
         location = self._extract_location(soup)
+        workplace_signal = self._extract_workplace_signal(soup)
+        workplace = classify_workplace(location, workplace_signal)
         category = self._extract_category(soup)
         hours = self._extract_hours(soup)
         rate = self._extract_rate(soup)
@@ -63,6 +66,7 @@ class IctergezochtAdapter(SiteAdapter):
             title=title,
             client=client,
             location=location,
+            workplace=workplace,
             category=category,
             hours=hours,
             rate=rate,
@@ -101,6 +105,22 @@ class IctergezochtAdapter(SiteAdapter):
             ):
                 if text not in ["Locatie", "Deels thuiswerken"]:
                     return text
+        return None
+
+    def _extract_workplace_signal(self, soup: BeautifulSoup) -> str | None:
+        """Extract workplace type signal from wfh-element span.
+        Returns English keyword for classify_workplace or None."""
+        component_location = soup.find("section", class_="component-location")
+        if not component_location:
+            return None
+        wfh_element = component_location.find("span", class_="wfh-element")
+        if not wfh_element:
+            return None
+        text = wfh_element.get_text(strip=True)
+        # Translate Dutch workplace terms to English keywords for classify_workplace
+        if "deels" in text.lower() and "thuis" in text.lower():
+            # "Deels thuiswerken" -> "Hybrid"
+            return "Hybrid"
         return None
 
     def _extract_category(self, soup: BeautifulSoup) -> str | None:

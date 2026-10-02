@@ -5,6 +5,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
@@ -71,6 +72,7 @@ class Circle8Adapter(SiteAdapter):
                         .get("address", {})
                         .get("addressLocality")
                     )
+                    workplace = classify_workplace(location)
                     client = data.get("hiringOrganization", {}).get("name")
                     category = data.get("industry")
                     rate = None
@@ -88,6 +90,7 @@ class Circle8Adapter(SiteAdapter):
                         description=description,
                         posted_date=posted_date,
                         location=location,
+                        workplace=workplace,
                         client=client,
                         category=category,
                         rate=rate,

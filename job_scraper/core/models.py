@@ -20,6 +20,7 @@ class JobPosting:
     level: str | None = None
     status: str | None = None
     location: str | None = None
+    workplace: str | None = None
     hours: str | None = None
     rate: str | None = None
     duration: str | None = None
@@ -38,6 +39,7 @@ class JobPosting:
             f"{self.level}|"
             f"{self.status}|"
             f"{self.location}|"
+            f"{self.workplace}|"
             f"{self.hours}|"
             f"{self.rate}|"
             f"{self.duration}|"

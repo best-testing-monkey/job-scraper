@@ -4,6 +4,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
@@ -57,6 +58,8 @@ class PlanetInterimAdapter(SiteAdapter):
         category_elem = soup.select_one(".pi-job-group-row .tag-pill span")
         category = category_elem.get_text(strip=True) if category_elem else None
 
+        workplace = classify_workplace(location)
+
         job_posting = JobPosting(
             site_id=self.site_id,
             listing_id=stub.listing_id,
@@ -65,6 +68,7 @@ class PlanetInterimAdapter(SiteAdapter):
             client=client,
             category=category,
             location=location,
+            workplace=workplace,
             hours=hours,
             rate=rate,
             duration=duration,

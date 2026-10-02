@@ -3,6 +3,7 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
@@ -39,6 +40,7 @@ class ArcDevAdapter(SiteAdapter):
         title = self._extract_title(soup)
         client = self._extract_client(soup)
         location = self._extract_location(soup)
+        workplace = classify_workplace(location)
         rate = self._extract_rate(soup)
         category = self._extract_category(soup)
         seniority = self._extract_seniority(soup)
@@ -54,6 +56,7 @@ class ArcDevAdapter(SiteAdapter):
             client=client,
             category=category,
             location=location,
+            workplace=workplace,
             rate=rate,
             duration=duration,
             posted_date=posted_date,

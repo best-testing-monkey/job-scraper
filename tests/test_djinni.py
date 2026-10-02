@@ -72,6 +72,7 @@ def test_parse_detail_job_posting(adapter: DjinniAdapter, detail_html: bytes) ->
     assert "Digis" in posting.client
     assert posting.category == "QA"
     assert "Poland" in posting.location
+    assert posting.workplace == "On-site"
     assert "2026-09-26" in posting.posted_date
     assert posting.rate is None
     assert posting.duration is None
@@ -79,3 +80,25 @@ def test_parse_detail_job_posting(adapter: DjinniAdapter, detail_html: bytes) ->
     assert "Digis" in posting.description
     assert posting.extra_fields.get("validThrough") is not None
     assert posting.extra_fields.get("employmentType") == "FULL_TIME"
+
+
+def test_parse_detail_workplace_options_list(
+    adapter: DjinniAdapter, fixtures_dir: Path
+) -> None:
+    """djinni pages carry a details-list entry ("Office, Remote, Hybrid
+    Remote") listing every arrangement the employer accepts for this
+    posting, separate from the JSON-LD block and from any title suffix.
+    Location alone ("Ukraine") and the title alone give no signal here —
+    this fixture only classifies correctly because of that details-list
+    entry, which lists "Remote" as one of the accepted options."""
+    detail_html = (fixtures_dir / "detail_850338.html").read_bytes()
+    stub = ListingStub(
+        listing_id="850338",
+        detail_url="https://djinni.co/jobs/850338-strong-junior-middle-general-qa-engineer/",
+        title="Strong Junior\\Middle General QA Engineer",
+    )
+
+    posting = adapter.parse_detail(stub, detail_html)
+
+    assert posting.location == "Ukraine"
+    assert posting.workplace == "Fully Remote"

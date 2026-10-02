@@ -101,3 +101,6 @@ def test_parse_detail() -> None:
     # Validate site_id and listing_id
     assert posting.site_id == "freelancer_com"
     assert posting.listing_id == "astrology-app-tester-required"
+
+    # Validate workplace is Fully Remote (from "Remote project" text)
+    assert posting.workplace == "Fully Remote"

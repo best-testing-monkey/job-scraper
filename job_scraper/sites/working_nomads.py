@@ -3,6 +3,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
@@ -42,6 +43,13 @@ class WorkingNomadsAdapter(SiteAdapter):
         posted_date = job.get("pub_date", "")
         description = self._strip_html_tags(job.get("description", ""))
         category_name = job.get("category_name", "")
+        # Working Nomads is a remote-jobs-only board by definition (its
+        # location field is a timezone constraint, e.g. "Time zone: CET
+        # (+/- 3 hours)", never the literal word "remote"), so classify_
+        # workplace(location) alone would misclassify every posting here
+        # as unknown. Fall back to the site's own premise, but still
+        # respect an explicit Hybrid/On-site signal if one ever appears.
+        workplace = classify_workplace(location) or "Fully Remote"
 
         extra_fields: dict[str, str] = {}
         if category_name:
@@ -55,6 +63,7 @@ class WorkingNomadsAdapter(SiteAdapter):
             client=client,
             category=tags,
             location=location,
+            workplace=workplace,
             hours=None,
             rate=None,
             duration=None,

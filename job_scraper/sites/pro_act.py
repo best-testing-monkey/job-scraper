@@ -3,6 +3,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
@@ -43,6 +44,9 @@ class ProActAdapter(SiteAdapter):
         posted_date, expiry_date = self._extract_dates(soup)
         hours = self._extract_hours(soup)
         client, location, rate = self._extract_general_info(soup)
+        # Translate Dutch workplace terms to English for classify_workplace
+        workplace_signal = self._normalize_workplace_signal(location)
+        workplace = classify_workplace(location, workplace_signal)
         description = self._extract_description(soup)
         posting = JobPosting(
             site_id=self.site_id,
@@ -51,6 +55,7 @@ class ProActAdapter(SiteAdapter):
             title=title,
             client=client,
             location=location,
+            workplace=workplace,
             hours=hours,
             rate=rate,
             posted_date=posted_date,
@@ -163,3 +168,20 @@ class ProActAdapter(SiteAdapter):
         if match:
             description = ("Opdrachtomschrijving" + match.group(1)).strip()
         return description
+
+    def _normalize_workplace_signal(self, location: str | None) -> str | None:
+        """Translate Dutch workplace terms to English keywords for classify_workplace.
+        The location field may contain Dutch workplace keywords like 'hybride',
+        'op locatie', 'thuiswerken', etc. This method translates them to English
+        equivalents that classify_workplace recognizes."""
+        if not location:
+            return None
+        location_lower = location.lower()
+        # Translate Dutch terms to English keywords
+        if "hybride" in location_lower:
+            return "Hybrid"
+        if "remote" in location_lower or "thuiswerk" in location_lower or "werken vanuit huis" in location_lower:
+            return "Fully Remote"
+        if "op locatie" in location_lower or "on-site" in location_lower:
+            return "On-site"
+        return None

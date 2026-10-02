@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
@@ -93,6 +94,8 @@ class DjinniAdapter(SiteAdapter):
             address = ld_json["jobLocation"].get("address", {})
             location = address.get("addressCountry")
 
+        workplace = self._extract_workplace_options(soup) or classify_workplace(location, title)
+
         posted_date = ld_json.get("datePosted")
 
         valid_through = ld_json.get("validThrough")
@@ -107,6 +110,7 @@ class DjinniAdapter(SiteAdapter):
             client=client,
             category=category,
             location=location,
+            workplace=workplace,
             posted_date=posted_date,
             description=description,
             rate=None,
@@ -121,6 +125,36 @@ class DjinniAdapter(SiteAdapter):
             posting.extra_fields["employmentType"] = ld_json["employmentType"]
 
         return posting
+
+    def _extract_workplace_options(self, soup: BeautifulSoup) -> str | None:
+        """djinni.co job pages carry a details-list entry listing every
+        work arrangement the employer accepts for *this* posting (e.g.
+        "Office, Remote, Hybrid Remote"), separate from the JSON-LD block.
+        It's identified by content (a comma-separated match against a
+        known small vocabulary), not by class, since several unrelated
+        details-list entries — experience level, eligible countries —
+        share the same CSS class. Unlike classify_workplace's mutual-
+        exclusivity (meant for a single fixed arrangement), this field is
+        a menu of accepted options: if the employer accepts fully-remote
+        candidates at all, that's the practically relevant fact for a
+        remote-seeking job hunter, even if Office/Hybrid are also listed.
+        Returns "Fully Remote" / "Hybrid" / "On-site", or None if no such
+        details-list entry is found on the page."""
+        vocabulary = {"office", "remote", "hybrid remote", "hybrid", "full remote"}
+        for strong in soup.find_all("strong", class_="d-block font-weight-600"):
+            text = strong.get_text(strip=True)
+            if not text:
+                continue
+            tokens = {t.strip().lower() for t in text.split(",")}
+            if not tokens or not tokens.issubset(vocabulary):
+                continue
+            if "remote" in tokens or "full remote" in tokens:
+                return "Fully Remote"
+            if "hybrid" in tokens or "hybrid remote" in tokens:
+                return "Hybrid"
+            if "office" in tokens:
+                return "On-site"
+        return None
 
     def _extract_ld_json(self, soup: BeautifulSoup) -> dict[str, Any]:
         scripts = soup.find_all("script", type="application/ld+json")

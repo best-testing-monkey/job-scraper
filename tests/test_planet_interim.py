@@ -56,6 +56,7 @@ def test_parse_detail_539572() -> None:
     assert posting.listing_id == "539572"
     assert "Beleidsadviseur" in posting.title
     assert posting.location == "Zoetermeer"
+    assert posting.workplace is None
     assert posting.hours == "24"
     assert posting.client is None
     assert posting.description == ""

@@ -3,6 +3,7 @@ import re
 from typing import Any, Iterator
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import FetchStrategy, SiteAdapter, fetch_page
 
 _CHUNK_PATTERN = re.compile(r'self\.__next_f\.push\(\[1,"(.*?)"\]\)', re.DOTALL)
@@ -99,6 +100,8 @@ class HeadfirstAdapter(SiteAdapter):
             extra_fields["referenceCode"] = job["referenceCode"]
         if job.get("brokerUrl"):
             extra_fields["apply_url"] = job["brokerUrl"]
+        location = job.get("location")
+        workplace = classify_workplace(location)
         return JobPosting(
             site_id=self.site_id,
             listing_id=stub.listing_id,
@@ -106,7 +109,8 @@ class HeadfirstAdapter(SiteAdapter):
             title=job.get("title", stub.title),
             client=job.get("clientName"),
             category=None,
-            location=job.get("location"),
+            location=location,
+            workplace=workplace,
             hours=_format_hours(job),
             rate=None,
             duration=_format_duration(job),

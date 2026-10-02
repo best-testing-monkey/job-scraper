@@ -63,6 +63,7 @@ def test_parse_detail_4893() -> None:
     assert posting.client is None
     assert posting.hours == "40"
     assert posting.location == "Noord Brabant"
+    assert posting.workplace is None
     assert posting.category == "Technology"
     assert posting.rate is None
     assert len(posting.description) > 0

@@ -1,10 +1,11 @@
 import json
 import re
-from typing import Any, Iterator
+from typing import Any, ClassVar, Iterator
 
 from scrapling.fetchers import Fetcher
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy
 
 
@@ -12,6 +13,7 @@ class StoneInterimAdapter(SiteAdapter):
     site_id = "stone_interim"
     base_url = "https://www.stone-interim.nl"
     fetch_strategy = FetchStrategy.STATIC
+    raw_format: ClassVar[str] = "json"
     LISTING_API_URL = "https://www.stone-interim.nl/api/v1/WordPress/GetOverviewItems/"
 
     def list_postings(self) -> Iterator[ListingStub]:
@@ -65,6 +67,8 @@ class StoneInterimAdapter(SiteAdapter):
         if province_node:
             location = province_node.get("Value")
 
+        workplace = classify_workplace(location)
+
         category = None
         function_level = cr.get("ToFunctionLevel1", {}).get("CRDataNode", {})
         if function_level:
@@ -95,6 +99,7 @@ class StoneInterimAdapter(SiteAdapter):
             client=client,
             category=category,
             location=location,
+            workplace=workplace,
             hours=hours,
             rate=None,
             duration=duration,

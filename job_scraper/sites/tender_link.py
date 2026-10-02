@@ -4,6 +4,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
@@ -55,6 +56,16 @@ class TenderLinkAdapter(SiteAdapter):
         salaried_gross = self._extract_salaried_gross(vacancy)
         if salaried_gross:
             extra_fields["salaried_gross_monthly"] = salaried_gross
+
+        # Extract and translate workplace signal
+        workplace_signal = vacancy.get("toWorkplaceTypeNode", "")
+        if workplace_signal:
+            workplace_signal = self._translate_workplace_signal(workplace_signal)
+        else:
+            workplace_signal = None
+
+        workplace = classify_workplace(location, workplace_signal)
+
         posting = JobPosting(
             site_id=self.site_id,
             listing_id=stub.listing_id,
@@ -63,6 +74,7 @@ class TenderLinkAdapter(SiteAdapter):
             client=client,
             category=category,
             location=location,
+            workplace=workplace,
             hours=hours,
             rate=rate,
             duration=duration,
@@ -105,3 +117,24 @@ class TenderLinkAdapter(SiteAdapter):
         if salaried_key in vacancy_info:
             return vacancy_info[salaried_key].get("value")
         return None
+
+    def _translate_workplace_signal(self, workplace_nl: str) -> str | None:
+        """Translate Dutch workplace keywords to English equivalents for classify_workplace.
+        Returns the translated signal, or the original text if no translation matches."""
+        if not workplace_nl:
+            return None
+        workplace_lower = workplace_nl.lower()
+        if "hybride" in workplace_lower or "hybrid" in workplace_lower:
+            return "Hybrid"
+        elif (
+            "remote" in workplace_lower
+            or "thuiswerken" in workplace_lower
+            or "volledig remote" in workplace_lower
+            or "deels thuiswerken" in workplace_lower
+        ):
+            return "Fully Remote"
+        elif "op locatie" in workplace_lower or "ter plaatse" in workplace_lower or "on-site" in workplace_lower:
+            return "On-site"
+        else:
+            # Pass as-is to classify_workplace
+            return workplace_nl

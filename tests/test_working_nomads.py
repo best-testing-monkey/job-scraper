@@ -65,6 +65,7 @@ def test_parse_detail_returns_correct_site_id() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[2], None)
     assert posting.site_id == "working_nomads"
+    assert posting.workplace == "Fully Remote"
 
 
 def test_parse_detail_returns_correct_listing_id() -> None:
@@ -74,6 +75,7 @@ def test_parse_detail_returns_correct_listing_id() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[2], None)
     assert posting.listing_id == "1843242"
+    assert posting.workplace == "Fully Remote"
 
 
 def test_parse_detail_returns_correct_title() -> None:
@@ -83,6 +85,7 @@ def test_parse_detail_returns_correct_title() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[2], None)
     assert posting.title == "Senior QA Automation Engineer"
+    assert posting.workplace == "Fully Remote"
 
 
 def test_parse_detail_returns_correct_client() -> None:
@@ -92,6 +95,7 @@ def test_parse_detail_returns_correct_client() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[2], None)
     assert posting.client == "Proxify"
+    assert posting.workplace == "Fully Remote"
 
 
 def test_parse_detail_returns_correct_location() -> None:
@@ -101,6 +105,7 @@ def test_parse_detail_returns_correct_location() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[2], None)
     assert posting.location == "Time zone: CET (+/- 3 hours)"
+    assert posting.workplace == "Fully Remote"
 
 
 def test_parse_detail_returns_qa_tags_in_category() -> None:
@@ -113,6 +118,7 @@ def test_parse_detail_returns_qa_tags_in_category() -> None:
     assert "playwright" in posting.category.lower()
     assert "selenium" in posting.category.lower()
     assert "test automation" in posting.category.lower()
+    assert posting.workplace == "Fully Remote"
 
 
 def test_parse_detail_returns_non_empty_description() -> None:
@@ -124,6 +130,7 @@ def test_parse_detail_returns_non_empty_description() -> None:
     assert posting.description
     assert len(posting.description) > 0
     assert "Senior QA Automation Engineer" in posting.description or "Proxify" in posting.description
+    assert posting.workplace == "Fully Remote"
 
 
 def test_parse_detail_returns_correct_posted_date() -> None:
@@ -133,6 +140,7 @@ def test_parse_detail_returns_correct_posted_date() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[2], None)
     assert posting.posted_date == "2026-09-07T14:40:19-04:00"
+    assert posting.workplace == "Fully Remote"
 
 
 def test_parse_detail_hours_is_none() -> None:
@@ -142,6 +150,7 @@ def test_parse_detail_hours_is_none() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[2], None)
     assert posting.hours is None
+    assert posting.workplace == "Fully Remote"
 
 
 def test_parse_detail_rate_is_none() -> None:
@@ -151,6 +160,7 @@ def test_parse_detail_rate_is_none() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[2], None)
     assert posting.rate is None
+    assert posting.workplace == "Fully Remote"
 
 
 def test_parse_detail_duration_is_none() -> None:
@@ -160,6 +170,7 @@ def test_parse_detail_duration_is_none() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[2], None)
     assert posting.duration is None
+    assert posting.workplace == "Fully Remote"
 
 
 def test_parse_detail_stores_category_name_in_extra_fields() -> None:
@@ -169,6 +180,7 @@ def test_parse_detail_stores_category_name_in_extra_fields() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[2], None)
     assert posting.extra_fields.get("category_name") == "Development"
+    assert posting.workplace == "Fully Remote"
 
 
 def test_parse_detail_ignores_page_argument() -> None:

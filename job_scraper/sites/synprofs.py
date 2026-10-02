@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
@@ -63,12 +64,31 @@ class SynprofsAdapter(SiteAdapter):
 
         # Extract location from jobLocation
         location = None
+        workplace_signal = None
         if "jobLocation" in ld_json:
             address = ld_json["jobLocation"].get("address", {})
-            location = address.get("addressLocality")
+            full_location = address.get("addressLocality")
+            # Split location from workplace type (e.g., "Assen / hybride" → "Assen", "hybride")
+            if full_location:
+                parts = [p.strip() for p in full_location.split("/")]
+                location = parts[0] if parts else None
+                # Translate Dutch workplace keywords to English before classify_workplace
+                if len(parts) > 1:
+                    workplace_nl = parts[1].lower()
+                    if "hybride" in workplace_nl:
+                        workplace_signal = "Hybrid"
+                    elif "remote" in workplace_nl or "thuiswerken" in workplace_nl or "volledig remote" in workplace_nl:
+                        workplace_signal = "Fully Remote"
+                    elif "op locatie" in workplace_nl or "ter plaatse" in workplace_nl:
+                        workplace_signal = "On-site"
+                    else:
+                        workplace_signal = parts[1]  # Pass as-is to classify_workplace
 
         # Extract posted_date
         posted_date = ld_json.get("datePosted")
+
+        # Classify workplace
+        workplace = classify_workplace(location, workplace_signal)
 
         # Extract validThrough for extra_fields
         valid_through = ld_json.get("validThrough")
@@ -93,6 +113,7 @@ class SynprofsAdapter(SiteAdapter):
             title=title,
             client=client,
             location=location,
+            workplace=workplace,
             hours=hours,
             duration=duration,
             posted_date=posted_date,

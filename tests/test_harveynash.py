@@ -52,6 +52,7 @@ def test_parse_detail():
     assert posting.title == "Expert (gas)regelvermogen Weert"
     assert posting.description != ""
     assert len(posting.description) > 100
+    assert posting.workplace == "Hybrid"
 
 
 def test_parse_detail_full_fields():
@@ -67,6 +68,7 @@ def test_parse_detail_full_fields():
     assert posting.client == "Enexis"
     assert "Techniek" in posting.category or "Projectbeheersing" in posting.category
     assert posting.location == "Weert, Limburg"
+    assert posting.workplace == "Hybrid"
     assert posting.hours == "Fulltime"
     assert posting.rate == "Bespreekbaar"
     assert posting.extra_fields.get("employment_type") == "Interim"

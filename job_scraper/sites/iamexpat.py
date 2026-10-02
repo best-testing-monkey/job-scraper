@@ -5,6 +5,7 @@ from urllib.parse import urljoin, urlparse, parse_qs
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
@@ -111,6 +112,12 @@ class IamexpatAdapter(SiteAdapter):
         desc_elem = soup.find("div", class_="BodyCenter_main__Sz_2E")
         description = desc_elem.get_text(strip=True) if desc_elem else ""
 
+        # Location-only: classify_workplace() has no negation handling, and
+        # scanning the full free-text description risks false positives at
+        # this site's scale (e.g. "not a remote position", "remote client
+        # support" as a responsibility) misclassifying a real on-site role.
+        workplace = classify_workplace(location)
+
         # Build JobPosting
         posting = JobPosting(
             site_id=self.site_id,
@@ -120,6 +127,7 @@ class IamexpatAdapter(SiteAdapter):
             client=client,
             category=category,
             location=location,
+            workplace=workplace,
             duration=duration,
             hours=hours,
             level=level,

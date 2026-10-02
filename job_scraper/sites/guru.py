@@ -1,9 +1,11 @@
+import json
 import re
 from typing import Any, Iterator
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
@@ -132,6 +134,12 @@ class GuruAdapter(SiteAdapter):
             if " ... " in description:
                 description = description.split(" ... ")[0].strip()
 
+        # Extract location and jobLocationType from JSON-LD
+        location = self._extract_location_from_json_ld(soup)
+        job_location_type = self._extract_job_location_type_from_json_ld(soup)
+        workplace_signal = self._map_job_location_type(job_location_type)
+        workplace = classify_workplace(location, workplace_signal)
+
         # Build JobPosting
         posting = JobPosting(
             site_id=self.site_id,
@@ -143,9 +151,54 @@ class GuruAdapter(SiteAdapter):
             category=category,
             description=description,
             client=None,
+            location=location,
+            workplace=workplace,
             hours=None,
             duration=None,
             extra_fields={"skills": ", ".join(skills)} if skills else {},
         )
 
         return posting
+
+    def _extract_location_from_json_ld(self, soup: BeautifulSoup) -> str | None:
+        """Extract location from JSON-LD applicantLocationRequirements."""
+        json_ld = self._get_json_ld(soup)
+        if not json_ld:
+            return None
+        location_req = json_ld.get("applicantLocationRequirements", {})
+        if isinstance(location_req, dict):
+            names = location_req.get("name", [])
+            if isinstance(names, list) and names:
+                return ", ".join(names)
+        return None
+
+    def _extract_job_location_type_from_json_ld(self, soup: BeautifulSoup) -> str | None:
+        """Extract jobLocationType from JSON-LD (e.g., TELECOMMUTE, ON_SITE)."""
+        json_ld = self._get_json_ld(soup)
+        if not json_ld:
+            return None
+        return json_ld.get("jobLocationType")
+
+    def _get_json_ld(self, soup: BeautifulSoup) -> dict | None:
+        """Parse JSON-LD structured data from the page."""
+        script = soup.find("script", type="application/ld+json")
+        if not script:
+            return None
+        try:
+            return json.loads(script.string)
+        except (json.JSONDecodeError, TypeError):
+            return None
+
+    def _map_job_location_type(self, job_location_type: str | None) -> str | None:
+        """Map guru's jobLocationType values to workplace classification text."""
+        if not job_location_type:
+            return None
+        # Map common values: TELECOMMUTE -> Remote, ON_SITE -> On-site, HYBRID -> Hybrid
+        type_upper = job_location_type.upper()
+        if type_upper in ("TELECOMMUTE", "REMOTE"):
+            return "Remote"
+        if type_upper in ("ON_SITE", "ONSITE"):
+            return "On-site"
+        if type_upper == "HYBRID":
+            return "Hybrid"
+        return None

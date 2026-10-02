@@ -77,6 +77,7 @@ def test_parse_detail_test_automation_consultant() -> None:
     assert "paginat" in posting.scrape_note.lower()
     assert posting.client is None
     assert posting.rate is None
+    assert posting.workplace == "Fully Remote"
 
 
 def test_parse_detail_extra_fields_and_location() -> None:
@@ -96,3 +97,4 @@ def test_parse_detail_extra_fields_and_location() -> None:
     assert posting.extra_fields.get("contract_type") == "Freiberuflich"
     assert posting.extra_fields.get("start_date") == "ab sofort"
     assert posting.posted_date == "23.09.2026"
+    assert posting.workplace == "Fully Remote"

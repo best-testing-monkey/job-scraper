@@ -70,5 +70,6 @@ def test_parse_detail_job_posting(adapter: ArcDevAdapter, detail_html: bytes) ->
     assert "Permanent" in posting.duration
     assert len(posting.description) > 0
     assert posting.location == "Remote restrictions apply"
+    assert posting.workplace == "Fully Remote"
     assert posting.extra_fields.get("seniority") == "Senior"
     assert posting.extra_fields.get("visa") == "U.S. visa required"

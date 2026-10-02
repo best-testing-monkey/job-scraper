@@ -5,6 +5,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 
 
@@ -71,6 +72,10 @@ class HarveyNashAdapter(SiteAdapter):
         posted_date = page_data.get("published_at")
         description_html = page_data.get("description", "")
 
+        # Extract workplace indicator from description
+        workplace_signal = self._extract_workplace_signal(description_html)
+        workplace = classify_workplace(location, workplace_signal)
+
         # Extract fields from categories
         categories_list = page_data.get("categories", [])
         categories_dict = {cat["name"]: cat["values"] for cat in categories_list}
@@ -118,6 +123,7 @@ class HarveyNashAdapter(SiteAdapter):
             client=client,
             category=category,
             location=location,
+            workplace=workplace,
             hours=hours,
             rate=rate,
             posted_date=posted_date,
@@ -133,3 +139,20 @@ class HarveyNashAdapter(SiteAdapter):
         # Normalize whitespace
         text = re.sub(r"\s+", " ", text)
         return text
+
+    def _extract_workplace_signal(self, description_html: str) -> str | None:
+        """Extract workplace type signal from the HTML description.
+        Looks for patterns like "Op locatie of vanuit huis: 50%-50%" indicating hybrid work."""
+        if not description_html:
+            return None
+
+        # Extract text from HTML
+        soup = BeautifulSoup(description_html, "html.parser")
+        text = soup.get_text()
+
+        # Look for percentage patterns like "50%-50%" or "50% - 50%"
+        # which indicate hybrid/split work arrangement
+        if re.search(r"\b50\s*%\s*-\s*50\s*%\b", text, re.IGNORECASE):
+            return "Hybrid"
+
+        return None

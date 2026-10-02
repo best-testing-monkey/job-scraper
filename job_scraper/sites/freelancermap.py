@@ -5,6 +5,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup, Tag
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import FetchStrategy, SiteAdapter, fetch_page
 
 _PAGINATION_NOTE = (
@@ -95,6 +96,17 @@ class FreelancermapAdapter(SiteAdapter):
         duration = _badge_for_icon(soup, "far", "fa-hourglass")
         hours = _badge_for_icon(soup, "far", "fa-briefcase")
 
+        # Extract workplace classification from remoteInPercent
+        workplace_signal = None
+        contract_info = project_data.get("contractType", {})
+        if isinstance(contract_info, dict):
+            remote_percent = contract_info.get("remoteInPercent")
+            if remote_percent == 100:
+                workplace_signal = "100% remote"
+            elif isinstance(remote_percent, int) and 0 < remote_percent < 100:
+                workplace_signal = "Hybrid"
+        workplace = classify_workplace(location, workplace_signal)
+
         posted_date = None
         posted_match = _POSTED_DATE_RE.search(soup.get_text())
         if posted_match:
@@ -126,6 +138,7 @@ class FreelancermapAdapter(SiteAdapter):
             client=client,
             category=category,
             location=location,
+            workplace=workplace,
             hours=hours,
             rate=None,
             duration=duration,

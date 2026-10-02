@@ -110,6 +110,7 @@ def test_parse_detail():
     assert posting.listing_id == "7S-004982"
     assert posting.title == "Agile Coach"
     assert posting.location == "Zwolle"
+    assert posting.workplace == "Hybrid"
     assert posting.hours == "40 uren"
     assert posting.duration == "3 Maanden"
     assert posting.client is None

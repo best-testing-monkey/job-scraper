@@ -4,6 +4,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import FetchStrategy, SiteAdapter, fetch_page
 
 
@@ -66,6 +67,7 @@ class HeroAdapter(SiteAdapter):
         # Extract metadata from li.hero-lead
         location = None
         hours = None
+        werkvorm = None
 
         metadata_ul = soup.find("ul", class_="mt-4")
         if metadata_ul:
@@ -80,6 +82,8 @@ class HeroAdapter(SiteAdapter):
                         label, value = label_value.split(": ", 1)
                         if label.strip() == "Regio":
                             location = value.strip()
+                        elif label.strip() == "Werkvorm":
+                            werkvorm = value.strip()
                         elif label.strip() == "Uren per week":
                             hours = value.strip()
 
@@ -91,12 +95,21 @@ class HeroAdapter(SiteAdapter):
             if p:
                 description = p.get_text(strip=True)
 
+        # Normalize Dutch "Hybride" to English "Hybrid" for classification
+        if werkvorm:
+            werkvorm_normalized = re.sub(r"Hybride", "Hybrid", werkvorm, flags=re.IGNORECASE)
+        else:
+            werkvorm_normalized = None
+
+        workplace = classify_workplace(location, werkvorm_normalized)
+
         return JobPosting(
             site_id=self.site_id,
             listing_id=stub.listing_id,
             source_url=stub.detail_url,
             title=title,
             location=location,
+            workplace=workplace,
             hours=hours,
             description=description,
             category=None,

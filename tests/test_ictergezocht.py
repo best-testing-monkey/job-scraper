@@ -44,6 +44,7 @@ def test_parse_detail(mock_fetch: object) -> None:
     assert "Functioneel Beheerder" in posting.title
     assert posting.client == "Concretor"
     assert posting.location == "Barendrecht"
+    assert posting.workplace == "Hybrid"
     assert posting.hours == "36 uur"
     assert posting.description
     assert len(posting.description) > 0

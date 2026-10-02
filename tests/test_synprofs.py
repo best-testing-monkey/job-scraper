@@ -86,6 +86,9 @@ def test_parse_detail_6930(adapter: SynprofsAdapter, detail_html: bytes, monkeyp
     assert posting.location is not None
     assert "Assen" in posting.location
 
+    # Verify workplace is classified as Hybrid
+    assert posting.workplace == "Hybrid"
+
     # Verify posted_date contains "2026-09-25"
     assert posting.posted_date is not None
     assert "2026-09-25" in posting.posted_date
@@ -115,6 +118,9 @@ def test_parse_detail_extra_fields(adapter: SynprofsAdapter, detail_html: bytes)
     assert "validThrough" in posting.extra_fields
     assert posting.extra_fields["validThrough"] == "2026-09-30"
 
+    # Verify workplace is Hybrid
+    assert posting.workplace == "Hybrid"
+
 
 def test_parse_detail_hours_and_duration(adapter: SynprofsAdapter, detail_html: bytes) -> None:
     stub = ListingStub(
@@ -132,3 +138,6 @@ def test_parse_detail_hours_and_duration(adapter: SynprofsAdapter, detail_html: 
     # Verify duration is extracted
     assert posting.duration is not None
     assert "12" in posting.duration or "maanden" in posting.duration
+
+    # Verify workplace is Hybrid
+    assert posting.workplace == "Hybrid"

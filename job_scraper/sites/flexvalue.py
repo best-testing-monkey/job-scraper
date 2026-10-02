@@ -4,6 +4,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
 from job_scraper.core.models import JobPosting, ListingStub
+from job_scraper.core.workplace import classify_workplace
 from job_scraper.sites.base import FetchStrategy, SiteAdapter, fetch_page
 
 
@@ -56,6 +57,7 @@ class FlexValueAdapter(SiteAdapter):
         duration = None
         extra_fields = {}
         client = None
+        location_detail = None
 
         if job_description:
             table = job_description.find("table")
@@ -76,6 +78,7 @@ class FlexValueAdapter(SiteAdapter):
                         elif label in ["Optie op verlenging", "Deadline"]:
                             extra_fields[label] = value
                         elif label == "Locatie":
+                            location_detail = value
                             extra_fields["Locatie (detail)"] = value
 
             if "start_date" in locals() and "end_date" in locals():
@@ -85,6 +88,8 @@ class FlexValueAdapter(SiteAdapter):
 
             client = self._extract_client(job_description)
 
+        workplace = classify_workplace(location, location_detail)
+
         return JobPosting(
             site_id=self.site_id,
             listing_id=stub.listing_id,
@@ -93,6 +98,7 @@ class FlexValueAdapter(SiteAdapter):
             client=client,
             category=None,
             location=location,
+            workplace=workplace,
             hours=hours,
             duration=duration,
             description=description_text,

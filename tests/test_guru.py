@@ -70,6 +70,8 @@ def test_parse_detail_2101732() -> None:
     assert posting.rate is not None and "250-$500" in posting.rate
     assert posting.category is not None and ("QA" in posting.category or "Testing" in posting.category)
     assert posting.client is None
+    assert posting.location == "India"
+    assert posting.workplace == "Fully Remote"
     assert len(posting.description) > 0
     assert "Show more" not in posting.description
     assert "skills" in posting.extra_fields

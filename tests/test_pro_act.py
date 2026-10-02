@@ -43,6 +43,7 @@ def test_parse_detail():
     assert posting.extra_fields["Verloopt"] == "30 september 2026"
     assert posting.description != ""
     assert len(posting.description) > 100
+    assert posting.workplace == "Hybrid"
 
 
 def test_parse_detail_client_location_rate():
@@ -57,4 +58,5 @@ def test_parse_detail_client_location_rate():
     assert posting.client is not None
     assert "Universiteit van Amsterdam" in posting.client
     assert posting.location == "hybride"
+    assert posting.workplace == "Hybrid"
     assert posting.rate == "marktconform"

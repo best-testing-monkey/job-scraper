@@ -76,6 +76,7 @@ class TestHeroParseDetail:
         assert posting.listing_id == "e98187b8"
         assert posting.site_id == "hero"
         assert posting.location == "Maasland"
+        assert posting.workplace == "Hybrid"
         assert posting.hours == "36 uur/week"
         assert (
             "Cloud Engineer voor het programma Grensverleggende IT"

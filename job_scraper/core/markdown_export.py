@@ -21,7 +21,8 @@ def filename_for(posting: JobPosting) -> str:
 def render(posting: JobPosting) -> str:
     """Returns the full markdown text: '# {title}' header, then one
     '- {Field}: {value}' bullet per populated field in this order: Source
-    (= source_url), Client, Category, Level, Status, Location, Hours, Rate,
+    (= source_url), Client, Category, Level, Status, Location, Workplace,
+    Hours, Rate,
     Duration, Posted (= posted_date), Experience, Skills (comma-joined if
     non-empty). Skip any field that is None/empty (don't render a bullet
     for it at all). Then render one '- {Key}: {value}' bullet per entry in
@@ -40,6 +41,7 @@ def render(posting: JobPosting) -> str:
         ("Level", posting.level),
         ("Status", posting.status),
         ("Location", posting.location),
+        ("Workplace", posting.workplace),
         ("Hours", posting.hours),
         ("Rate", posting.rate),
         ("Duration", posting.duration),

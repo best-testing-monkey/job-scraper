@@ -50,6 +50,7 @@ def test_parse_detail():
     assert posting.site_id == "headfirst"
     assert posting.client == "Ministerie van Economische Zaken"
     assert posting.location == "Utrecht"
+    assert posting.workplace is None
     assert posting.hours == "32-36"
     assert posting.extra_fields.get("referenceCode") == "SAISAE000050"
     assert posting.description == ""
@@ -70,6 +71,7 @@ def test_parse_detail_duration_and_apply_url():
     posting = adapter.parse_detail(stub, _fixture_bytes())
 
     assert posting.duration == "2026-10-11 - 2027-04-10"
+    assert posting.workplace is None
     assert posting.extra_fields.get("apply_url") == (
         "https://striive.com/nl/opdrachten?id=28ed2087-a156-462e-b89c-fccc6ff74a71"
     )

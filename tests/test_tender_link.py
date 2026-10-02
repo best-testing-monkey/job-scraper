@@ -40,6 +40,7 @@ def test_parse_detail_returns_correct_title() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[0], None)
     assert posting.title == "BRP Specialist"
+    assert posting.workplace is None
 
 
 def test_parse_detail_returns_correct_listing_id() -> None:
@@ -49,6 +50,7 @@ def test_parse_detail_returns_correct_listing_id() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[0], None)
     assert posting.listing_id == "33345"
+    assert posting.workplace is None
 
 
 def test_parse_detail_returns_correct_site_id() -> None:
@@ -58,6 +60,7 @@ def test_parse_detail_returns_correct_site_id() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[0], None)
     assert posting.site_id == "tender_link"
+    assert posting.workplace is None
 
 
 def test_parse_detail_returns_correct_client() -> None:
@@ -67,6 +70,7 @@ def test_parse_detail_returns_correct_client() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[0], None)
     assert posting.client == "gemeente Soest"
+    assert posting.workplace is None
 
 
 def test_parse_detail_returns_correct_category() -> None:
@@ -76,6 +80,7 @@ def test_parse_detail_returns_correct_category() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[0], None)
     assert posting.category == "Detachering"
+    assert posting.workplace is None
 
 
 def test_parse_detail_returns_correct_location() -> None:
@@ -85,6 +90,7 @@ def test_parse_detail_returns_correct_location() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[0], None)
     assert "Soest" in posting.location or "Utrecht" in posting.location
+    assert posting.workplace is None
 
 
 def test_parse_detail_returns_correct_hours() -> None:
@@ -94,6 +100,7 @@ def test_parse_detail_returns_correct_hours() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[0], None)
     assert posting.hours == "40"
+    assert posting.workplace is None
 
 
 def test_parse_detail_returns_correct_duration() -> None:
@@ -103,6 +110,7 @@ def test_parse_detail_returns_correct_duration() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[0], None)
     assert posting.duration == "6 maanden"
+    assert posting.workplace is None
 
 
 def test_parse_detail_returns_correct_rate() -> None:
@@ -114,6 +122,7 @@ def test_parse_detail_returns_correct_rate() -> None:
     assert "68" in posting.rate
     assert "81" in posting.rate
     assert "5400" not in posting.rate
+    assert posting.workplace is None
 
 
 def test_parse_detail_returns_correct_salaried_gross_monthly() -> None:
@@ -123,6 +132,7 @@ def test_parse_detail_returns_correct_salaried_gross_monthly() -> None:
         stubs = list(adapter.list_postings())
     posting = adapter.parse_detail(stubs[0], None)
     assert posting.extra_fields.get("salaried_gross_monthly") == "5400"
+    assert posting.workplace is None
 
 
 def test_parse_detail_returns_non_empty_description() -> None:
@@ -133,3 +143,4 @@ def test_parse_detail_returns_non_empty_description() -> None:
     posting = adapter.parse_detail(stubs[0], None)
     assert posting.description
     assert len(posting.description) > 0
+    assert posting.workplace is None

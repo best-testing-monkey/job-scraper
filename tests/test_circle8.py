@@ -56,6 +56,7 @@ def test_parse_detail_vnr_85422() -> None:
     assert posting.listing_id == "VNR-85422"
     assert posting.title == "Adviseur GGD-GHOR"
     assert posting.location == "Utrecht"
+    assert posting.workplace is None
     assert "ICTU" in posting.client
     assert "Openbaar bestuur" in posting.category
     assert posting.hours is not None and "8" in posting.hours
