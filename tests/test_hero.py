@@ -124,3 +124,11 @@ def test_screenshot_selector_matches_description_element(detail_html: str) -> No
     assert "Je bouwt mee aan het Private Cloud Platform en automatiseert de cloud orchestration" in els[0].get_text()
     assert els[0].find(["nav", "header", "footer", "form"]) is None
     assert "cookie" not in els[0].get_text().lower()
+
+
+class TestHeroScreenshotSkip:
+    def test_no_skip_selectors_pinned(self, adapter: HeroAdapter) -> None:
+        # E14-S09 BLOCKED: the "Log in om de volledige aanvraag" gate is present
+        # on every anonymously saved hero page (81/81, incl. the "ungated"
+        # fixture), so no selector separates gated from good pages.
+        assert adapter.screenshot_skip_selectors == ()
