@@ -271,3 +271,88 @@ def test_extra_fields_stored_as_json(temp_db):
     row = cursor.fetchone()
     extra = json.loads(row[0])
     assert extra == {"budget": "5000", "duration": "3 months"}
+
+
+def _p(listing_id, title="T", description="d", site="s"):
+    return JobPosting(site_id=site, listing_id=listing_id,
+                      source_url=f"https://x/{listing_id}", title=title,
+                      description=description)
+
+
+def _stale(repo, lid, site="s"):
+    return repo.conn.execute(
+        "SELECT is_stale, stale_since FROM jobs WHERE site_id=? AND listing_id=?",
+        (site, lid)).fetchone()
+
+
+def test_migration_adds_stale_since_to_old_db(tmp_path):
+    path = str(tmp_path / "old.db")
+    raw = sqlite3.connect(path)
+    raw.execute("""CREATE TABLE jobs (
+        id INTEGER PRIMARY KEY, site_id TEXT NOT NULL, listing_id TEXT NOT NULL,
+        source_url TEXT NOT NULL, title TEXT NOT NULL,
+        client TEXT, category TEXT, level TEXT, status TEXT, location TEXT,
+        hours TEXT, rate TEXT, duration TEXT, posted_date TEXT, experience TEXT,
+        skills TEXT, description TEXT, scrape_note TEXT, extra_fields TEXT,
+        content_hash TEXT NOT NULL, first_seen_at TEXT NOT NULL,
+        last_seen_at TEXT NOT NULL, is_stale INTEGER NOT NULL DEFAULT 0,
+        duplicate_of INTEGER REFERENCES jobs(id), UNIQUE(site_id, listing_id))""")
+    raw.execute("INSERT INTO jobs (site_id, listing_id, source_url, title, content_hash,"
+                " first_seen_at, last_seen_at) VALUES ('s','1','u','Old','h','a','b')")
+    raw.commit()
+    raw.close()
+    for _ in range(2):
+        repo = JobRepository(path)
+        cols = [r[1] for r in repo.conn.execute("PRAGMA table_info(jobs)")]
+        assert cols.count("stale_since") == 1
+        assert repo.conn.execute(
+            "SELECT title, stale_since FROM jobs").fetchall() == [("Old", None)]
+        repo.conn.close()
+
+
+@pytest.mark.parametrize("changed", [False, True])
+def test_upsert_clears_stale_since(temp_db, changed):
+    temp_db.upsert(_p("1"), "2026-10-01T00:00:00Z")
+    temp_db.set_stale_state("s", "1", 1, "2026-10-01")
+    temp_db.upsert(_p("1", description="new" if changed else "d"), "2026-10-02T00:00:00Z")
+    assert _stale(temp_db, "1") == (0, None)
+
+
+def test_mark_stale_sets_and_keeps_stale_since(temp_db):
+    temp_db.upsert(_p("1"), "2026-10-01T00:00:00Z")
+    assert temp_db.mark_stale_not_seen_since("s", "2026-10-02T00:00:00Z", "2026-10-02") == 1
+    assert _stale(temp_db, "1") == (1, "2026-10-02")
+    assert temp_db.mark_stale_not_seen_since("s", "2026-10-03T00:00:00Z", "2026-10-03") == 1
+    assert _stale(temp_db, "1") == (1, "2026-10-02")
+
+
+def test_mark_stale_without_stale_on_leaves_null(temp_db):
+    temp_db.upsert(_p("1"), "2026-10-01T00:00:00Z")
+    assert temp_db.mark_stale_not_seen_since("s", "2026-10-02T00:00:00Z") == 1
+    assert _stale(temp_db, "1") == (1, None)
+
+
+def test_list_newly_stale(temp_db):
+    run = "2026-10-05T00:00:00Z"
+    temp_db.upsert(_p("seen", title="Seen"), "2026-10-05T01:00:00Z")
+    temp_db.upsert(_p("already", title="Already"), "2026-10-01T00:00:00Z")
+    temp_db.set_stale_state("s", "already", 1, "2026-10-02")
+    temp_db.upsert(_p("dup", title="Dup"), "2026-10-01T00:00:00Z")
+    temp_db.set_duplicate_of("s", "dup", 1)
+    temp_db.upsert(_p("unseen", title="Unseen"), "2026-10-01T00:00:00Z")
+    temp_db.upsert(_p("other", site="o"), "2026-10-01T00:00:00Z")
+    assert temp_db.list_newly_stale("s", run) == [("unseen", "Unseen")]
+
+
+def test_list_stale_state_and_setters(temp_db):
+    temp_db.upsert(_p("b", title="B"), "2026-10-01T00:00:00Z")
+    temp_db.upsert(_p("a", title="A"), "2026-10-01T00:00:00Z")
+    temp_db.upsert(_p("d", title="D"), "2026-10-01T00:00:00Z")
+    temp_db.set_duplicate_of("s", "d", 1)
+    temp_db.set_stale_state("s", "a", 1, "2026-10-02")
+    assert temp_db.list_stale_state() == [
+        ("s", "a", "A", 1, "2026-10-02"), ("s", "b", "B", 0, None)]
+    temp_db.set_stale_since("s", "a", "2026-09-01")
+    assert _stale(temp_db, "a") == (1, "2026-09-01")
+    temp_db.set_stale_since("s", "a", None)
+    assert _stale(temp_db, "a") == (1, None)

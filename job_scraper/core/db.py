@@ -27,10 +27,14 @@ class JobRepository:
                 first_seen_at TEXT NOT NULL,
                 last_seen_at TEXT NOT NULL,
                 is_stale INTEGER NOT NULL DEFAULT 0,
+                stale_since TEXT,
                 duplicate_of INTEGER REFERENCES jobs(id),
                 UNIQUE(site_id, listing_id)
             )
         """)
+        cols = [r[1] for r in self.conn.execute("PRAGMA table_info(jobs)")]
+        if "stale_since" not in cols:
+            self.conn.execute("ALTER TABLE jobs ADD COLUMN stale_since TEXT")
         self.conn.commit()
 
     def upsert(self, posting: JobPosting, seen_at: str) -> bool:
@@ -92,7 +96,8 @@ class JobRepository:
                     level = ?, status = ?, location = ?, hours = ?, rate = ?,
                     duration = ?, posted_date = ?, experience = ?, skills = ?,
                     description = ?, scrape_note = ?, extra_fields = ?,
-                    content_hash = ?, last_seen_at = ?, is_stale = 0
+                    content_hash = ?, last_seen_at = ?, is_stale = 0,
+                    stale_since = NULL
                 WHERE site_id = ? AND listing_id = ?
                 """,
                 (
@@ -122,22 +127,66 @@ class JobRepository:
             return True
 
         cursor.execute(
-            "UPDATE jobs SET last_seen_at = ?, is_stale = 0 WHERE id = ?",
+            "UPDATE jobs SET last_seen_at = ?, is_stale = 0, stale_since = NULL WHERE id = ?",
             (seen_at, existing_id),
         )
         self.conn.commit()
         return False
 
-    def mark_stale_not_seen_since(self, site_id: str, run_started_at: str) -> int:
+    def mark_stale_not_seen_since(
+        self, site_id: str, run_started_at: str, stale_on: str | None = None
+    ) -> int:
         """Set is_stale=1 for every row of this site_id whose last_seen_at
-        is earlier than run_started_at. Returns the number of rows updated."""
+        is earlier than run_started_at. If stale_on is given, also set
+        stale_since (never overwriting an existing date).
+        Returns the number of rows updated."""
         cursor = self.conn.cursor()
-        cursor.execute(
-            "UPDATE jobs SET is_stale = 1 WHERE site_id = ? AND last_seen_at < ?",
-            (site_id, run_started_at),
-        )
+        if stale_on is None:
+            cursor.execute(
+                "UPDATE jobs SET is_stale = 1 WHERE site_id = ? AND last_seen_at < ?",
+                (site_id, run_started_at),
+            )
+        else:
+            cursor.execute(
+                "UPDATE jobs SET is_stale = 1, stale_since = COALESCE(stale_since, ?) "
+                "WHERE site_id = ? AND last_seen_at < ?",
+                (stale_on, site_id, run_started_at),
+            )
         self.conn.commit()
         return cursor.rowcount
+
+    def list_newly_stale(self, site_id: str, run_started_at: str) -> list[tuple[str, str]]:
+        """(listing_id, title) of live, non-duplicate rows not seen since run_started_at."""
+        cursor = self.conn.execute(
+            "SELECT listing_id, title FROM jobs WHERE site_id = ? AND is_stale = 0 "
+            "AND last_seen_at < ? AND duplicate_of IS NULL ORDER BY listing_id",
+            (site_id, run_started_at),
+        )
+        return [(r[0], r[1]) for r in cursor.fetchall()]
+
+    def list_stale_state(self) -> list[tuple[str, str, str, int, str | None]]:
+        """(site_id, listing_id, title, is_stale, stale_since) for non-duplicate rows."""
+        cursor = self.conn.execute(
+            "SELECT site_id, listing_id, title, is_stale, stale_since FROM jobs "
+            "WHERE duplicate_of IS NULL ORDER BY site_id, listing_id"
+        )
+        return [tuple(r) for r in cursor.fetchall()]
+
+    def set_stale_state(
+        self, site_id: str, listing_id: str, is_stale: int, stale_since: str | None
+    ) -> None:
+        self.conn.execute(
+            "UPDATE jobs SET is_stale = ?, stale_since = ? WHERE site_id = ? AND listing_id = ?",
+            (is_stale, stale_since, site_id, listing_id),
+        )
+        self.conn.commit()
+
+    def set_stale_since(self, site_id: str, listing_id: str, stale_since: str | None) -> None:
+        self.conn.execute(
+            "UPDATE jobs SET stale_since = ? WHERE site_id = ? AND listing_id = ?",
+            (stale_since, site_id, listing_id),
+        )
+        self.conn.commit()
 
     def find_duplicate(
         self, title: str, client: str | None, location: str | None
