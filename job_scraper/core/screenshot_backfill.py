@@ -102,6 +102,7 @@ scraper marked stale are skipped (``skipped_stale``).
                 pre_actions=adapter.screenshot_pre_actions,
                 skip_selectors=adapter.screenshot_skip_selectors,
                 min_height=adapter.screenshot_min_height,
+                gone_check=adapter.gone_check(),
             )
         except Exception as exc:  # noqa: BLE001 - one failure must not stop the run
             print(f"Screenshot failed for {md.name}: {exc}", file=sys.stderr)

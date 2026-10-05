@@ -18,6 +18,8 @@ class FakeAdapter(SiteAdapter):
     site_id = "fake-site"
     base_url = "https://fake-site.example.com"
     fetch_strategy = FetchStrategy.STATIC
+    listing_paths = ()
+    gone_markers = ()
 
     def list_postings(self) -> Iterator[ListingStub]:
         yield ListingStub(
@@ -822,3 +824,53 @@ def test_normal_run_has_zero_gone(tmp_path: Path) -> None:
     c, _ = _gone_run(repo, tmp_path / "jobs", GoneAdapter(["A", "B"]), 1, "2026-10-01", set())
     assert c["gone"] == 0 and c["gone_suppressed"] == 0
     assert c["seen"] == 2 and c["written"] == 2 and c["stale_marked"] == 0
+
+
+def test_screenshot_gone_check_passed_to_capture_element(tmp_path: Path) -> None:
+    """Verify capture_element receives gone_check with listing_id from posting."""
+    class GoneCheckShotAdapter(ShotAdapter):
+        listing_paths = ("/jobs",)
+        gone_markers = ("gone",)
+
+    adapter = GoneCheckShotAdapter()
+    repo = JobRepository(str(tmp_path / "test.db"))
+    shots = str(tmp_path / "shots")
+
+    with (
+        patch("job_scraper.pipeline.fetch_page", return_value=None),
+        patch("job_scraper.pipeline.capture_element", return_value=True) as cap,
+    ):
+        run_site(adapter, repo, str(tmp_path / "jobs"), "2023-01-01T00:00:00", screenshots_dir=shots)
+
+    # Verify gone_check is passed with listing_id from posting
+    # ShotAdapter yields job-1 and job-3 (job-2 is excluded)
+    expected_listing_ids = {"job-1", "job-3"}
+    actual_listing_ids = {call.kwargs.get("gone_check").listing_id for call in cap.call_args_list}
+    assert actual_listing_ids == expected_listing_ids
+
+    for call in cap.call_args_list:
+        gone_check = call.kwargs.get("gone_check")
+        assert gone_check is not None
+        # The listings_paths and gone_markers should be from the adapter
+        assert gone_check.listing_paths == ("/jobs",)
+        assert gone_check.gone_markers == ("gone",)
+
+
+def test_screenshot_none_with_gone_check_counts_skipped(tmp_path: Path) -> None:
+    """Verify that None return from capture_element counts as skipped_blocked when gone_check is passed."""
+    class GoneCheckShotAdapter(ShotAdapter):
+        listing_paths = ("/jobs",)
+
+    adapter = GoneCheckShotAdapter()
+    repo = JobRepository(str(tmp_path / "test.db"))
+    shots = str(tmp_path / "shots")
+
+    with (
+        patch("job_scraper.pipeline.fetch_page", return_value=None),
+        patch("job_scraper.pipeline.capture_element", return_value=None),
+    ):
+        counters = run_site(adapter, repo, str(tmp_path / "jobs"), "2023-01-01T00:00:00", screenshots_dir=shots)
+
+    assert counters["screenshots_skipped"] == 2
+    assert counters["screenshots_failed"] == 0
+    assert counters["written"] == 2

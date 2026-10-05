@@ -123,6 +123,7 @@ def run_site(
                         pre_actions=adapter.screenshot_pre_actions,
                         skip_selectors=adapter.screenshot_skip_selectors,
                         min_height=adapter.screenshot_min_height,
+                        gone_check=adapter.gone_check(posting.listing_id),
                     )
                 except Exception as exc:
                     print(f"Warning: screenshot failed for {stem}: {exc}", file=sys.stderr)

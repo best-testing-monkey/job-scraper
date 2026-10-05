@@ -19,6 +19,13 @@ class FakeAdapter:
     screenshot_skip_selectors = ()
     screenshot_min_height = 100
     fetch_strategy = FetchStrategy.STATIC
+    listing_paths = ()
+    gone_markers = ()
+
+    @classmethod
+    def gone_check(cls, listing_id: str = ""):
+        from job_scraper.core.gone import GoneCheck
+        return GoneCheck(listing_id, cls.listing_paths, cls.gone_markers)
 
 
 @pytest.fixture
@@ -46,6 +53,7 @@ def test_unknown_site(env):
 
 
 def test_all_success(env):
+    from job_scraper.core.gone import GoneCheck
     with patch.object(sb, "capture_element", return_value=True) as cap:
         res = run(env)
     assert res == {
@@ -58,7 +66,7 @@ def test_all_success(env):
         "skipped_stale": 0,
     }
     assert cap.call_args_list[0].args[:2] == ("https://x.test/a", "div.x")
-    assert cap.call_args_list[0].kwargs == {"stealth": False, "hide_selectors": (), "pre_actions": (), "skip_selectors": (), "min_height": 100}
+    assert cap.call_args_list[0].kwargs == {"stealth": False, "hide_selectors": (), "pre_actions": (), "skip_selectors": (), "min_height": 100, "gone_check": GoneCheck("", (), ())}
     text = (env[0] / "fake-a-t.md").read_text()
     assert "- Screenshot: screenshots/fake-a-t.png" in text
     assert "Screenshot" not in (env[0] / "other-1-t.md").read_text()
@@ -105,10 +113,11 @@ def test_hide_selectors_passed(env, monkeypatch):
 
 
 def test_stealth_flag(env, monkeypatch):
+    from job_scraper.core.gone import GoneCheck
     monkeypatch.setattr(FakeAdapter, "fetch_strategy", FetchStrategy.STEALTH)
     with patch.object(sb, "capture_element", return_value=True) as cap:
         run(env)
-    assert cap.call_args.kwargs == {"stealth": True, "hide_selectors": (), "pre_actions": (), "skip_selectors": (), "min_height": 100}
+    assert cap.call_args.kwargs == {"stealth": True, "hide_selectors": (), "pre_actions": (), "skip_selectors": (), "min_height": 100, "gone_check": GoneCheck("", (), ())}
 
 
 def test_idempotent_single_line(env):
@@ -198,3 +207,41 @@ def test_site_registry_has_min_height():
         min_height = adapter_cls.screenshot_min_height
         assert isinstance(min_height, int), f"{site_id}.screenshot_min_height is {type(min_height)}, not int"
         assert min_height > 0, f"{site_id}.screenshot_min_height is {min_height}, not > 0"
+
+
+def test_gone_check_passed_to_capture_element(env):
+    from job_scraper.core.gone import GoneCheck
+    jobs, _ = env
+    with patch.object(sb, "capture_element", return_value=True) as cap:
+        run(env)
+    # Verify gone_check is passed to capture_element
+    expected_gc = GoneCheck("", (), ())
+    assert cap.call_args_list[0].kwargs["gone_check"] == expected_gc
+
+
+def test_gone_check_with_listing_paths(env, monkeypatch):
+    from job_scraper.core.gone import GoneCheck
+
+    class AdapterWithPaths(FakeAdapter):
+        listing_paths = ("/jobs",)
+
+    monkeypatch.setitem(SITE_REGISTRY, "fake", AdapterWithPaths)
+    jobs, _ = env
+    with patch.object(sb, "capture_element", return_value=True) as cap:
+        run(env)
+    # Verify gone_check includes listing_paths but empty listing_id (backfill doesn't know it)
+    expected_gc = GoneCheck("", ("/jobs",), ())
+    assert cap.call_args_list[0].kwargs["gone_check"] == expected_gc
+
+
+def test_none_result_counts_skipped_blocked_with_gone_check(env):
+    jobs, _ = env
+    before_a = (jobs / "fake-a-t.md").read_bytes()
+    with patch.object(sb, "capture_element", return_value=None) as cap:
+        res = run(env)
+    assert res["skipped_blocked"] == 2
+    assert res["attempted"] == 2
+    # Verify gone_check was passed even though result was None
+    from job_scraper.core.gone import GoneCheck
+    expected_gc = GoneCheck("", (), ())
+    assert cap.call_args_list[0].kwargs["gone_check"] == expected_gc
