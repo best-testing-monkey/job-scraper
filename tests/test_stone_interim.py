@@ -150,11 +150,19 @@ def test_parse_detail_without_listing_raises() -> None:
         StoneInterimAdapter().parse_detail(stub, load_fixture_bytes("detail_4893_api_GetVacancy.json"))
 
 
-def test_screenshot_selector_is_none_blocked() -> None:
-    # BLOCKED: the saved human page (detail_4893.html) is a client-rendered
-    # shell without the description, and raw/stone_interim has only JSON.
+def test_screenshot_selector_matches_rendered_fixture() -> None:
     from bs4 import BeautifulSoup
 
-    assert StoneInterimAdapter().screenshot_selector is None
-    html = (Path(__file__).parent / "fixtures" / "stone_interim" / "detail_4893.html").read_text()
-    assert "Supply Chain afdeling" not in BeautifulSoup(html, "html.parser").get_text()
+    html = (Path(__file__).parent / "fixtures" / "stone_interim" / "rendered_3783.html").read_text()
+    soup = BeautifulSoup(html, "html.parser")
+    els = soup.select(StoneInterimAdapter.screenshot_selector)
+    assert len(els) == 1
+    text = els[0].get_text(" ", strip=True)
+    assert "Dan is onze opdrachtgever in regio Tilburg op zoek naar jou!" in text
+    # block__header are the ad's own section headings, not the page header
+    assert not els[0].select("nav, footer, form")
+    assert not [h for h in els[0].select("header") if "block__header" not in h.get("class", [])]
+    assert "cookie" not in text.lower()
+    assert "section.cookiebar" in StoneInterimAdapter.screenshot_hide_selectors
+    for sel in StoneInterimAdapter.screenshot_hide_selectors:
+        soup.select(sel)

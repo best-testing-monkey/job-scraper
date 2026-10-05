@@ -14,7 +14,10 @@ from job_scraper.sites.base import SiteAdapter, FetchStrategy
 class StoneInterimAdapter(SiteAdapter):
     site_id = "stone_interim"
     base_url = "https://www.stone-interim.nl"
-    screenshot_selector = None  # BLOCKED: saved human page has no description (client-rendered)
+    # Client-rendered: div.vacancy__text exists first with only a loading spinner, so require
+    # the rendered text blocks (:has) or capture_element would shoot the spinner.
+    screenshot_selector = "div.vacancy__text:has(section.block--text)"
+    screenshot_hide_selectors = ("section.cookiebar",)
     fetch_strategy = FetchStrategy.STATIC
     raw_format: ClassVar[str] = "json"
     LISTING_API_URL = "https://www.stone-interim.nl/api/v1/WordPress/GetOverviewItems/"
