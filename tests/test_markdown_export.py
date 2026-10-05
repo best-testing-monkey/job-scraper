@@ -6,6 +6,7 @@ import pytest
 from job_scraper.core.markdown_export import (
     filename_for,
     md_path_for,
+    remove_screenshot_line,
     render,
     screenshot_relpath,
     set_screenshot_line,
@@ -1091,3 +1092,217 @@ Test description."""
 
         result = source_line_differs(str(md_path), url)
         assert result is False
+
+
+class TestRemoveScreenshotLine:
+    def test_remove_screenshot_line_removes_bullet(self, tmp_path: Path) -> None:
+        """Test that remove_screenshot_line removes the screenshot bullet."""
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting, screenshot="screenshots/test.png"))
+
+        result = remove_screenshot_line(str(md_path))
+
+        assert result is True
+        content = md_path.read_text()
+        assert "- Screenshot:" not in content
+
+    def test_remove_screenshot_line_byte_identical_except_screenshot(self, tmp_path: Path) -> None:
+        """Test that removing screenshot line leaves all other lines byte-identical."""
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+            extra_fields={"Custom": "Value"},
+            scrape_note="Scrape note here.",
+        )
+        md_path = tmp_path / "test.md"
+        original_without = render(posting)
+        with_screenshot = render(posting, screenshot="screenshots/test.png")
+        md_path.write_text(with_screenshot)
+
+        result = remove_screenshot_line(str(md_path))
+
+        assert result is True
+        content = md_path.read_text()
+        # Check that the content matches the original without screenshot
+        assert content == original_without
+
+    def test_remove_screenshot_line_idempotent(self, tmp_path: Path) -> None:
+        """Test that a second call returns False (idempotent)."""
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting, screenshot="screenshots/test.png"))
+
+        # First call removes the screenshot line
+        first_result = remove_screenshot_line(str(md_path))
+        assert first_result is True
+
+        # Second call should return False (nothing to remove)
+        second_result = remove_screenshot_line(str(md_path))
+        assert second_result is False
+
+        content = md_path.read_text()
+        assert "- Screenshot:" not in content
+
+    def test_remove_screenshot_line_missing_file(self, tmp_path: Path) -> None:
+        """Test that a missing file returns False."""
+        md_path = tmp_path / "nonexistent.md"
+
+        result = remove_screenshot_line(str(md_path))
+
+        assert result is False
+
+    def test_remove_screenshot_line_no_description(self, tmp_path: Path) -> None:
+        """Test that a file without ## Description returns False."""
+        md_path = tmp_path / "test.md"
+        content = """# Test Job
+
+- Source: https://test.com
+- Screenshot: screenshots/test.png"""
+        md_path.write_text(content)
+
+        result = remove_screenshot_line(str(md_path))
+
+        assert result is False
+
+    def test_remove_screenshot_line_no_bullet(self, tmp_path: Path) -> None:
+        """Test that a file without the bullet returns False."""
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting))
+
+        result = remove_screenshot_line(str(md_path))
+
+        assert result is False
+
+    def test_remove_screenshot_line_preserves_description_screenshot(self, tmp_path: Path) -> None:
+        """Test that a line in the description starting with '- Screenshot:' is preserved."""
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Some text.\n- Screenshot: x\nMore text here.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting, screenshot="screenshots/test.png"))
+
+        result = remove_screenshot_line(str(md_path))
+
+        assert result is True
+        content = md_path.read_text()
+        # Check that the header screenshot line is removed
+        lines = content.split("\n")
+        description_idx = next(i for i, line in enumerate(lines) if line == "## Description")
+        # Verify no screenshot line in header
+        for i in range(0, description_idx):
+            assert not lines[i].startswith("- Screenshot:")
+        # Verify the description's line is still there
+        assert "- Screenshot: x" in content
+
+    def test_remove_screenshot_line_round_trip(self, tmp_path: Path) -> None:
+        """Test that set_screenshot_line then remove_screenshot_line restores original."""
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        original = render(posting)
+        md_path.write_text(original)
+
+        # Add screenshot
+        set_screenshot_line(str(md_path), "screenshots/test.png")
+        with_screenshot = md_path.read_text()
+        assert "- Screenshot: screenshots/test.png" in with_screenshot
+
+        # Remove screenshot
+        remove_screenshot_line(str(md_path))
+        restored = md_path.read_text()
+
+        assert restored == original
+
+    def test_remove_screenshot_line_preserves_description_content(self, tmp_path: Path) -> None:
+        """Test that description and scrape_note are never touched."""
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description text here.",
+            scrape_note="Scrape note here.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting, screenshot="screenshots/test.png"))
+
+        remove_screenshot_line(str(md_path))
+
+        content = md_path.read_text()
+        assert "Test description text here." in content
+        assert "Scrape note here." in content
+
+    def test_remove_screenshot_line_with_stale_line(self, tmp_path: Path) -> None:
+        """Test that removing screenshot leaves stale line intact."""
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(
+            render(posting, screenshot="screenshots/test.png", stale_since="2026-10-01")
+        )
+
+        result = remove_screenshot_line(str(md_path))
+
+        assert result is True
+        content = md_path.read_text()
+        assert "- Screenshot:" not in content
+        assert "- Stale since: 2026-10-01" in content
+
+    def test_remove_screenshot_line_first_occurrence(self, tmp_path: Path) -> None:
+        """Test that only the first screenshot line is removed."""
+        md_path = tmp_path / "test.md"
+        content = """# Test Job
+
+- Source: https://test.com
+- Screenshot: screenshots/first.png
+
+## Description
+
+Text here with another - Screenshot: second.png reference."""
+        md_path.write_text(content)
+
+        result = remove_screenshot_line(str(md_path))
+
+        assert result is True
+        content = md_path.read_text()
+        # First screenshot should be removed
+        assert "- Screenshot: screenshots/first.png" not in content
+        # Second screenshot in description should remain
+        assert "- Screenshot: second.png" in content

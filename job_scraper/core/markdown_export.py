@@ -212,6 +212,52 @@ def source_line_differs(md_path: str, source_url: str) -> bool:
     return True
 
 
+def remove_screenshot_line(md_path: str) -> bool:
+    """Removes the '- Screenshot:' line from a markdown file.
+
+    Searches for and removes the first line starting with '- Screenshot:'
+    found in the header block (lines before '## Description'). Returns True
+    if a line was removed, False if the file does not exist, has no
+    '## Description', or has no such line. Idempotent. Nothing at or after
+    '## Description' is touched."""
+    file_path = Path(md_path)
+    if not file_path.exists():
+        return False
+
+    original_content = file_path.read_text()
+    lines = original_content.split("\n")
+
+    # Find the blank line before ## Description first (to limit search to header)
+    description_idx = None
+    for i, line in enumerate(lines):
+        if line == "## Description":
+            description_idx = i
+            break
+
+    if description_idx is None:
+        return False
+
+    # Find existing screenshot line only in the header section (before ## Description)
+    screenshot_idx = None
+    for i in range(description_idx):
+        if lines[i].startswith("- Screenshot:"):
+            screenshot_idx = i
+            break
+
+    if screenshot_idx is None:
+        return False
+
+    # Remove the line
+    lines.pop(screenshot_idx)
+
+    new_content = "\n".join(lines)
+    if new_content == original_content:
+        return False
+
+    file_path.write_text(new_content)
+    return True
+
+
 def set_stale_line(md_path: str, stale_since: str | None) -> bool:
     """Updates, inserts, or removes a '- Stale since: {stale_since}' line.
 
