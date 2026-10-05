@@ -13,12 +13,19 @@ class WearedevelopersAdapter(SiteAdapter):
     site_id: str = "wearedevelopers"
     base_url: str = "https://www.wearedevelopers.com"
     fetch_strategy: FetchStrategy = FetchStrategy.STEALTH
-    # First section holding a prose body = "Job description" (Requirements/About
-    # sections reuse the same classes and follow it). Needs :has() (Playwright + soupsieve).
-    screenshot_selector = (
-        "section:has(> div.prose-base-content)"
-        ":not(section:has(> div.prose-base-content) ~ section)"
+    # The "Job description" block is always the 3rd <section> of the detail
+    # column (after "Role details" and "Tech stack"); plain CSS, no :has().
+    screenshot_selector = "div.flex-col.gap-8.pb-8 > section:nth-of-type(3)"
+    screenshot_hide_selectors = (
+        "header.sticky",
+        "dialog#modal",
+        "div.fixed.inset-0",
+        ".tru_overlay",
+        ".tru_cookie-dialog_wrapper",
     )
+    # Live: the TrustArc overlay stays displayed despite the hide rule, so also
+    # click its "Necessary only" button (normal consent decline).
+    screenshot_pre_actions = ("#tru_deselect_btn",)
     LISTING_URL: str = "https://www.wearedevelopers.com/jobs?country=all&q=QA"
 
     def list_postings(self) -> Iterator[ListingStub]:

@@ -131,14 +131,17 @@ def test_screenshot_selector_matches_description_element(fixture: str) -> None:
 def test_screenshot_hide_selectors_valid() -> None:
     from bs4 import BeautifulSoup
 
-    assert Circle8Adapter.screenshot_hide_selectors == ("#CybotCookiebotDialog",)
+    # E14-S20: live (StealthyFetcher) probe: Cookiebot underlay tints the page,
+    # sticky header/logo and sticky vacancy hero overlap the element.
+    assert Circle8Adapter.screenshot_hide_selectors == (
+        "#CybotCookiebotDialog",
+        "#CybotCookiebotDialogBodyUnderlay",
+        "#c-header",
+        ".c-header__static-logo-wrapper",
+        "#sticky-vacancy-hero",
+    )
+    assert Circle8Adapter.screenshot_selector == "div.c-vacancy-paragraph__body-text"
     html = (Path(__file__).parent / "fixtures" / "circle8/detail_VNR-85422.html").read_text()
     soup = BeautifulSoup(html, "html.parser")
     for sel in Circle8Adapter.screenshot_hide_selectors:
         soup.select(sel)
-
-
-def test_screenshot_attributes_pinned_blocked_live() -> None:
-    # BLOCKED (E14-S11): live detail pages return HTTP 403 to headless Chromium.
-    assert Circle8Adapter.screenshot_selector == "div.c-vacancy-paragraph__body-text"
-    assert Circle8Adapter.screenshot_hide_selectors == ("#CybotCookiebotDialog",)

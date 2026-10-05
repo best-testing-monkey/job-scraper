@@ -238,9 +238,33 @@ def test_screenshot_selector_matches_description_element(fixture: str, snippet: 
     assert "cookie" not in els[0].get_text().lower()
 
 
-def test_screenshot_selector_pinned_while_live_probe_blocked() -> None:
-    # E14-S12: live probe got Cloudflare 403 (bare patchright); selector unchanged.
-    assert WearedevelopersAdapter().screenshot_selector == (
-        "section:has(> div.prose-base-content)"
-        ":not(section:has(> div.prose-base-content) ~ section)"
+def test_screenshot_selector_plain_css_unique_in_fixtures() -> None:
+    from bs4 import BeautifulSoup
+
+    sel = WearedevelopersAdapter.screenshot_selector
+    assert sel == "div.flex-col.gap-8.pb-8 > section:nth-of-type(3)"
+    assert ":has(" not in sel and "~" not in sel
+    for fx in ("1343363", "2203015", "2904764"):
+        html = open(f"tests/fixtures/wearedevelopers/detail_{fx}.html", encoding="utf-8").read()
+        soup = BeautifulSoup(html, "html.parser")
+        els = soup.select(sel)
+        assert len(els) == 1
+        assert els[0].h2.get_text(strip=True) == "Job description"
+        assert len(els[0].get_text(" ", strip=True)) > 40
+
+
+def test_screenshot_hide_and_pre_actions() -> None:
+    from bs4 import BeautifulSoup
+
+    assert WearedevelopersAdapter.screenshot_hide_selectors == (
+        "header.sticky",
+        "dialog#modal",
+        "div.fixed.inset-0",
+        ".tru_overlay",
+        ".tru_cookie-dialog_wrapper",
     )
+    assert WearedevelopersAdapter.screenshot_pre_actions == ("#tru_deselect_btn",)
+    soup = BeautifulSoup("<p></p>", "html.parser")
+    for sel in (*WearedevelopersAdapter.screenshot_hide_selectors,
+                *WearedevelopersAdapter.screenshot_pre_actions):
+        soup.select(sel)

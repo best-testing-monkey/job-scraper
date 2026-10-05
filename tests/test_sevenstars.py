@@ -206,17 +206,23 @@ def test_screenshot_selector_matches_description_element(fixture: str) -> None:
 def test_screenshot_hide_selectors_valid() -> None:
     from bs4 import BeautifulSoup
 
-    assert SevenstarsAdapter.screenshot_hide_selectors == ("#CybotCookiebotDialog",)
+    assert "#CybotCookiebotDialog" in SevenstarsAdapter.screenshot_hide_selectors
     html = (Path(__file__).parent / "fixtures" / "sevenstars/detail_7S-004982.html").read_text()
     soup = BeautifulSoup(html, "html.parser")
     for sel in SevenstarsAdapter.screenshot_hide_selectors:
         soup.select(sel)
 
 
-def test_screenshot_attributes_pinned_blocked_live() -> None:
-    # BLOCKED (E14-S11): live detail pages return HTTP 403 to headless Chromium.
+def test_screenshot_attributes_pinned_live_verified() -> None:
+    # E14-S20: verified live through the stealth capture path.
     assert (
         SevenstarsAdapter.screenshot_selector
         == "div.c-vacancy-paragraph__body-text.job-description"
     )
-    assert SevenstarsAdapter.screenshot_hide_selectors == ("#CybotCookiebotDialog",)
+    assert SevenstarsAdapter.screenshot_hide_selectors == (
+        "#CybotCookiebotDialog",
+        "#CybotCookiebotDialogBodyUnderlay",
+        ".c-header__outer-wrapper",
+        ".c-vacancy-hero__vacancy-hero-wrapper",
+        ".grecaptcha-badge",
+    )
