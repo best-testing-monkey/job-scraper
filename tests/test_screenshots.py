@@ -177,9 +177,10 @@ def test_missing_pre_action_does_not_fail_capture(tmp_path):
 def test_adapters_default_screenshot_pre_actions_empty():
     from job_scraper.sites.registry import SITE_REGISTRY
 
-    for cls in SITE_REGISTRY.values():
+    overrides = {"wearedevelopers": ("#tru_deselect_btn",)}
+    for name, cls in SITE_REGISTRY.items():
         assert isinstance(cls.screenshot_pre_actions, tuple)
-        assert cls.screenshot_pre_actions == ()
+        assert cls.screenshot_pre_actions == overrides.get(name, ())
 
 
 def test_is_challenge_cases():
