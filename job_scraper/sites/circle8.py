@@ -22,6 +22,7 @@ class Circle8Adapter(SiteAdapter):
         "#sticky-vacancy-hero",
     )
     fetch_strategy: FetchStrategy = FetchStrategy.STEALTH
+    listing_paths = ("/opdrachten",)
     LISTING_URL: str = "https://www.circle8.nl/opdrachten"
 
     def list_postings(self) -> Iterator[ListingStub]:

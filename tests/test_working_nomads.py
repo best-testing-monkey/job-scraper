@@ -325,3 +325,25 @@ def test_screenshot_selector_matches_description_element(fixture: str) -> None:
     assert "The objective of this project is to collect a large and diverse dataset" in els[0].get_text()
     assert els[0].find(["nav", "header", "footer", "form"]) is None
     assert "cookie" not in els[0].get_text().lower()
+
+
+def test_is_unrelated_redirect_to_listing() -> None:
+    from job_scraper.core.gone import is_unrelated_redirect
+
+    adapter = WorkingNomadsAdapter()
+    requested = "https://www.workingnomads.com/job/go/1843253/"
+    final = "https://www.workingnomads.com/jobs"
+    assert is_unrelated_redirect(
+        requested, final, listing_id="1843253", listing_paths=adapter.listing_paths
+    )
+
+
+def test_is_unrelated_redirect_to_specific_job_not_gone() -> None:
+    from job_scraper.core.gone import is_unrelated_redirect
+
+    adapter = WorkingNomadsAdapter()
+    requested = "https://www.workingnomads.com/job/go/1843253/"
+    final = "https://www.workingnomads.com/jobs/senior-python-developer-acme"
+    assert not is_unrelated_redirect(
+        requested, final, listing_id="1843253", listing_paths=adapter.listing_paths
+    )

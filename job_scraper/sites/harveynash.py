@@ -16,6 +16,7 @@ class HarveyNashAdapter(SiteAdapter):
     screenshot_selector = "div.post-content"
     screenshot_hide_selectors = ("div.social-share", "div.post-content a.primaryBtn")
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
+    listing_paths = ("/vacatures",)
     LISTING_URL: str = "https://www.harveynash.nl/sitemap.xml"
 
     def list_postings(self) -> Iterator[ListingStub]:

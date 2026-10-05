@@ -15,6 +15,7 @@ class WorkingNomadsAdapter(SiteAdapter):
     base_url: str = "https://www.workingnomads.com"
     screenshot_selector = "div.jd-desktop div.jd-description"
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
+    listing_paths = ("/jobs",)
     LISTING_URL: str = "https://www.workingnomads.com/api/exposed_jobs/"
 
     def __init__(self) -> None:

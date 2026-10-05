@@ -145,3 +145,25 @@ def test_screenshot_hide_selectors_valid() -> None:
     soup = BeautifulSoup(html, "html.parser")
     for sel in Circle8Adapter.screenshot_hide_selectors:
         soup.select(sel)
+
+
+def test_is_unrelated_redirect_to_listing() -> None:
+    from job_scraper.core.gone import is_unrelated_redirect
+
+    adapter = Circle8Adapter()
+    requested = "https://www.circle8.nl/opdracht/backstage-engineers-(medior%2C-senior-%26-technical-lead)_VNR-85376"
+    final = "https://www.circle8.nl/opdrachten"
+    assert is_unrelated_redirect(
+        requested, final, listing_id="VNR-85376", listing_paths=adapter.listing_paths
+    )
+
+
+def test_is_unrelated_redirect_same_url_with_slash_not_gone() -> None:
+    from job_scraper.core.gone import is_unrelated_redirect
+
+    adapter = Circle8Adapter()
+    requested = "https://www.circle8.nl/opdracht/backstage-engineers-(medior%2C-senior-%26-technical-lead)_VNR-85376"
+    final = "https://www.circle8.nl/opdracht/backstage-engineers-(medior%2C-senior-%26-technical-lead)_VNR-85376/"
+    assert not is_unrelated_redirect(
+        requested, final, listing_id="VNR-85376", listing_paths=adapter.listing_paths
+    )

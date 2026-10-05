@@ -14,6 +14,7 @@ class HeroAdapter(SiteAdapter):
     base_url = "https://hero.eu"
     fetch_strategy = FetchStrategy.STATIC
     screenshot_selector = "div.hero-requisition-body"
+    listing_paths = ("/interim-opdrachten",)
     LISTING_URL = "https://hero.eu/interim-opdrachten"
 
     def list_postings(self) -> Iterator[ListingStub]:

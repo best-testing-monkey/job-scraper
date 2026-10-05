@@ -132,3 +132,25 @@ class TestHeroScreenshotSkip:
         # on every anonymously saved hero page (81/81, incl. the "ungated"
         # fixture), so no selector separates gated from good pages.
         assert adapter.screenshot_skip_selectors == ()
+
+
+def test_is_unrelated_redirect_to_listing() -> None:
+    from job_scraper.core.gone import is_unrelated_redirect
+
+    adapter = HeroAdapter()
+    requested = "https://hero.eu/interim-opdrachten/lead-developer-solution-architect-04489d5d"
+    final = "https://hero.eu/interim-opdrachten"
+    assert is_unrelated_redirect(
+        requested, final, listing_id="04489d5d", listing_paths=adapter.listing_paths
+    )
+
+
+def test_is_unrelated_redirect_to_root_is_gone() -> None:
+    from job_scraper.core.gone import is_unrelated_redirect
+
+    adapter = HeroAdapter()
+    requested = "https://hero.eu/interim-opdrachten/lead-developer-solution-architect-04489d5d"
+    final = "https://hero.eu/"
+    assert is_unrelated_redirect(
+        requested, final, listing_id="04489d5d", listing_paths=adapter.listing_paths
+    )

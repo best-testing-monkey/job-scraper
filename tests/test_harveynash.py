@@ -161,3 +161,25 @@ def test_screenshot_hide_selectors_valid() -> None:
     for sel in HarveyNashAdapter.screenshot_hide_selectors:
         soup.select(sel)  # valid for soupsieve
     assert post.select("a.primaryBtn")
+
+
+def test_is_unrelated_redirect_to_listing() -> None:
+    from job_scraper.core.gone import is_unrelated_redirect
+
+    adapter = HarveyNashAdapter()
+    requested = "https://www.harveynash.nl/vacatures/299060-Commissioning-supervisor---WarmtelinQ-project-JP3351"
+    final = "https://www.harveynash.nl/vacatures"
+    assert is_unrelated_redirect(
+        requested, final, listing_id="299060", listing_paths=adapter.listing_paths
+    )
+
+
+def test_is_unrelated_redirect_same_id_different_slug_not_gone() -> None:
+    from job_scraper.core.gone import is_unrelated_redirect
+
+    adapter = HarveyNashAdapter()
+    requested = "https://www.harveynash.nl/vacatures/299060-Commissioning-supervisor---WarmtelinQ-project-JP3351"
+    final = "https://www.harveynash.nl/vacatures/299060-commissioning-supervisor-warmtelinq-project-jp3351"
+    assert not is_unrelated_redirect(
+        requested, final, listing_id="299060", listing_paths=adapter.listing_paths
+    )
