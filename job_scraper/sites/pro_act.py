@@ -13,7 +13,14 @@ class ProActAdapter(SiteAdapter):
     base_url: str = "https://pro-act.nl"
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
     screenshot_selector = "section.section-content div.content-wrapper"
-    screenshot_hide_selectors = ("div.contact-info",)  # application form inside the wrapper
+    screenshot_hide_selectors = (
+        "div.contact-info",  # application form inside the wrapper
+        "#cookie-law-info-bar",  # cookie-law-info consent dialog
+        "#cookie-law-info-again",
+        "#cliSettingsPopup",
+        ".cli-modal-backdrop",  # full-screen grey dimmer (JS-injected)
+        ".cli-modal-dialog",
+    )
     LISTING_URL: str = "https://pro-act.nl/vacatures"
 
     def list_postings(self) -> Iterator[ListingStub]:

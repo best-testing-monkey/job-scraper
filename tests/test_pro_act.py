@@ -129,3 +129,24 @@ def test_screenshot_selector_wrapper_and_hidden_form() -> None:
     assert "div.contact-info" in ProActAdapter.screenshot_hide_selectors
     for sel in ProActAdapter.screenshot_hide_selectors:
         soup.select(sel)
+
+
+def test_screenshot_hides_cookie_dialog_and_dimmer() -> None:
+    from bs4 import BeautifulSoup
+
+    assert ProActAdapter.screenshot_hide_selectors == (
+        "div.contact-info",
+        "#cookie-law-info-bar",
+        "#cookie-law-info-again",
+        "#cliSettingsPopup",
+        ".cli-modal-backdrop",
+        ".cli-modal-dialog",
+    )
+    html = Path("tests/fixtures/pro_act/detail_8887.html").read_text()
+    soup = BeautifulSoup(html, "html.parser")
+    el = soup.select_one(ProActAdapter.screenshot_selector)
+    for sel in ProActAdapter.screenshot_hide_selectors:
+        soup.select(sel)
+    assert len(soup.select("#cookie-law-info-bar")) >= 1
+    assert el.select_one("#cookie-law-info-bar") is None
+    assert el.select_one("div.contact-info") is not None
