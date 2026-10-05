@@ -56,6 +56,9 @@ class SiteAdapter(ABC):
     """CSS selectors (valid for Playwright) of elements to click, each once and in
     order, after the page loads and before the element screenshot (e.g. a "Show
     more" button); a missing or unclickable selector is skipped."""
+    screenshot_skip_selectors: ClassVar[tuple[str, ...]] = ()
+    """CSS selectors (valid for Playwright); if any of these matches after load, the
+    page is a gate/teaser: skip the screenshot."""
 
     @abstractmethod
     def list_postings(self) -> Iterator[ListingStub]: ...

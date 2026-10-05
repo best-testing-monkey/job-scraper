@@ -1,10 +1,15 @@
 import logging
 import struct
+import types
 from unittest.mock import patch
 
 import pytest
 
-from job_scraper.core.screenshots import browser_available, capture_element
+from job_scraper.core.screenshots import (
+    _is_challenge,
+    browser_available,
+    capture_element,
+)
 
 needs_browser = pytest.mark.skipif(
     not browser_available(), reason="Chromium not installed"
@@ -174,3 +179,34 @@ def test_adapters_default_screenshot_pre_actions_empty():
     for cls in SITE_REGISTRY.values():
         assert isinstance(cls.screenshot_pre_actions, tuple)
         assert cls.screenshot_pre_actions == ()
+
+
+def test_is_challenge_cases():
+    def resp(status, headers=None):
+        return types.SimpleNamespace(status=status, headers=headers or {})
+
+    assert _is_challenge(resp(200, {"cf-mitigated": "challenge"}), "x") is True
+    assert _is_challenge(resp(403), "Just a moment...") is True
+    assert _is_challenge(resp(403), "Forbidden") is False
+    assert _is_challenge(None, "Just a moment...") is False
+
+
+@pytest.mark.enable_socket
+@needs_browser
+def test_skip_selectors_skip_gate_page(tmp_path):
+    page = tmp_path / "gate.html"
+    page.write_text('<div class="gate">log in</div><div id="job">text</div>')
+    out1, out2 = tmp_path / "skipped.png", tmp_path / "saved.png"
+    assert capture_element(
+        page.as_uri(), "#job", str(out1), skip_selectors=("div.gate",)
+    ) is None
+    assert not out1.exists()
+    assert capture_element(page.as_uri(), "#job", str(out2)) is True
+
+
+def test_adapters_default_screenshot_skip_selectors_empty():
+    from job_scraper.sites.registry import SITE_REGISTRY
+
+    for cls in SITE_REGISTRY.values():
+        assert isinstance(cls.screenshot_skip_selectors, tuple)
+        assert cls.screenshot_skip_selectors == ()

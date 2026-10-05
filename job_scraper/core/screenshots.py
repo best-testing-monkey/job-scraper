@@ -32,6 +32,15 @@ def browser_available() -> bool:
         return False
 
 
+def _is_challenge(response, title: str) -> bool:
+    """True iff the response is a bot-wall challenge page (detect and skip only)."""
+    if response is None:
+        return False
+    if response.headers.get("cf-mitigated") == "challenge":
+        return True
+    return response.status in (403, 503) and "just a moment" in title.lower()
+
+
 def capture_element(
     url: str,
     selector: str,
@@ -41,12 +50,17 @@ def capture_element(
     timeout_ms: int = 30000,
     hide_selectors: Sequence[str] = (),
     pre_actions: Sequence[str] = (),
-) -> bool:
+    skip_selectors: Sequence[str] = (),
+) -> bool | None:
     """Save a PNG of only the first element matching ``selector``.
 
     Elements matching GENERIC_HIDE_SELECTORS + ``hide_selectors`` are hidden
     first (display: none) and page scrolling is unlocked. Each selector in
     ``pre_actions`` is then clicked once (if present and visible).
+
+    Returns True when saved, False on failure, None when skipped on purpose
+    (bot-challenge page, or any ``skip_selectors`` match = gate/teaser page);
+    a skip writes no file.
 
     Never raises: on any failure logs a warning, removes a partial file and
     returns False.
@@ -61,7 +75,13 @@ def capture_element(
             browser = p.chromium.launch(headless=True)
             try:
                 page = browser.new_page(viewport=_VIEWPORT)
-                page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
+                response = page.goto(
+                    url, wait_until="domcontentloaded", timeout=timeout_ms
+                )
+                if _is_challenge(response, page.title()):
+                    logger.info("Skipping %s: bot-challenge page", url)
+                    Path(out_path).unlink(missing_ok=True)
+                    return None
                 hide = [s for s in (*GENERIC_HIDE_SELECTORS, *hide_selectors) if s]
                 css = f"{', '.join(hide)} {{ display: none !important; }}\n"
                 css += "html, body { overflow: auto !important; }"
@@ -74,7 +94,13 @@ def capture_element(
                             page.wait_for_timeout(300)
                     except Exception as exc:  # noqa: BLE001 - skip, never fail
                         logger.debug("Pre-action %r skipped: %s", sel, exc)
-                page.wait_for_selector(selector, timeout=timeout_ms)
+                page.wait_for_selector(
+                    ", ".join([selector, *skip_selectors]), timeout=timeout_ms
+                )
+                if any(page.locator(s).count() > 0 for s in skip_selectors):
+                    logger.info("Skipping %s: gated page", url)
+                    Path(out_path).unlink(missing_ok=True)
+                    return None
                 page.locator(selector).first.screenshot(path=out_path)
             finally:
                 browser.close()
