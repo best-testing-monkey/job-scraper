@@ -356,3 +356,31 @@ def test_list_stale_state_and_setters(temp_db):
     assert _stale(temp_db, "a") == (1, "2026-09-01")
     temp_db.set_stale_since("s", "a", None)
     assert _stale(temp_db, "a") == (1, None)
+
+
+def test_find_duplicate_excludes_own_row(temp_db):
+    a = JobPosting(site_id="s1", listing_id="a", source_url="u1", title="Dev",
+                   client="Acme", location="Remote", description="d")
+    b = JobPosting(site_id="s2", listing_id="b", source_url="u2", title="Dev",
+                   client="Acme", location="Remote", description="d")
+    temp_db.upsert(a, "2026-10-01T00:00:00Z")
+    assert temp_db.find_duplicate("dev", "acme", "remote", "s1", "a") is None
+    a_id = temp_db.conn.execute("SELECT id FROM jobs").fetchone()[0]
+    assert temp_db.find_duplicate("dev", "acme", "remote", "s2", "b") == a_id
+
+
+def test_migration_clears_self_duplicates(tmp_path):
+    path = str(tmp_path / "dup.db")
+    repo = JobRepository(path)
+    for i in range(1, 5):
+        repo.conn.execute(
+            "INSERT INTO jobs (id, site_id, listing_id, source_url, title, content_hash,"
+            " first_seen_at, last_seen_at, duplicate_of) VALUES (?, 's', ?, 'u', 'T', 'h',"
+            " 'a', 'b', ?)", (i, str(i), 1 if i == 4 else i))
+    repo.conn.commit()
+    repo.conn.close()
+    for _ in range(2):
+        repo = JobRepository(path)
+        rows = repo.conn.execute("SELECT id, duplicate_of FROM jobs ORDER BY id").fetchall()
+        assert rows == [(1, None), (2, None), (3, None), (4, 1)]
+        repo.conn.close()

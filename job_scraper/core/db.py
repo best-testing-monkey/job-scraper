@@ -35,6 +35,7 @@ class JobRepository:
         cols = [r[1] for r in self.conn.execute("PRAGMA table_info(jobs)")]
         if "stale_since" not in cols:
             self.conn.execute("ALTER TABLE jobs ADD COLUMN stale_since TEXT")
+        self.conn.execute("UPDATE jobs SET duplicate_of = NULL WHERE duplicate_of = id")
         self.conn.commit()
 
     def upsert(self, posting: JobPosting, seen_at: str) -> bool:
@@ -189,18 +190,28 @@ class JobRepository:
         self.conn.commit()
 
     def find_duplicate(
-        self, title: str, client: str | None, location: str | None
+        self,
+        title: str,
+        client: str | None,
+        location: str | None,
+        site_id: str | None = None,
+        listing_id: str | None = None,
     ) -> int | None:
         """Case-insensitive, whitespace-normalized match against existing rows'
         (title, client, location). Returns the matching row's id, or None if no match.
-        Rows that are themselves duplicates (duplicate_of IS NOT NULL) are not matched against."""
+        Rows that are themselves duplicates (duplicate_of IS NOT NULL) are not matched against.
+        The row with the given (site_id, listing_id) is never returned."""
         cursor = self.conn.cursor()
 
         normalized_title = self._normalize_string(title)
         normalized_client = self._normalize_string(client) if client else None
         normalized_location = self._normalize_string(location) if location else None
 
-        cursor.execute("SELECT id, title, client, location FROM jobs WHERE duplicate_of IS NULL")
+        cursor.execute(
+            "SELECT id, title, client, location FROM jobs WHERE duplicate_of IS NULL "
+            "AND NOT (site_id IS ? AND listing_id IS ?)",
+            (site_id, listing_id),
+        )
         rows = cursor.fetchall()
 
         for row_id, row_title, row_client, row_location in rows:

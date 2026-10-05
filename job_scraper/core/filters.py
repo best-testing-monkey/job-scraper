@@ -29,7 +29,11 @@ def apply_dedup(posting: JobPosting, repo: JobRepository) -> tuple[JobPosting, i
     normalized_location = _normalize_string(posting.location) if posting.location else None
 
     duplicate_id = repo.find_duplicate(
-        normalized_title, normalized_client, normalized_location
+        normalized_title,
+        normalized_client,
+        normalized_location,
+        site_id=posting.site_id,
+        listing_id=posting.listing_id,
     )
 
     return (posting, duplicate_id)

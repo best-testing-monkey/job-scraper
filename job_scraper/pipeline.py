@@ -75,13 +75,6 @@ def run_site(
             continue
 
         posting, dup_id = apply_dedup(posting, repo)
-        if dup_id is not None:
-            own = repo.conn.execute(
-                "SELECT id FROM jobs WHERE site_id = ? AND listing_id = ?",
-                (posting.site_id, posting.listing_id),
-            ).fetchone()
-            if own is not None and own[0] == dup_id:
-                dup_id = None  # a re-seen posting matches its own row: not a duplicate
         changed = repo.upsert(posting, seen_at=run_started_at)
 
         if dup_id is not None:

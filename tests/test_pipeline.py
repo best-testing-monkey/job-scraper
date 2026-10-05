@@ -429,3 +429,14 @@ def test_stale_duplicate_gets_no_bullet(tmp_path: Path) -> None:
     assert c["newly_stale"] == 0
     assert sorted(p.name for p in jobs.glob("*.md")) == files
     assert "Stale since" not in (jobs / files[0]).read_text()
+
+
+def test_reseen_posting_not_duplicate_of_itself(tmp_path: Path) -> None:
+    repo = JobRepository(str(tmp_path / "t.db"))
+    jobs = tmp_path / "jobs"
+    first = _stale_run(repo, jobs, StaleAdapter(["A", "B"]), 1, "2026-10-01")
+    second = _stale_run(repo, jobs, StaleAdapter(["A", "B"]), 2, "2026-10-02")
+    assert first["duplicates"] == 0 and first["written"] == 2
+    assert second["duplicates"] == 0 and second["written"] == 0
+    assert repo.conn.execute(
+        "SELECT COUNT(*) FROM jobs WHERE duplicate_of IS NOT NULL").fetchone()[0] == 0
