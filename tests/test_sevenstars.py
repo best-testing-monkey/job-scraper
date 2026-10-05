@@ -211,3 +211,12 @@ def test_screenshot_hide_selectors_valid() -> None:
     soup = BeautifulSoup(html, "html.parser")
     for sel in SevenstarsAdapter.screenshot_hide_selectors:
         soup.select(sel)
+
+
+def test_screenshot_attributes_pinned_blocked_live() -> None:
+    # BLOCKED (E14-S11): live detail pages return HTTP 403 to headless Chromium.
+    assert (
+        SevenstarsAdapter.screenshot_selector
+        == "div.c-vacancy-paragraph__body-text.job-description"
+    )
+    assert SevenstarsAdapter.screenshot_hide_selectors == ("#CybotCookiebotDialog",)
