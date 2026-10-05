@@ -236,3 +236,11 @@ def test_screenshot_selector_matches_description_element(fixture: str, snippet: 
     assert snippet in els[0].get_text()
     assert els[0].find(["nav", "header", "footer", "form"]) is None
     assert "cookie" not in els[0].get_text().lower()
+
+
+def test_screenshot_selector_pinned_while_live_probe_blocked() -> None:
+    # E14-S12: live probe got Cloudflare 403 (bare patchright); selector unchanged.
+    assert WearedevelopersAdapter().screenshot_selector == (
+        "section:has(> div.prose-base-content)"
+        ":not(section:has(> div.prose-base-content) ~ section)"
+    )
