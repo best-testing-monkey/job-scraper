@@ -23,12 +23,22 @@ def stem_for(posting: JobPosting) -> str:
     return filename_for(posting)[:-3]
 
 
+def md_path_for(jobs_dir: str, site_id: str, listing_id: str, title: str) -> Path:
+    """Returns the path for a markdown file given its components.
+    Path(jobs_dir) / f"{site_id}-{listing_id}-{slugify(title)}.md"."""
+    return Path(jobs_dir) / f"{site_id}-{listing_id}-{slugify(title)}.md"
+
+
 def screenshot_relpath(stem: str) -> str:
     """Returns the relative path for a screenshot file given its stem."""
     return f"screenshots/{stem}.png"
 
 
-def render(posting: JobPosting, screenshot: str | None = None) -> str:
+def render(
+    posting: JobPosting,
+    screenshot: str | None = None,
+    stale_since: str | None = None,
+) -> str:
     """Returns the full markdown text: '# {title}' header, then one
     '- {Field}: {value}' bullet per populated field in this order: Source
     (= source_url), Client, Category, Level, Status, Location, Workplace,
@@ -37,9 +47,12 @@ def render(posting: JobPosting, screenshot: str | None = None) -> str:
     non-empty). Skip any field that is None/empty (don't render a bullet
     for it at all). Then render one '- {Key}: {value}' bullet per entry in
     extra_fields (in insertion order). If screenshot is a non-empty string,
-    add a '- Screenshot: {screenshot}' bullet. Then a blank line,
-    '## Description', a blank line, description text. If scrape_note is set,
-    append a blank line, '## Scrape note', a blank line, scrape_note text."""
+    add a '- Screenshot: {screenshot}' bullet. If stale_since is a non-empty
+    string, add a '- Stale since: {stale_since}' bullet right after the
+    screenshot bullet (or after extra fields if no screenshot). Then a blank
+    line, '## Description', a blank line, description text. If scrape_note
+    is set, append a blank line, '## Scrape note', a blank line, scrape_note
+    text."""
     lines = []
 
     lines.append(f"# {posting.title}")
@@ -74,6 +87,9 @@ def render(posting: JobPosting, screenshot: str | None = None) -> str:
     if screenshot and screenshot != "":
         lines.append(f"- Screenshot: {screenshot}")
 
+    if stale_since and stale_since != "":
+        lines.append(f"- Stale since: {stale_since}")
+
     lines.append("")
     lines.append("## Description")
     lines.append("")
@@ -88,14 +104,19 @@ def render(posting: JobPosting, screenshot: str | None = None) -> str:
     return "\n".join(lines)
 
 
-def write(posting: JobPosting, jobs_dir: str, screenshot: str | None = None) -> str:
-    """Ensures jobs_dir exists, writes render(posting, screenshot) to
-    jobs_dir/filename_for(posting), returns the full path written."""
+def write(
+    posting: JobPosting,
+    jobs_dir: str,
+    screenshot: str | None = None,
+    stale_since: str | None = None,
+) -> str:
+    """Ensures jobs_dir exists, writes render(posting, screenshot, stale_since)
+    to jobs_dir/filename_for(posting), returns the full path written."""
     jobs_path = Path(jobs_dir)
     jobs_path.mkdir(parents=True, exist_ok=True)
 
     file_path = jobs_path / filename_for(posting)
-    file_path.write_text(render(posting, screenshot))
+    file_path.write_text(render(posting, screenshot, stale_since))
 
     return str(file_path)
 
@@ -146,6 +167,80 @@ def set_screenshot_line(md_path: str, screenshot: str) -> bool:
             lines.insert(insert_idx, target_line)
         else:
             return False
+
+    new_content = "\n".join(lines)
+    if new_content == original_content:
+        return False
+
+    file_path.write_text(new_content)
+    return True
+
+
+def set_stale_line(md_path: str, stale_since: str | None) -> bool:
+    """Updates, inserts, or removes a '- Stale since: {stale_since}' line.
+
+    If stale_since is a non-empty string matching YYYY-MM-DD format, replace
+    or insert the line after the last consecutive '- ' bullet (same rule as
+    set_screenshot_line). If stale_since is None, remove the line if present.
+    Returns True if the file content changed, False otherwise.
+    Raises ValueError if stale_since doesn't match the format.
+    The description and everything after '## Description' are never touched."""
+    file_path = Path(md_path)
+    if not file_path.exists():
+        return False
+
+    # Validate format
+    if stale_since is not None and stale_since != "":
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", stale_since):
+            raise ValueError(
+                f"stale_since must match YYYY-MM-DD format, got: {stale_since}"
+            )
+
+    original_content = file_path.read_text()
+    lines = original_content.split("\n")
+
+    # Find the blank line before ## Description first (to limit search to header)
+    description_idx = None
+    for i, line in enumerate(lines):
+        if line == "## Description":
+            description_idx = i
+            break
+
+    if description_idx is None:
+        return False
+
+    # Find existing stale_since line only in the header section (before ## Description)
+    stale_idx = None
+    for i in range(description_idx):
+        if lines[i].startswith("- Stale since:"):
+            stale_idx = i
+            break
+
+    if stale_since is None or stale_since == "":
+        # Remove the line if present
+        if stale_idx is not None:
+            lines.pop(stale_idx)
+        else:
+            return False
+    else:
+        # Insert or replace
+        target_line = f"- Stale since: {stale_since}"
+
+        if stale_idx is not None:
+            # Replace existing line
+            if lines[stale_idx] == target_line:
+                return False
+            lines[stale_idx] = target_line
+        else:
+            # Find the last consecutive bullet before description
+            insert_idx = description_idx - 2  # -1 for blank line, -1 to insert before it
+
+            # Ensure we're inserting after a bullet
+            if insert_idx >= 0 and lines[insert_idx].startswith("- "):
+                insert_idx += 1
+                lines.insert(insert_idx, target_line)
+            else:
+                return False
 
     new_content = "\n".join(lines)
     if new_content == original_content:

@@ -5,9 +5,11 @@ import pytest
 
 from job_scraper.core.markdown_export import (
     filename_for,
+    md_path_for,
     render,
     screenshot_relpath,
     set_screenshot_line,
+    set_stale_line,
     slugify,
     stem_for,
     write,
@@ -612,3 +614,400 @@ class TestSetScreenshotLine:
                 assert match is not None
                 assert match.group(1) == "Screenshot"
                 assert match.group(2) == "screenshots/test-123-test.png"
+
+
+class TestMdPathFor:
+    def test_md_path_for_basic(self) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test.",
+        )
+        result = md_path_for("/jobs", "test", "123", "Test Job")
+        expected = Path("/jobs") / filename_for(posting)
+
+        assert result == expected
+
+    def test_md_path_for_slugify_applied(self) -> None:
+        result = md_path_for("/jobs", "freelapp", "508877", "Tester (RVO, remote in Nederland)")
+        assert result == Path("/jobs/freelapp-508877-tester-rvo-remote-in-nederland.md")
+
+    def test_md_path_for_matches_filename_for(self) -> None:
+        posting = JobPosting(
+            site_id="example-site",
+            listing_id="12345",
+            source_url="https://example.com/job/12345",
+            title="Senior Developer",
+            description="Test.",
+        )
+        md_path_result = md_path_for("/jobs", posting.site_id, posting.listing_id, posting.title)
+        filename_result = filename_for(posting)
+
+        assert str(md_path_result) == f"/jobs/{filename_result}"
+
+
+class TestRenderWithStaleSince:
+    def test_render_with_stale_since(self) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test",
+            description="Test",
+        )
+        result = render(posting, stale_since="2026-10-01")
+        assert "- Stale since: 2026-10-01" in result
+
+    def test_render_without_stale_since(self) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test",
+            description="Test",
+        )
+        result = render(posting, stale_since=None)
+        assert "- Stale since:" not in result
+
+    def test_render_empty_stale_since(self) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test",
+            description="Test",
+        )
+        result = render(posting, stale_since="")
+        assert "- Stale since:" not in result
+
+    def test_render_stale_since_after_screenshot(self) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test",
+            description="Test",
+        )
+        result = render(posting, screenshot="screenshots/test.png", stale_since="2026-10-01")
+        lines = result.split("\n")
+
+        screenshot_idx = next(i for i, line in enumerate(lines) if "Screenshot:" in line)
+        stale_idx = next(i for i, line in enumerate(lines) if "Stale since:" in line)
+        description_idx = next(i for i, line in enumerate(lines) if line == "## Description")
+
+        assert screenshot_idx < stale_idx < description_idx
+
+    def test_render_stale_since_after_extra_fields_no_screenshot(self) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test",
+            description="Test",
+            extra_fields={"Custom": "Value"},
+        )
+        result = render(posting, stale_since="2026-10-01")
+        lines = result.split("\n")
+
+        custom_idx = next(i for i, line in enumerate(lines) if "Custom:" in line)
+        stale_idx = next(i for i, line in enumerate(lines) if "Stale since:" in line)
+        description_idx = next(i for i, line in enumerate(lines) if line == "## Description")
+
+        assert custom_idx < stale_idx < description_idx
+
+    def test_render_byte_identical_without_stale_since(self) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test",
+            description="Test",
+        )
+        result_without = render(posting)
+        result_with_none = render(posting, stale_since=None)
+
+        assert result_without == result_with_none
+
+    def test_render_stale_since_app_regex(self) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test",
+            description="Test",
+        )
+        result = render(posting, stale_since="2026-10-05")
+        app_regex = r"^- (\w[\w ]*):\s*(.+)$"
+
+        for line in result.split("\n"):
+            if "Stale since:" in line:
+                match = re.match(app_regex, line)
+                assert match is not None
+                assert match.group(1) == "Stale since"
+                assert match.group(2) == "2026-10-05"
+
+
+class TestWriteWithStaleSince:
+    def test_write_with_stale_since(self, tmp_path: Path) -> None:
+        jobs_dir = tmp_path / "jobs"
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+
+        result = write(posting, str(jobs_dir), stale_since="2026-10-01")
+        file_path = Path(result)
+        content = file_path.read_text()
+
+        assert "- Stale since: 2026-10-01" in content
+        assert content == render(posting, stale_since="2026-10-01")
+
+    def test_write_stale_since_passed_to_render(self, tmp_path: Path) -> None:
+        jobs_dir = tmp_path / "jobs"
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+
+        result = write(posting, str(jobs_dir), screenshot="screenshots/test.png", stale_since="2026-10-01")
+        file_path = Path(result)
+        content = file_path.read_text()
+
+        assert content == render(posting, screenshot="screenshots/test.png", stale_since="2026-10-01")
+
+
+class TestSetStaleLine:
+    def test_set_stale_line_insert_new(self, tmp_path: Path) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting))
+
+        result = set_stale_line(str(md_path), "2026-10-01")
+
+        assert result is True
+        content = md_path.read_text()
+        assert "- Stale since: 2026-10-01" in content
+
+    def test_set_stale_line_replace_existing(self, tmp_path: Path) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting, stale_since="2026-10-01"))
+
+        result = set_stale_line(str(md_path), "2026-10-02")
+
+        assert result is True
+        content = md_path.read_text()
+        assert "- Stale since: 2026-10-02" in content
+        assert "2026-10-01" not in content
+
+    def test_set_stale_line_remove(self, tmp_path: Path) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting, stale_since="2026-10-01"))
+
+        result = set_stale_line(str(md_path), None)
+
+        assert result is True
+        content = md_path.read_text()
+        assert "- Stale since:" not in content
+
+    def test_set_stale_line_remove_when_absent(self, tmp_path: Path) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting))
+
+        result = set_stale_line(str(md_path), None)
+
+        assert result is False
+
+    def test_set_stale_line_idempotent_second_call(self, tmp_path: Path) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting, stale_since="2026-10-01"))
+
+        # Second call should return False
+        result = set_stale_line(str(md_path), "2026-10-01")
+
+        assert result is False
+
+    def test_set_stale_line_missing_file(self, tmp_path: Path) -> None:
+        md_path = tmp_path / "nonexistent.md"
+
+        result = set_stale_line(str(md_path), "2026-10-01")
+
+        assert result is False
+
+    def test_set_stale_line_bad_format_raises_error(self, tmp_path: Path) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting))
+
+        with pytest.raises(ValueError):
+            set_stale_line(str(md_path), "2026/10/01")
+
+        with pytest.raises(ValueError):
+            set_stale_line(str(md_path), "not-a-date")
+
+    def test_set_stale_line_description_lookalike_untouched(self, tmp_path: Path) -> None:
+        """Test that a line in the description that looks like '- Stale since: ...' is not touched."""
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Some text.\n- Stale since: 2020-01-01\nMore text here.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting))
+
+        result = set_stale_line(str(md_path), "2026-10-01")
+
+        assert result is True
+        content = md_path.read_text()
+        # Check that the description's lookalike line is still there
+        assert "- Stale since: 2020-01-01" in content
+        # Check that we have the new line in the header
+        lines = content.split("\n")
+        description_idx = next(i for i, line in enumerate(lines) if line == "## Description")
+        # Find the bullet line in the header section
+        bullet_found = False
+        for i in range(0, description_idx):
+            if lines[i] == "- Stale since: 2026-10-01":
+                bullet_found = True
+                break
+        assert bullet_found
+
+    def test_set_stale_line_with_both_screenshot_and_stale(self, tmp_path: Path) -> None:
+        """Test that a file with both screenshot and stale_since keeps both after operations."""
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting, screenshot="screenshots/test.png", stale_since="2026-10-01"))
+
+        # Call set_screenshot_line - should not affect stale line
+        set_screenshot_line(str(md_path), "screenshots/new.png")
+
+        content = md_path.read_text()
+        assert "- Screenshot: screenshots/new.png" in content
+        assert "- Stale since: 2026-10-01" in content
+
+        # Call set_stale_line - should not affect screenshot
+        set_stale_line(str(md_path), "2026-10-02")
+
+        content = md_path.read_text()
+        assert "- Screenshot: screenshots/new.png" in content
+        assert "- Stale since: 2026-10-02" in content
+
+    def test_set_stale_line_insert_position(self, tmp_path: Path) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+            extra_fields={"Custom": "Value"},
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting))
+
+        set_stale_line(str(md_path), "2026-10-01")
+
+        content = md_path.read_text()
+        lines = content.split("\n")
+
+        custom_idx = next(i for i, line in enumerate(lines) if "Custom:" in line)
+        stale_idx = next(i for i, line in enumerate(lines) if "Stale since:" in line)
+        description_idx = next(i for i, line in enumerate(lines) if line == "## Description")
+
+        # Stale should be after custom field and before description
+        assert custom_idx < stale_idx < description_idx
+
+    def test_set_stale_line_preserves_description(self, tmp_path: Path) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description text here.",
+            scrape_note="Scrape note here.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting))
+
+        set_stale_line(str(md_path), "2026-10-01")
+
+        content = md_path.read_text()
+        assert "Test description text here." in content
+        assert "Scrape note here." in content
+
+    def test_set_stale_line_app_regex_match(self, tmp_path: Path) -> None:
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting))
+
+        set_stale_line(str(md_path), "2026-10-05")
+
+        content = md_path.read_text()
+        app_regex = r"^- (\w[\w ]*):\s*(.+)$"
+
+        for line in content.split("\n"):
+            if "Stale since:" in line:
+                match = re.match(app_regex, line)
+                assert match is not None
+                assert match.group(1) == "Stale since"
+                assert match.group(2) == "2026-10-05"
