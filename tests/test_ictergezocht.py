@@ -1,6 +1,9 @@
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+from bs4 import BeautifulSoup
+
 from job_scraper.core.models import ListingStub
 from job_scraper.sites.ictergezocht import IctergezochtAdapter
 
@@ -119,3 +122,25 @@ def test_screenshot_hide_selectors_valid() -> None:
     soup = BeautifulSoup(html, "html.parser")
     for sel in IctergezochtAdapter.screenshot_hide_selectors:
         soup.select(sel)
+
+
+SKIP_SELECTORS = IctergezochtAdapter.screenshot_skip_selectors
+
+
+@pytest.mark.parametrize("selector", SKIP_SELECTORS)
+def test_skip_selector_is_valid(selector: str) -> None:
+    BeautifulSoup("<div></div>", "html.parser").select(selector)
+
+
+def test_hide_selectors_unchanged() -> None:
+    assert IctergezochtAdapter.screenshot_hide_selectors == ("#cookieyes-banner",)
+
+
+def test_skip_selectors_match_challenge_not_real_page() -> None:
+    challenge = BeautifulSoup('<form id="challenge-form"></form>', "html.parser")
+    real = BeautifulSoup(
+        Path("tests/fixtures/ictergezocht/detail_438712.html").read_bytes(),
+        "html.parser",
+    )
+    assert any(challenge.select(sel) for sel in SKIP_SELECTORS)
+    assert not any(real.select(sel) for sel in SKIP_SELECTORS)

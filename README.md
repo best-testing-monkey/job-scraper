@@ -102,6 +102,8 @@ Scrapling's `StealthyFetcher` launches patchright Chromium (not Camoufox) via `p
 
 If a browser is missing, run `uv run playwright install chromium` (warning: `~/.cache/*` physically lands on the crowded `/media/baz/MonkeyWorks` drive and the download is hundreds of MB).
 
+ictergezocht: detail pages are behind a Cloudflare challenge (probe: HTTP 403, `cf-mitigated: challenge`, title "Just a moment..."); no screenshots are taken (skipped, not counted as failures). The scraper never bypasses bot walls.
+
 ## robots.txt
 
 Every scrape checks `robots.txt` before touching a site, and skips it if
