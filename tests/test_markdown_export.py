@@ -11,6 +11,7 @@ from job_scraper.core.markdown_export import (
     set_screenshot_line,
     set_stale_line,
     slugify,
+    source_line_differs,
     stem_for,
     write,
 )
@@ -1011,3 +1012,82 @@ class TestSetStaleLine:
                 assert match is not None
                 assert match.group(1) == "Stale since"
                 assert match.group(2) == "2026-10-05"
+
+
+class TestSourceLineDiffers:
+    def test_source_line_differs_missing_file(self) -> None:
+        """File does not exist returns True."""
+        result = source_line_differs("/nonexistent/path/file.md", "https://test.com/job/1")
+        assert result is True
+
+    def test_source_line_differs_no_source_line(self, tmp_path: Path) -> None:
+        """File exists but has no '- Source:' line returns True."""
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://test.com/job/1",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        # Create markdown without Source line by manually crafting the content
+        content = """# Test Job
+
+- Client: Test
+
+## Description
+
+Test description."""
+        md_path.write_text(content)
+
+        result = source_line_differs(str(md_path), "https://test.com/job/1")
+        assert result is True
+
+    def test_source_line_differs_different_url(self, tmp_path: Path) -> None:
+        """File exists with different URL returns True."""
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url="https://old.example/job/go/1",
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting))
+
+        # Now check against a different URL
+        result = source_line_differs(str(md_path), "https://new.example/job/1")
+        assert result is True
+
+    def test_source_line_differs_same_url(self, tmp_path: Path) -> None:
+        """File exists with same URL returns False."""
+        url = "https://test.com/job/1"
+        posting = JobPosting(
+            site_id="test",
+            listing_id="123",
+            source_url=url,
+            title="Test Job",
+            description="Test description.",
+        )
+        md_path = tmp_path / "test.md"
+        md_path.write_text(render(posting))
+
+        result = source_line_differs(str(md_path), url)
+        assert result is False
+
+    def test_source_line_differs_whitespace_handling(self, tmp_path: Path) -> None:
+        """File with extra whitespace around URL is stripped and compared correctly."""
+        url = "https://test.com/job/1"
+        # Create markdown with extra spaces around the URL
+        md_path = tmp_path / "test.md"
+        content = """# Test Job
+
+- Source:   https://test.com/job/1
+
+## Description
+
+Test description."""
+        md_path.write_text(content)
+
+        result = source_line_differs(str(md_path), url)
+        assert result is False

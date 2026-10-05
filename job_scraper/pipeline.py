@@ -6,9 +6,11 @@ from pathlib import Path
 from job_scraper.core.db import JobRepository
 from job_scraper.core.filters import apply_dedup, is_excluded
 from job_scraper.core.markdown_export import (
+    filename_for,
     md_path_for,
     screenshot_relpath,
     set_stale_line,
+    source_line_differs,
     stem_for,
     write,
 )
@@ -88,7 +90,9 @@ def run_site(
         if dup_id is not None:
             repo.set_duplicate_of(posting.site_id, posting.listing_id, dup_id)
             counters["duplicates"] += 1
-        elif changed:
+        elif changed or source_line_differs(
+            str(Path(jobs_dir) / filename_for(posting)), posting.source_url
+        ):
             screenshot = None
             if screenshots_dir and adapter.screenshot_selector:
                 stem = stem_for(posting)

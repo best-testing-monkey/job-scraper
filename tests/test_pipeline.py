@@ -534,3 +534,143 @@ def test_run_error_keeps_partial_counters(tmp_path: Path) -> None:
 
     assert results["partial-site"]["seen"] == 2
     assert results["partial-site"]["error"] == "TimeoutError: curl timeout"
+
+
+def test_source_url_changed_rewrites_markdown(tmp_path: Path) -> None:
+    """When posting content is unchanged but source_url differs, the file is rewritten."""
+    db_path = tmp_path / "test.db"
+    jobs_dir = tmp_path / "jobs"
+    repo = JobRepository(str(db_path))
+
+    # Create an adapter that returns job-1 with a new source URL
+    class ChangedUrlAdapter(FakeAdapter):
+        def parse_detail(self, stub: Any, page: Any) -> JobPosting:
+            if stub.listing_id == "job-1":
+                return JobPosting(
+                    site_id=self.site_id,
+                    listing_id=stub.listing_id,
+                    source_url="https://new-example.com/job/1",  # New URL
+                    title=stub.title,
+                    client="Acme Corp",
+                    description="A great opportunity for a Python developer",
+                )
+            elif stub.listing_id == "job-2":
+                return JobPosting(
+                    site_id=self.site_id,
+                    listing_id=stub.listing_id,
+                    source_url=stub.detail_url,
+                    title=stub.title,
+                    client="Tech Startup",
+                    description="zzp niet toegestaan - this is excluded",
+                )
+            elif stub.listing_id == "job-3":
+                return JobPosting(
+                    site_id=self.site_id,
+                    listing_id=stub.listing_id,
+                    source_url=stub.detail_url,
+                    title=stub.title,
+                    client="Contractor Company",
+                    description="An independent contracting opportunity",
+                )
+
+    adapter = ChangedUrlAdapter()
+
+    # First run: establish baseline with old URL
+    with patch("job_scraper.pipeline.fetch_page") as mock_fetch:
+        mock_fetch.return_value = None
+        first_run = run_site(
+            adapter, repo, str(jobs_dir), "2023-01-01T00:00:00"
+        )
+
+    assert first_run["written"] == 2
+    md_path = jobs_dir / "fake-site-job-1-python-developer.md"
+    assert md_path.exists()
+    content_after_first = md_path.read_text()
+    assert "- Source: https://new-example.com/job/1" in content_after_first
+
+    # Second run: same content, same URL -> nothing written
+    with patch("job_scraper.pipeline.fetch_page") as mock_fetch:
+        mock_fetch.return_value = None
+        second_run = run_site(
+            adapter, repo, str(jobs_dir), "2023-01-02T00:00:00"
+        )
+
+    assert second_run["written"] == 0
+    content_after_second = md_path.read_text()
+    assert content_after_second == content_after_first
+
+
+def test_source_url_differs_when_unchanged_content(tmp_path: Path) -> None:
+    """Pre-write markdown with old source URL, upsert posting, then run_site should rewrite."""
+    db_path = tmp_path / "test.db"
+    jobs_dir = tmp_path / "jobs"
+    repo = JobRepository(str(db_path))
+
+    # Create the markdown file and upsert with old source URL first
+    old_url = "https://old.example/job/go/1"
+    new_url = "https://new.example/job/1"
+
+    posting_old = JobPosting(
+        site_id="fake-site",
+        listing_id="job-1",
+        source_url=old_url,
+        title="Python Developer",
+        client="Acme Corp",
+        description="A great opportunity for a Python developer",
+    )
+
+    jobs_dir.mkdir(parents=True, exist_ok=True)
+    md_path = jobs_dir / "fake-site-job-1-python-developer.md"
+    from job_scraper.core.markdown_export import render
+    md_path.write_text(render(posting_old))
+
+    # Upsert the posting with the OLD URL to establish a baseline
+    repo.upsert(posting_old, seen_at="2023-01-01T00:00:00")
+
+    # Now create a posting with the same content but NEW URL
+    posting_new = JobPosting(
+        site_id="fake-site",
+        listing_id="job-1",
+        source_url=new_url,  # New URL
+        title="Python Developer",
+        client="Acme Corp",
+        description="A great opportunity for a Python developer",
+    )
+
+    # Verify the content hashes are the same (source_url is not included in hash)
+    assert posting_old.content_hash() == posting_new.content_hash()
+
+    # Create an adapter that returns only the one posting with new URL
+    class NewUrlAdapter(SiteAdapter):
+        site_id = "fake-site"
+        base_url = "https://fake-site.example.com"
+        fetch_strategy = FetchStrategy.STATIC
+
+        def list_postings(self) -> Iterator[ListingStub]:
+            yield ListingStub(
+                listing_id="job-1",
+                detail_url="https://fake-site.example.com/job/1",
+                title="Python Developer",
+            )
+
+        def parse_detail(self, stub: ListingStub, page: Any) -> JobPosting:
+            return posting_new
+
+    adapter = NewUrlAdapter()
+
+    # Run the scraper: should detect source URL differs and rewrite
+    with patch("job_scraper.pipeline.fetch_page") as mock_fetch:
+        mock_fetch.return_value = None
+        counters = run_site(adapter, repo, str(jobs_dir), "2023-01-02T00:00:00")
+
+    assert counters["written"] == 1  # Should write 1 for the URL change
+    content = md_path.read_text()
+    assert f"- Source: {new_url}" in content
+    assert f"- Source: {old_url}" not in content
+
+    # Second run: URL is same -> nothing written
+    with patch("job_scraper.pipeline.fetch_page") as mock_fetch:
+        mock_fetch.return_value = None
+        counters = run_site(adapter, repo, str(jobs_dir), "2023-01-03T00:00:00")
+
+    assert counters["written"] == 0

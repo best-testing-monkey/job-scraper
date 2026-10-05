@@ -176,6 +176,42 @@ def set_screenshot_line(md_path: str, screenshot: str) -> bool:
     return True
 
 
+def source_line_differs(md_path: str, source_url: str) -> bool:
+    """Returns True if the file does not exist, has no '- Source:' line, or its value
+    (after .strip()) != source_url. False when the Source line equals source_url."""
+    file_path = Path(md_path)
+    if not file_path.exists():
+        return True
+
+    try:
+        content = file_path.read_text()
+    except Exception:
+        return True
+
+    lines = content.split("\n")
+
+    # Find the Source line in the header (before ## Description)
+    description_idx = None
+    for i, line in enumerate(lines):
+        if line == "## Description":
+            description_idx = i
+            break
+
+    # Search for Source line only in the header section
+    for i in range(description_idx if description_idx else len(lines)):
+        line = lines[i]
+        if line.startswith("- Source:"):
+            # Extract the URL after "- Source: "
+            match = re.match(r"^- Source:\s*(.+)$", line)
+            if match:
+                url_value = match.group(1).strip()
+                return url_value != source_url
+            return True
+
+    # No Source line found
+    return True
+
+
 def set_stale_line(md_path: str, stale_since: str | None) -> bool:
     """Updates, inserts, or removes a '- Stale since: {stale_since}' line.
 
