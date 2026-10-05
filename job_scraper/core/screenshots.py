@@ -10,6 +10,8 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
+from job_scraper.core.gone import GoneCheck, gone_reason
+
 logger = logging.getLogger(__name__)
 
 _VIEWPORT = {"width": 1280, "height": 1600}
@@ -115,6 +117,7 @@ def _screenshot_with_retry(page, selector, out_path, timeout_ms):
 def _capture_on_page(
     page, response, url, selector, out_path, timeout_ms,
     hide_selectors, pre_actions, skip_selectors, min_height=100,
+    gone_check: GoneCheck | None = None,
 ) -> bool | None:
     """Per-page work shared by the plain-Playwright and StealthyFetcher paths.
 
@@ -129,6 +132,18 @@ def _capture_on_page(
         logger.info("Skipping %s: bot-challenge page", url)
         Path(out_path).unlink(missing_ok=True)
         return None
+    if gone_check is not None:
+        reason = gone_reason(
+            getattr(response, "status", None),
+            url,
+            getattr(page, "url", None),
+            f"<title>{title}</title>",
+            gone_check,
+        )
+        if reason:
+            logger.info("Skipping %s: posting gone (%s)", url, reason)
+            Path(out_path).unlink(missing_ok=True)
+            return None
     hide = [s for s in (*GENERIC_HIDE_SELECTORS, *hide_selectors) if s]
     css = f"{', '.join(hide)} {{ display: none !important; }}\n"
     css += "html, body { overflow: auto !important; }"
@@ -167,6 +182,7 @@ def _capture_on_page(
 
 def _capture_stealth(
     url, selector, out_path, timeout_ms, hide_selectors, pre_actions, skip_selectors, min_height=100,
+    gone_check: GoneCheck | None = None,
 ) -> bool | None:
     """Capture inside scrapling's StealthyFetcher browser (patchright Chromium).
 
@@ -189,6 +205,7 @@ def _capture_stealth(
             outcome["result"] = _capture_on_page(
                 page, None, url, selector, out_path, timeout_ms,
                 hide_selectors, pre_actions, skip_selectors, min_height,
+                gone_check,
             )
         except Exception as exc:  # noqa: BLE001 - recorded, reported as False
             outcome["error"] = exc
@@ -208,6 +225,18 @@ def _capture_stealth(
         logger.info("Skipping %s: bot-challenge page", url)
         Path(out_path).unlink(missing_ok=True)
         return None
+    if gone_check is not None:
+        reason = gone_reason(
+            getattr(response, "status", None),
+            url,
+            getattr(response, "url", None),
+            None,
+            gone_check,
+        )
+        if reason:
+            logger.info("Skipping %s: posting gone (%s)", url, reason)
+            Path(out_path).unlink(missing_ok=True)
+            return None
     return bool(outcome["result"])
 
 
@@ -222,6 +251,7 @@ def capture_element(
     pre_actions: Sequence[str] = (),
     skip_selectors: Sequence[str] = (),
     min_height: int = 100,
+    gone_check: GoneCheck | None = None,
 ) -> bool | None:
     """Save a PNG of only the first element matching ``selector``.
 
@@ -230,7 +260,8 @@ def capture_element(
     ``pre_actions`` is then clicked once (if present and visible).
 
     Returns True when saved, False on failure, None when skipped on purpose
-    (bot-challenge page, gated page, or element too short); a skip writes no file.
+    (bot-challenge page, delisted page when ``gone_check`` is given, gated page,
+    or element too short); a skip writes no file.
 
     Never raises: on any failure logs a warning, removes a partial file and
     returns False.
@@ -241,6 +272,7 @@ def capture_element(
             return _capture_stealth(
                 url, selector, out_path, timeout_ms,
                 hide_selectors, pre_actions, skip_selectors, min_height,
+                gone_check,
             )
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
@@ -252,6 +284,7 @@ def capture_element(
                 result = _capture_on_page(
                     page, response, url, selector, out_path, timeout_ms,
                     hide_selectors, pre_actions, skip_selectors, min_height,
+                    gone_check,
                 )
             finally:
                 browser.close()

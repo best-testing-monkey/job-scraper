@@ -6,7 +6,9 @@ from unittest.mock import patch
 
 import pytest
 
+from job_scraper.core.gone import GoneCheck
 from job_scraper.core.screenshots import (
+    _capture_on_page,
     _is_challenge,
     _png_height,
     _screenshot_with_retry,
@@ -568,3 +570,137 @@ def test_settle_never_raises():
     page.wait_for_function.side_effect = Exception("timeout")
     assert _settle(page, "#job") is None
     page.wait_for_timeout.assert_called_once_with(100)
+
+
+# --- gone-page skipping (E16-S12) ----------------------------------------
+
+
+class _GonePage(_FakePage):
+    def __init__(self, url="https://s.test/jobs/123", title="Job"):
+        super().__init__(title=title)
+        self.url = url
+        self.calls = []
+
+    def wait_for_selector(self, selector, timeout):
+        self.calls.append("wait_for_selector")
+
+    def add_style_tag(self, content):
+        self.calls.append("add_style_tag")
+
+
+def _gone_run(tmp_path, page, status, gone_check):
+    out = tmp_path / "o.png"
+    out.write_bytes(b"stale")
+    response = types.SimpleNamespace(status=status, headers={})
+    result = _capture_on_page(
+        page, response, "https://s.test/jobs/123", "#a", str(out), 1000,
+        (), (), (), 100, gone_check,
+    )
+    return result, out
+
+
+@pytest.mark.parametrize("status", [404, 410])
+def test_gone_http_status_skips(tmp_path, status):
+    page = _GonePage()
+    result, out = _gone_run(tmp_path, page, status, GoneCheck())
+    assert result is None
+    assert not out.exists()
+    assert page.calls == []
+
+
+def test_gone_unrelated_redirect_skips(tmp_path):
+    page = _GonePage(url="https://s.test/jobs")
+    result, out = _gone_run(tmp_path, page, 200, GoneCheck("123", ("/jobs",)))
+    assert result is None
+    assert not out.exists()
+    assert page.calls == []
+
+
+def test_gone_title_marker_skips(tmp_path):
+    page = _GonePage(title="Job Not Found")
+    result, out = _gone_run(
+        tmp_path, page, 200, GoneCheck(gone_markers=("not found",))
+    )
+    assert result is None
+    assert not out.exists()
+    assert page.calls == []
+
+
+def test_gone_check_none_keeps_old_flow_on_404(tmp_path):
+    page = _GonePage()
+    result, _ = _gone_run(tmp_path, page, 404, None)
+    assert "wait_for_selector" in page.calls
+    assert result is True
+
+
+def test_gone_check_normal_page_continues(tmp_path):
+    page = _GonePage()
+    result, out = _gone_run(
+        tmp_path, page, 200, GoneCheck("123", ("/jobs",), ("not found",))
+    )
+    assert "wait_for_selector" in page.calls
+    assert result is True
+    assert out.exists()
+
+
+def test_gone_check_fake_without_status_or_url_never_triggers(tmp_path):
+    out = tmp_path / "o.png"
+    result = _capture_on_page(
+        _FakePage(), None, "https://s.test/jobs/123", "#a", str(out), 1000,
+        (), (), (), 100, GoneCheck("123", ("/jobs",)),
+    )
+    assert result is True
+
+
+def _gone_fetch(monkeypatch, page, status, final_url):
+    from scrapling.fetchers import StealthyFetcher
+
+    def fetch(url, **kwargs):
+        kwargs["page_action"](page)
+        return types.SimpleNamespace(
+            status=status,
+            url=final_url,
+            headers={},
+            css=lambda q: types.SimpleNamespace(get=lambda: page.title()),
+        )
+
+    monkeypatch.setattr(StealthyFetcher, "fetch", staticmethod(fetch))
+
+
+def test_stealth_gone_404_returns_none_and_removes_file(tmp_path, monkeypatch):
+    out = tmp_path / "o.png"
+    _gone_fetch(monkeypatch, _FakePage(), 404, "https://s.test/jobs/123")
+    assert (
+        capture_element(
+            "https://s.test/jobs/123", "#a", str(out), stealth=True,
+            gone_check=GoneCheck(),
+        )
+        is None
+    )
+    assert not out.exists()
+
+
+def test_stealth_gone_redirect_returns_none(tmp_path, monkeypatch):
+    out = tmp_path / "o.png"
+    _gone_fetch(monkeypatch, _FakePage(), 200, "https://s.test/jobs")
+    assert (
+        capture_element(
+            "https://s.test/jobs/123", "#a", str(out), stealth=True,
+            gone_check=GoneCheck("123", ("/jobs",)),
+        )
+        is None
+    )
+    assert not out.exists()
+
+
+def test_stealth_live_page_with_gone_check_saves(tmp_path, monkeypatch):
+    out = tmp_path / "o.png"
+    _gone_fetch(monkeypatch, _FakePage(), 200, "https://s.test/jobs/123")
+    assert (
+        capture_element(
+            "https://s.test/jobs/123", "#a", str(out), stealth=True,
+            gone_check=GoneCheck("123", ("/jobs",)),
+        )
+        is True
+    )
+    assert out.read_bytes().startswith(PNG_MAGIC)
