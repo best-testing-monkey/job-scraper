@@ -15,6 +15,19 @@ NOT_REBUILDABLE: dict[str, str] = {
 }
 
 
+def _existing_screenshot(md_path: Path) -> str | None:
+    """Return the value of the '- Screenshot:' header bullet in an existing
+    markdown file, so a rebuild does not drop it."""
+    if not md_path.is_file():
+        return None
+    for line in md_path.read_text().splitlines():
+        if line.startswith("## "):
+            break
+        if line.startswith("- Screenshot:"):
+            return line[len("- Screenshot:"):].strip() or None
+    return None
+
+
 def rebuild_site(site_id: str, repo: JobRepository, jobs_dir: str, raw_dir: str) -> dict[str, int]:
     """Re-run each adapter's parse_detail over raw pages saved in raw_dir/site_id/
     and rewrite matching markdown files and DB rows.
@@ -96,7 +109,12 @@ def rebuild_site(site_id: str, repo: JobRepository, jobs_dir: str, raw_dir: str)
 
         repo.upsert(posting, seen_at=last_seen_at)
         repo.set_stale_state(site_id, listing_id, is_stale, stale_since)
-        markdown_export.write(posting, jobs_dir, stale_since=stale_since if is_stale and stale_since else None)
+        markdown_export.write(
+            posting,
+            jobs_dir,
+            screenshot=_existing_screenshot(Path(jobs_dir) / markdown_export.filename_for(posting)),
+            stale_since=stale_since if is_stale and stale_since else None,
+        )
         counters["rebuilt"] += 1
 
     return counters

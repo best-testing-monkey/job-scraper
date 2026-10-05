@@ -406,3 +406,32 @@ def test_rebuild_site_preserves_stale_without_date(tmp_path: Path, detail_html: 
     markdown_file = Path(jobs_dir) / filename_for(initial_posting)
     markdown_content = markdown_file.read_text()
     assert "- Stale since:" not in markdown_content
+
+
+def test_rebuild_site_preserves_screenshot_bullet(tmp_path: Path, detail_html: bytes) -> None:
+    jobs_dir = str(tmp_path / "jobs")
+    raw_dir = str(tmp_path / "raw")
+    repo = JobRepository(str(tmp_path / "test.db"))
+
+    initial_posting = JobPosting(
+        site_id="pro_act",
+        listing_id="8887",
+        source_url="https://pro-act.nl/vacatures/agile-coach-8887/",
+        title="Agile Coach",
+        description="OLD DESCRIPTION",
+    )
+    repo.upsert(initial_posting, seen_at="2026-09-15T10:00:00Z")
+
+    from job_scraper.core import markdown_export
+    shot = "screenshots/pro_act-8887-agile-coach.png"
+    markdown_export.write(initial_posting, jobs_dir, screenshot=shot)
+
+    site_raw_dir = Path(raw_dir) / "pro_act"
+    site_raw_dir.mkdir(parents=True, exist_ok=True)
+    (site_raw_dir / "pro_act-8887-agile-coach.html").write_bytes(detail_html)
+
+    result = rebuild_site("pro_act", repo, jobs_dir, raw_dir)
+
+    assert result["rebuilt"] == 1
+    content = (Path(jobs_dir) / filename_for(initial_posting)).read_text()
+    assert f"- Screenshot: {shot}" in content
