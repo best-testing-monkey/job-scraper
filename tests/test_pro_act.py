@@ -150,3 +150,14 @@ def test_screenshot_hides_cookie_dialog_and_dimmer() -> None:
     assert len(soup.select("#cookie-law-info-bar")) >= 1
     assert el.select_one("#cookie-law-info-bar") is None
     assert el.select_one("div.contact-info") is not None
+
+
+def test_is_unrelated_redirect_to_listing() -> None:
+    from job_scraper.core.gone import is_unrelated_redirect
+
+    adapter = ProActAdapter()
+    requested = "https://pro-act.nl/vacatures/open-solicitatie-2026-8681/"
+    final = "https://pro-act.nl/vacatures"
+    assert is_unrelated_redirect(
+        requested, final, listing_id="8681", listing_paths=adapter.listing_paths
+    )

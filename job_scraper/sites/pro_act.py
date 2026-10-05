@@ -21,6 +21,7 @@ class ProActAdapter(SiteAdapter):
         ".cli-modal-backdrop",  # full-screen grey dimmer (JS-injected)
         ".cli-modal-dialog",
     )
+    listing_paths = ("/vacatures",)
     LISTING_URL: str = "https://pro-act.nl/vacatures"
 
     def list_postings(self) -> Iterator[ListingStub]:

@@ -166,3 +166,29 @@ def test_screenshot_selector_matches_rendered_fixture() -> None:
     assert "section.cookiebar" in StoneInterimAdapter.screenshot_hide_selectors
     for sel in StoneInterimAdapter.screenshot_hide_selectors:
         soup.select(sel)
+
+
+def test_adapter_defaults_unchanged() -> None:
+    adapter = StoneInterimAdapter()
+    assert adapter.listing_paths == ()
+    assert adapter.gone_markers == ()
+
+
+def test_is_unrelated_redirect_to_root() -> None:
+    from job_scraper.core.gone import is_unrelated_redirect
+
+    requested = "https://www.stone-interim.nl/api/v1/WordPress/GetVacancy/4893"
+    final = "https://www.stone-interim.nl/"
+    assert is_unrelated_redirect(
+        requested, final, listing_id="4893", listing_paths=()
+    )
+
+
+def test_is_unrelated_redirect_to_same_api_with_slash_not_gone() -> None:
+    from job_scraper.core.gone import is_unrelated_redirect
+
+    requested = "https://www.stone-interim.nl/api/v1/WordPress/GetVacancy/4893"
+    final = "https://www.stone-interim.nl/api/v1/WordPress/GetVacancy/4893/"
+    assert not is_unrelated_redirect(
+        requested, final, listing_id="4893", listing_paths=()
+    )

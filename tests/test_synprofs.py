@@ -222,3 +222,23 @@ def test_screenshot_hides_sticky_header(detail_html: bytes) -> None:
         soup.select(sel)  # valid CSS
     assert len(soup.select("header#masthead")) == 1
     assert el.select_one("header#masthead") is None
+
+
+def test_is_unrelated_redirect_to_listing() -> None:
+    from job_scraper.core.gone import is_unrelated_redirect
+
+    adapter = SynprofsAdapter()
+    requested = "https://www.synprofs.nl/opdracht/iam-specialist-5927/"
+    final = "https://www.synprofs.nl/opdrachten/"
+    assert is_unrelated_redirect(
+        requested, final, listing_id="5927", listing_paths=adapter.listing_paths
+    )
+
+
+def test_title_has_gone_marker_real_fixture(
+    adapter: SynprofsAdapter, detail_html: bytes
+) -> None:
+    from job_scraper.core.gone import title_has_gone_marker
+
+    result = title_has_gone_marker(detail_html, adapter.gone_markers)
+    assert result is None

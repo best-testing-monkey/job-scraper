@@ -226,3 +226,43 @@ def test_screenshot_attributes_pinned_live_verified() -> None:
         ".c-vacancy-hero__vacancy-hero-wrapper",
         ".grecaptcha-badge",
     )
+
+
+def test_is_unrelated_redirect_to_listing() -> None:
+    from job_scraper.core.gone import is_unrelated_redirect
+
+    adapter = SevenstarsAdapter()
+    requested = "https://www.sevenstars.nl/opdracht/devops-engineerinfra_7S-004944"
+    final = "https://www.sevenstars.nl/opdrachten"
+    assert is_unrelated_redirect(
+        requested, final, listing_id="7S-004944", listing_paths=adapter.listing_paths
+    )
+
+
+def test_is_unrelated_redirect_same_url_lowercase_not_gone() -> None:
+    from job_scraper.core.gone import is_unrelated_redirect
+
+    adapter = SevenstarsAdapter()
+    requested = "https://www.sevenstars.nl/opdracht/devops-engineerinfra_7S-004944"
+    final = "https://www.sevenstars.nl/opdracht/devops-engineerinfra_7s-004944"
+    assert not is_unrelated_redirect(
+        requested, final, listing_id="7S-004944", listing_paths=adapter.listing_paths
+    )
+
+
+def test_title_has_gone_marker() -> None:
+    from job_scraper.core.gone import title_has_gone_marker
+
+    adapter = SevenstarsAdapter()
+    html = b"<html><title>Job Not Found | Seven Stars</title></html>"
+    result = title_has_gone_marker(html, adapter.gone_markers)
+    assert result is not None
+
+
+def test_title_has_gone_marker_real_fixture() -> None:
+    from job_scraper.core.gone import title_has_gone_marker
+
+    adapter = SevenstarsAdapter()
+    detail_html = Path("tests/fixtures/sevenstars/detail_7S-004982.html").read_bytes()
+    result = title_has_gone_marker(detail_html, adapter.gone_markers)
+    assert result is None

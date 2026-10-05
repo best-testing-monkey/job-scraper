@@ -22,6 +22,8 @@ class SevenstarsAdapter(SiteAdapter):
         ".grecaptcha-badge",
     )
     fetch_strategy: FetchStrategy = FetchStrategy.STEALTH
+    listing_paths = ("/opdrachten",)
+    gone_markers = ("job not found",)
     LISTING_URL: str = "https://www.sevenstars.nl/opdrachten"
 
     def list_postings(self) -> Iterator[ListingStub]:
