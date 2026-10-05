@@ -48,7 +48,8 @@ def run_site(
     defaults to the local date (YYYY-MM-DD) and is injectable for tests.
     Returns a dict of counters: {"seen": int, "excluded": int,
     "duplicates": int, "written": int, "stale_marked": int,
-    "newly_stale": int, ...}."""
+    "newly_stale": int, "screenshots_taken": int, "screenshots_failed": int,
+    "screenshots_skipped": int, ...}."""
     if today is None:
         today = datetime.now().date().isoformat()
     counters = {
@@ -60,6 +61,7 @@ def run_site(
         "newly_stale": 0,
         "screenshots_taken": 0,
         "screenshots_failed": 0,
+        "screenshots_skipped": 0,
     }
 
     for stub in adapter.list_postings():
@@ -92,15 +94,19 @@ def run_site(
                         str(out_path),
                         stealth=adapter.fetch_strategy == FetchStrategy.STEALTH,
                         hide_selectors=adapter.screenshot_hide_selectors,
+                        pre_actions=adapter.screenshot_pre_actions,
+                        skip_selectors=adapter.screenshot_skip_selectors,
                     )
                 except Exception as exc:
                     print(f"Warning: screenshot failed for {stem}: {exc}", file=sys.stderr)
                     ok = False
-                if ok:
+                if ok is True:
                     counters["screenshots_taken"] += 1
-                else:
+                elif ok is False:
                     counters["screenshots_failed"] += 1
-                if ok or out_path.exists():
+                elif ok is None:
+                    counters["screenshots_skipped"] += 1
+                if (ok is True or out_path.exists()) and ok is not None:
                     screenshot = screenshot_relpath(stem)
             write(posting, jobs_dir, screenshot=screenshot)
             counters["written"] += 1

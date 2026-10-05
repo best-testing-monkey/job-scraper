@@ -108,6 +108,7 @@ def test_run_site_basic(tmp_path: Path) -> None:
     assert counters["duplicates"] == 0
     assert counters["written"] == 2
     assert counters["stale_marked"] == 0
+    assert counters["screenshots_skipped"] == 0
 
     assert (jobs_dir / "fake-site-job-1-python-developer.md").exists()
     assert (jobs_dir / "fake-site-job-3-contractor-role-no-zzp-niet-toegestaan-here.md").exists()
@@ -326,6 +327,27 @@ def test_screenshot_stealth_flag(tmp_path: Path) -> None:
     (tmp_path / "b").mkdir()
     _, cap = _run_shots(tmp_path / "b", ShotAdapter(), str(tmp_path / "s2"), return_value=True)
     assert all(c.kwargs["stealth"] is False for c in cap.call_args_list)
+
+
+def test_screenshot_none_counts_skipped(tmp_path: Path) -> None:
+    shots = str(tmp_path / "shots")
+    counters, cap = _run_shots(tmp_path, ShotAdapter(), shots, return_value=None)
+    assert counters["screenshots_skipped"] == 2
+    assert counters["screenshots_failed"] == 0
+    assert counters["screenshots_taken"] == 0
+    md = (tmp_path / "jobs" / f"{_STEM1}.md").read_text()
+    assert "- Screenshot:" not in md
+    assert counters["written"] == 2
+
+
+def test_screenshot_pre_actions_and_skip_selectors_passed(tmp_path: Path) -> None:
+    class PreActionSkipAdapter(ShotAdapter):
+        screenshot_pre_actions = ("click:button.load", "wait:div.content")
+        screenshot_skip_selectors = ("div.no-ad", "span.skip")
+
+    _, cap = _run_shots(tmp_path, PreActionSkipAdapter(), str(tmp_path / "shots"), return_value=True)
+    assert cap.call_args_list[0].kwargs["pre_actions"] == PreActionSkipAdapter.screenshot_pre_actions
+    assert cap.call_args_list[0].kwargs["skip_selectors"] == PreActionSkipAdapter.screenshot_skip_selectors
 
 
 def test_screenshot_not_for_excluded_or_duplicates(tmp_path: Path) -> None:
