@@ -4,6 +4,7 @@ from typing import Any, ClassVar, Iterator
 
 from scrapling.fetchers import Fetcher, StealthyFetcher
 
+from job_scraper.core.gone import GoneCheck, gone_reason
 from job_scraper.core.models import JobPosting, ListingStub
 
 
@@ -13,7 +14,15 @@ class FetchStrategy(Enum):
     DYNAMIC = "dynamic"
 
 
-def fetch_page(strategy: "FetchStrategy", url: str, **kwargs: Any) -> bytes:
+class PostingGone(Exception):
+    """Raised when a detail page indicates the posting is no longer available."""
+    def __init__(self, url: str, reason: str) -> None:
+        self.url = url
+        self.reason = reason
+        super().__init__(f"{url}: {reason}")
+
+
+def fetch_page(strategy: "FetchStrategy", url: str, *, gone_check: GoneCheck | None = None, **kwargs: Any) -> bytes:
     """Dispatches to the right Scrapling fetcher for this strategy and
     returns the fetched page's raw response body as bytes (not
     .html_content, which is empty for non-HTML responses like JSON/XML —
@@ -28,12 +37,27 @@ def fetch_page(strategy: "FetchStrategy", url: str, **kwargs: Any) -> bytes:
     e.g. solve_cloudflare=True, network_idle=True for a site whose
     StealthyFetcher call needs Cloudflare-challenge solving.
     FetchStrategy.DYNAMIC is out of scope this phase: raises
-    NotImplementedError."""
+    NotImplementedError.
+
+    If gone_check is not None, checks the response for indicators that the
+    posting is gone (404/410 status, redirect to listing page, or gone markers
+    in title/h1). Raises PostingGone if any indicator is found. With gone_check=None,
+    the function behaves exactly as before."""
     if strategy == FetchStrategy.STATIC:
-        return Fetcher.get(url, **kwargs).body
-    if strategy == FetchStrategy.STEALTH:
-        return StealthyFetcher.fetch(url, headless=True, **kwargs).body
-    raise NotImplementedError(f"Fetch strategy {strategy.value} not yet implemented")
+        resp = Fetcher.get(url, **kwargs)
+    elif strategy == FetchStrategy.STEALTH:
+        resp = StealthyFetcher.fetch(url, headless=True, **kwargs)
+    else:
+        raise NotImplementedError(f"Fetch strategy {strategy.value} not yet implemented")
+
+    if gone_check is not None:
+        status = getattr(resp, "status", None)
+        final_url = getattr(resp, "url", None)
+        reason = gone_reason(status, url, final_url, resp.body, gone_check)
+        if reason is not None:
+            raise PostingGone(url, reason)
+
+    return resp.body
 
 
 class SiteAdapter(ABC):
@@ -61,6 +85,16 @@ class SiteAdapter(ABC):
     page is a gate/teaser: skip the screenshot."""
     screenshot_min_height: ClassVar[int] = 100
     """Minimum element height in pixels; captures shorter than this are skipped on purpose."""
+    listing_paths: ClassVar[tuple[str, ...]] = ()
+    """URL paths of the site's listing/landing pages; a detail fetch that redirects
+    to one means the posting is gone."""
+    gone_markers: ClassVar[tuple[str, ...]] = ()
+    """Case-insensitive texts of a soft-404 page, matched against <title>/<h1> only."""
+
+    @classmethod
+    def gone_check(cls, listing_id: str = "") -> GoneCheck:
+        """Return a GoneCheck configured for this adapter."""
+        return GoneCheck(listing_id, cls.listing_paths, cls.gone_markers)
 
     @abstractmethod
     def list_postings(self) -> Iterator[ListingStub]: ...
