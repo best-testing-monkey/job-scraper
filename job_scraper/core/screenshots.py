@@ -32,13 +32,18 @@ def browser_available() -> bool:
         return False
 
 
+def _title_is_challenge(title: str) -> bool:
+    t = title.lower()
+    return "just a moment" in t or "attention required" in t
+
+
 def _is_challenge(response, title: str) -> bool:
     """True iff the response is a bot-wall challenge page (detect and skip only)."""
     if response is None:
         return False
     if response.headers.get("cf-mitigated") == "challenge":
         return True
-    return response.status in (403, 503) and "just a moment" in title.lower()
+    return response.status in (403, 503) and _title_is_challenge(title)
 
 
 def _screenshot_with_retry(page, selector, out_path, timeout_ms):
@@ -53,6 +58,92 @@ def _screenshot_with_retry(page, selector, out_path, timeout_ms):
             if attempt == 2 or not ("not attached" in msg or "detached" in msg):
                 raise
             page.wait_for_timeout(500)
+
+
+def _capture_on_page(
+    page, response, url, selector, out_path, timeout_ms,
+    hide_selectors, pre_actions, skip_selectors,
+) -> bool | None:
+    """Per-page work shared by the plain-Playwright and StealthyFetcher paths.
+
+    Returns True saved, None skipped (challenge / gated page; no file left).
+    Raises on failure (callers turn that into False). ``response`` may be None
+    (stealth path: the status is checked by the caller after the fetch).
+    """
+    title = page.title()
+    if _is_challenge(response, title) or (
+        response is None and _title_is_challenge(title)
+    ):
+        logger.info("Skipping %s: bot-challenge page", url)
+        Path(out_path).unlink(missing_ok=True)
+        return None
+    hide = [s for s in (*GENERIC_HIDE_SELECTORS, *hide_selectors) if s]
+    css = f"{', '.join(hide)} {{ display: none !important; }}\n"
+    css += "html, body { overflow: auto !important; }"
+    page.add_style_tag(content=css)
+    for sel in pre_actions:
+        try:
+            target = page.locator(sel).first
+            if target.count() > 0 and target.is_visible():
+                target.click(timeout=3000)
+                page.wait_for_timeout(300)
+        except Exception as exc:  # noqa: BLE001 - skip, never fail
+            logger.debug("Pre-action %r skipped: %s", sel, exc)
+    page.wait_for_selector(
+        ", ".join([selector, *skip_selectors]), timeout=timeout_ms
+    )
+    if any(page.locator(s).count() > 0 for s in skip_selectors):
+        logger.info("Skipping %s: gated page", url)
+        Path(out_path).unlink(missing_ok=True)
+        return None
+    _screenshot_with_retry(page, selector, out_path, timeout_ms)
+    return True
+
+
+def _capture_stealth(
+    url, selector, out_path, timeout_ms, hide_selectors, pre_actions, skip_selectors
+) -> bool | None:
+    """Capture inside scrapling's StealthyFetcher browser (patchright Chromium).
+
+    Differences from the plain path (fetcher limits): the fetcher owns launch
+    and navigation (``page.goto`` plus its load/stability waits; its
+    ``timeout`` is in ms like ours) and uses a 1920x1080 viewport, so the page
+    is resized to the plain-path viewport inside ``page_action``. The Response
+    status/headers exist only after ``fetch`` returns, so inside the callback
+    only the title is checked; status/headers are checked afterwards.
+    scrapling swallows ``page_action`` exceptions, hence the closure.
+    No challenge-solving option is ever passed.
+    """
+    from scrapling.fetchers import StealthyFetcher
+
+    outcome: dict = {"result": False, "error": None}
+
+    def page_action(page):
+        try:
+            page.set_viewport_size(_VIEWPORT)
+            outcome["result"] = _capture_on_page(
+                page, None, url, selector, out_path, timeout_ms,
+                hide_selectors, pre_actions, skip_selectors,
+            )
+        except Exception as exc:  # noqa: BLE001 - recorded, reported as False
+            outcome["error"] = exc
+            outcome["result"] = False
+        return page
+
+    response = StealthyFetcher.fetch(
+        url, headless=True, timeout=timeout_ms, page_action=page_action
+    )
+    if outcome["error"] is not None:
+        raise outcome["error"]
+    try:
+        title = str(response.css("title::text").get() or "")
+    except Exception:  # noqa: BLE001
+        title = ""
+    if outcome["result"] is None or _is_challenge(response, title):
+        logger.info("Skipping %s: bot-challenge page", url)
+        Path(out_path).unlink(missing_ok=True)
+        return None
+    return bool(outcome["result"])
 
 
 def capture_element(
@@ -80,45 +171,26 @@ def capture_element(
     returns False.
     """
     try:
-        if stealth:
-            from patchright.sync_api import sync_playwright as launcher
-        else:
-            launcher = sync_playwright
         Path(out_path).parent.mkdir(parents=True, exist_ok=True)
-        with launcher() as p:
+        if stealth:
+            return _capture_stealth(
+                url, selector, out_path, timeout_ms,
+                hide_selectors, pre_actions, skip_selectors,
+            )
+        with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             try:
                 page = browser.new_page(viewport=_VIEWPORT)
                 response = page.goto(
                     url, wait_until="domcontentloaded", timeout=timeout_ms
                 )
-                if _is_challenge(response, page.title()):
-                    logger.info("Skipping %s: bot-challenge page", url)
-                    Path(out_path).unlink(missing_ok=True)
-                    return None
-                hide = [s for s in (*GENERIC_HIDE_SELECTORS, *hide_selectors) if s]
-                css = f"{', '.join(hide)} {{ display: none !important; }}\n"
-                css += "html, body { overflow: auto !important; }"
-                page.add_style_tag(content=css)
-                for sel in pre_actions:
-                    try:
-                        target = page.locator(sel).first
-                        if target.count() > 0 and target.is_visible():
-                            target.click(timeout=3000)
-                            page.wait_for_timeout(300)
-                    except Exception as exc:  # noqa: BLE001 - skip, never fail
-                        logger.debug("Pre-action %r skipped: %s", sel, exc)
-                page.wait_for_selector(
-                    ", ".join([selector, *skip_selectors]), timeout=timeout_ms
+                result = _capture_on_page(
+                    page, response, url, selector, out_path, timeout_ms,
+                    hide_selectors, pre_actions, skip_selectors,
                 )
-                if any(page.locator(s).count() > 0 for s in skip_selectors):
-                    logger.info("Skipping %s: gated page", url)
-                    Path(out_path).unlink(missing_ok=True)
-                    return None
-                _screenshot_with_retry(page, selector, out_path, timeout_ms)
             finally:
                 browser.close()
-        return True
+        return result
     except Exception as exc:  # noqa: BLE001 - contract: never raise
         logger.warning("Screenshot of %s failed: %s", url, exc)
         try:

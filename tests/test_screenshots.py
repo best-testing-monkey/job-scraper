@@ -250,3 +250,108 @@ def test_capture_survives_element_replaced_after_load(tmp_path):
     out = tmp_path / "out.png"
     assert capture_element(page.as_uri(), "#job", str(out)) is True
     assert out.read_bytes().startswith(PNG_MAGIC)
+
+
+# --- stealth path (StealthyFetcher) -------------------------------------
+
+
+class _FakeLocator:
+    def __init__(self, page):
+        self.page = page
+        self.first = self
+
+    def screenshot(self, path):
+        if self.page.fail:
+            raise RuntimeError("shot failed")
+        open(path, "wb").write(PNG_MAGIC)
+
+    def count(self):
+        return 0
+
+
+class _FakePage:
+    def __init__(self, title="Job", fail=False):
+        self._title = title
+        self.fail = fail
+
+    def set_viewport_size(self, size):
+        pass
+
+    def title(self):
+        return self._title
+
+    def add_style_tag(self, content):
+        pass
+
+    def wait_for_selector(self, selector, timeout):
+        pass
+
+    def wait_for_timeout(self, ms):
+        pass
+
+    def locator(self, selector):
+        return _FakeLocator(self)
+
+
+def _fake_fetch(monkeypatch, page, status=200, headers=None):
+    from scrapling.fetchers import StealthyFetcher
+
+    seen = {}
+
+    def fetch(url, **kwargs):
+        seen.update(kwargs)
+        kwargs["page_action"](page)
+        return types.SimpleNamespace(
+            status=status,
+            headers=headers or {},
+            css=lambda q: types.SimpleNamespace(get=lambda: page.title()),
+        )
+
+    monkeypatch.setattr(StealthyFetcher, "fetch", staticmethod(fetch))
+    return seen
+
+
+def test_stealth_saves_via_stealthy_fetcher(tmp_path, monkeypatch):
+    out = tmp_path / "o.png"
+    seen = _fake_fetch(monkeypatch, _FakePage())
+    assert capture_element("https://x/", "#a", str(out), stealth=True) is True
+    assert out.read_bytes().startswith(PNG_MAGIC)
+    assert seen["headless"] is True
+    assert "solve_cloudflare" not in seen
+
+
+def test_stealth_screenshot_error_returns_false(tmp_path, monkeypatch):
+    out = tmp_path / "o.png"
+    _fake_fetch(monkeypatch, _FakePage(fail=True))
+    assert capture_element("https://x/", "#a", str(out), stealth=True) is False
+    assert not out.exists()
+
+
+def test_stealth_challenge_returns_none(tmp_path, monkeypatch):
+    out = tmp_path / "o.png"
+    seen = _fake_fetch(
+        monkeypatch, _FakePage(title="Just a moment..."), status=403
+    )
+    assert capture_element("https://x/", "#a", str(out), stealth=True) is None
+    assert not out.exists()
+    assert "solve_cloudflare" not in seen
+
+
+def test_stealth_challenge_header_discards_file(tmp_path, monkeypatch):
+    out = tmp_path / "o.png"
+    _fake_fetch(monkeypatch, _FakePage(), headers={"cf-mitigated": "challenge"})
+    assert capture_element("https://x/", "#a", str(out), stealth=True) is None
+    assert not out.exists()
+
+
+def test_stealth_fetch_exception_returns_false(tmp_path, monkeypatch):
+    from scrapling.fetchers import StealthyFetcher
+
+    def boom(url, **kw):
+        raise RuntimeError("launch failed")
+
+    monkeypatch.setattr(StealthyFetcher, "fetch", staticmethod(boom))
+    assert (
+        capture_element("https://x/", "#a", str(tmp_path / "o.png"), stealth=True)
+        is False
+    )
