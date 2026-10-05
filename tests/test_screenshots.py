@@ -8,6 +8,7 @@ import pytest
 
 from job_scraper.core.screenshots import (
     _is_challenge,
+    _png_height,
     _screenshot_with_retry,
     _settle,
     browser_available,
@@ -147,20 +148,16 @@ _PRE_ACTION_PAGE = (
 )
 
 
-def _png_height(path):
-    return struct.unpack(">II", path.read_bytes()[16:24])[1]
-
-
 @pytest.mark.enable_socket
 @needs_browser
 def test_pre_actions_click_expands_content(tmp_path):
     page = tmp_path / "pre.html"
     page.write_text(_PRE_ACTION_PAGE)
     out1, out2 = tmp_path / "plain.png", tmp_path / "clicked.png"
-    assert capture_element(page.as_uri(), "#job", str(out1))
+    assert capture_element(page.as_uri(), "#job", str(out1), min_height=0) is True
     assert capture_element(
         page.as_uri(), "#job", str(out2), pre_actions=("button#more",)
-    )
+    ) is True
     assert _png_height(out2) >= _png_height(out1) + 350  # +400px block minus the removed button
 
 
@@ -171,7 +168,7 @@ def test_missing_pre_action_does_not_fail_capture(tmp_path):
     page.write_text(_PRE_ACTION_PAGE)
     out = tmp_path / "out.png"
     assert capture_element(
-        page.as_uri(), "#job", str(out), pre_actions=("button#does-not-exist",)
+        page.as_uri(), "#job", str(out), pre_actions=("button#does-not-exist",), min_height=0
     ) is True
     assert out.exists()
 
@@ -205,7 +202,7 @@ def test_skip_selectors_skip_gate_page(tmp_path):
         page.as_uri(), "#job", str(out1), skip_selectors=("div.gate",)
     ) is None
     assert not out1.exists()
-    assert capture_element(page.as_uri(), "#job", str(out2)) is True
+    assert capture_element(page.as_uri(), "#job", str(out2), min_height=0) is True
 
 
 def test_adapters_default_screenshot_skip_selectors_empty():
@@ -270,6 +267,9 @@ class _FakeLocator:
 
     def count(self):
         return 0
+
+    def bounding_box(self):
+        return {"height": 300, "width": 600}
 
 
 class _FakePage:
@@ -358,6 +358,120 @@ def test_stealth_fetch_exception_returns_false(tmp_path, monkeypatch):
         capture_element("https://x/", "#a", str(tmp_path / "o.png"), stealth=True)
         is False
     )
+
+
+# --- min_height filter (E16-S02) --------------------------------------------
+
+
+def test_png_height_reads_valid_png(tmp_path):
+    # Valid PNG header with height 65
+    png = tmp_path / "test.png"
+    header = b"\x89PNG\r\n\x1a\n" + b"\x00" * 8 + struct.pack(">II", 640, 65) + b"\x00" * 100
+    png.write_bytes(header)
+    assert _png_height(png) == 65
+
+
+def test_png_height_returns_none_for_missing_file(tmp_path):
+    assert _png_height(tmp_path / "nonexistent.png") is None
+
+
+def test_png_height_returns_none_for_invalid_png(tmp_path):
+    bad = tmp_path / "bad.png"
+    bad.write_bytes(b"not a png")
+    assert _png_height(bad) is None
+
+
+def test_png_height_returns_none_for_short_file(tmp_path):
+    short = tmp_path / "short.png"
+    short.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 10)
+    assert _png_height(short) is None
+
+
+@pytest.mark.enable_socket
+@needs_browser
+def test_min_height_skips_short_element(tmp_path):
+    page = tmp_path / "short.html"
+    page.write_text('<div id="job" style="height:60px;width:600px">Short</div>')
+    out = tmp_path / "out.png"
+    assert capture_element(page.as_uri(), "#job", str(out)) is None
+    assert not out.exists()
+
+
+@pytest.mark.enable_socket
+@needs_browser
+def test_min_height_zero_captures_short_element(tmp_path):
+    page = tmp_path / "short.html"
+    page.write_text('<div id="job" style="height:60px;width:600px">Short</div>')
+    out = tmp_path / "out.png"
+    assert capture_element(page.as_uri(), "#job", str(out), min_height=0) is True
+    assert out.exists()
+    h = _png_height(out)
+    assert h is not None and h < 100
+
+
+@pytest.mark.enable_socket
+@needs_browser
+def test_min_height_does_not_skip_tall_element(tmp_path):
+    page = tmp_path / "tall.html"
+    page.write_text('<div id="job" style="height:300px;width:600px">Tall</div>')
+    out = tmp_path / "out.png"
+    assert capture_element(page.as_uri(), "#job", str(out)) is True
+    assert out.exists()
+
+
+def test_stealth_min_height_skips_short_element_by_bounding_box(tmp_path, monkeypatch):
+    out = tmp_path / "o.png"
+
+    class _ShortFakeLocator:
+        def __init__(self, page):
+            self.page = page
+            self.first = self
+
+        def bounding_box(self):
+            return {"height": 40, "width": 600}
+
+        def screenshot(self, path):
+            if self.page.fail:
+                raise RuntimeError("shot failed")
+            open(path, "wb").write(PNG_MAGIC)
+
+        def count(self):
+            return 0
+
+        def scroll_into_view_if_needed(self, timeout):
+            pass
+
+        def is_visible(self):
+            return True
+
+    class _ShortFakePage:
+        def __init__(self):
+            self.fail = False
+
+        def set_viewport_size(self, size):
+            pass
+
+        def title(self):
+            return "Job"
+
+        def add_style_tag(self, content):
+            pass
+
+        def wait_for_selector(self, selector, timeout):
+            pass
+
+        def wait_for_timeout(self, ms):
+            pass
+
+        def wait_for_function(self, js, arg, timeout):
+            pass
+
+        def locator(self, selector):
+            return _ShortFakeLocator(self)
+
+    seen = _fake_fetch(monkeypatch, _ShortFakePage())
+    assert capture_element("https://x/", "#a", str(out), stealth=True) is None
+    assert not out.exists()
 
 
 # --- settle wait (E16-S01) ------------------------------------------------

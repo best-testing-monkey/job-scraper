@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import struct
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -86,6 +87,17 @@ def _settle(page, selector, max_ms=3000) -> None:
         pass
 
 
+def _png_height(path: str | Path) -> int | None:
+    """Read PNG IHDR height from file, or None if missing/invalid."""
+    try:
+        data = Path(path).read_bytes()
+        if len(data) < 24 or not data.startswith(b"\x89PNG\r\n\x1a\n"):
+            return None
+        return struct.unpack(">II", data[16:24])[1]
+    except (OSError, IOError):
+        return None
+
+
 def _screenshot_with_retry(page, selector, out_path, timeout_ms):
     """wait_for_selector + element screenshot, retried once if the element detached."""
     for attempt in (1, 2):
@@ -102,11 +114,11 @@ def _screenshot_with_retry(page, selector, out_path, timeout_ms):
 
 def _capture_on_page(
     page, response, url, selector, out_path, timeout_ms,
-    hide_selectors, pre_actions, skip_selectors,
+    hide_selectors, pre_actions, skip_selectors, min_height=100,
 ) -> bool | None:
     """Per-page work shared by the plain-Playwright and StealthyFetcher paths.
 
-    Returns True saved, None skipped (challenge / gated page; no file left).
+    Returns True saved, None skipped (challenge / gated page / too short; no file left).
     Raises on failure (callers turn that into False). ``response`` may be None
     (stealth path: the status is checked by the caller after the fetch).
     """
@@ -137,12 +149,24 @@ def _capture_on_page(
         Path(out_path).unlink(missing_ok=True)
         return None
     _settle(page, selector)
+    if min_height > 0:
+        box = page.locator(selector).first.bounding_box()
+        if box is not None and box["height"] < min_height:
+            logger.info("Skipping %s: element only %dpx high", url, box["height"])
+            Path(out_path).unlink(missing_ok=True)
+            return None
     _screenshot_with_retry(page, selector, out_path, timeout_ms)
+    if min_height > 0:
+        png_h = _png_height(out_path)
+        if png_h is not None and png_h < min_height:
+            logger.info("Skipping %s: screenshot only %dpx high", url, png_h)
+            Path(out_path).unlink(missing_ok=True)
+            return None
     return True
 
 
 def _capture_stealth(
-    url, selector, out_path, timeout_ms, hide_selectors, pre_actions, skip_selectors
+    url, selector, out_path, timeout_ms, hide_selectors, pre_actions, skip_selectors, min_height=100,
 ) -> bool | None:
     """Capture inside scrapling's StealthyFetcher browser (patchright Chromium).
 
@@ -164,7 +188,7 @@ def _capture_stealth(
             page.set_viewport_size(_VIEWPORT)
             outcome["result"] = _capture_on_page(
                 page, None, url, selector, out_path, timeout_ms,
-                hide_selectors, pre_actions, skip_selectors,
+                hide_selectors, pre_actions, skip_selectors, min_height,
             )
         except Exception as exc:  # noqa: BLE001 - recorded, reported as False
             outcome["error"] = exc
@@ -197,6 +221,7 @@ def capture_element(
     hide_selectors: Sequence[str] = (),
     pre_actions: Sequence[str] = (),
     skip_selectors: Sequence[str] = (),
+    min_height: int = 100,
 ) -> bool | None:
     """Save a PNG of only the first element matching ``selector``.
 
@@ -205,8 +230,7 @@ def capture_element(
     ``pre_actions`` is then clicked once (if present and visible).
 
     Returns True when saved, False on failure, None when skipped on purpose
-    (bot-challenge page, or any ``skip_selectors`` match = gate/teaser page);
-    a skip writes no file.
+    (bot-challenge page, gated page, or element too short); a skip writes no file.
 
     Never raises: on any failure logs a warning, removes a partial file and
     returns False.
@@ -216,7 +240,7 @@ def capture_element(
         if stealth:
             return _capture_stealth(
                 url, selector, out_path, timeout_ms,
-                hide_selectors, pre_actions, skip_selectors,
+                hide_selectors, pre_actions, skip_selectors, min_height,
             )
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
@@ -227,7 +251,7 @@ def capture_element(
                 )
                 result = _capture_on_page(
                     page, response, url, selector, out_path, timeout_ms,
-                    hide_selectors, pre_actions, skip_selectors,
+                    hide_selectors, pre_actions, skip_selectors, min_height,
                 )
             finally:
                 browser.close()
