@@ -108,6 +108,16 @@ def main() -> None:
         default="screenshots/",
         help="Path to screenshots directory (default: screenshots/)",
     )
+    screenshots_parser.add_argument(
+        "--db",
+        default="scraper.db",
+        help="Path to SQLite database used to find stale postings (default: scraper.db)",
+    )
+    screenshots_parser.add_argument(
+        "--include-stale",
+        action="store_true",
+        help="also try postings the scraper marked stale",
+    )
 
     stale_sync_parser = subparsers.add_parser(
         "stale-sync", help="Backfill/repair Stale since bullets in markdown from the database"
@@ -212,6 +222,8 @@ def handle_screenshots(args: argparse.Namespace) -> None:
                 args.jobs_dir,
                 args.screenshots_dir,
                 missing_only=args.missing_only,
+                db_path=args.db,
+                include_stale=args.include_stale,
             )
             print(f"{site_id}: {json.dumps(counters)}")
         except ValueError as e:

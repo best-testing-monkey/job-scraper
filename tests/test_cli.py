@@ -345,6 +345,8 @@ def test_screenshots_single_site(monkeypatch, capsys):
             assert call_args[0][1] == "jobs/"
             assert call_args[0][2] == "screenshots/"
             assert call_args[1]["missing_only"] is False
+            assert call_args[1]["db_path"] == "scraper.db"
+            assert call_args[1]["include_stale"] is False
 
             # Verify output format
             captured = capsys.readouterr()
@@ -353,6 +355,23 @@ def test_screenshots_single_site(monkeypatch, capsys):
             json_str = line.split(": ", 1)[1]
             output_json = json.loads(json_str)
             assert output_json["attempted"] == 5
+
+
+def test_screenshots_db_and_include_stale(monkeypatch, capsys):
+    """--db x.db --include-stale reach backfill_screenshots"""
+    monkeypatch.setattr(sys, "argv", [
+        "job_scraper", "screenshots", "--site", "pro_act",
+        "--db", "x.db", "--include-stale",
+    ])
+
+    with patch("job_scraper.cli.browser_available", return_value=True):
+        with patch("job_scraper.cli.backfill_screenshots") as mock_backfill:
+            mock_backfill.return_value = {"attempted": 0}
+            main()
+
+            kwargs = mock_backfill.call_args[1]
+            assert kwargs["db_path"] == "x.db"
+            assert kwargs["include_stale"] is True
 
 
 def test_screenshots_missing_only(monkeypatch, capsys):

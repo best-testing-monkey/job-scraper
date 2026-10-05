@@ -3,6 +3,8 @@ from unittest.mock import patch
 import pytest
 
 from job_scraper.core import screenshot_backfill as sb
+from job_scraper.core.db import JobRepository
+from job_scraper.core.models import JobPosting
 from job_scraper.sites.base import FetchStrategy
 from job_scraper.sites.registry import SITE_REGISTRY
 
@@ -52,6 +54,7 @@ def test_all_success(env):
         "skipped_existing": 0,
         "skipped_no_selector": 0,
         "skipped_blocked": 0,
+        "skipped_stale": 0,
     }
     assert cap.call_args_list[0].args[:2] == ("https://x.test/a", "div.x")
     assert cap.call_args_list[0].kwargs == {"stealth": False, "hide_selectors": (), "pre_actions": (), "skip_selectors": ()}
@@ -140,3 +143,42 @@ def test_pre_actions_and_skip_selectors_passed(env, monkeypatch):
         run(env)
     assert cap.call_args_list[0].kwargs["pre_actions"] == ("click:button.load", "wait:div.content")
     assert cap.call_args_list[0].kwargs["skip_selectors"] == ("div.no-ad", "span.skip")
+
+
+def _stale_db(tmp_path):
+    db = tmp_path / "s.db"
+    repo = JobRepository(str(db))
+    for lid in ("a", "b"):
+        posting = JobPosting(site_id="fake", listing_id=lid, source_url=f"https://x.test/{lid}", title="t")
+        repo.upsert(posting, "2026-01-01T00:00:00Z" if lid == "a" else "2026-02-01T00:00:00Z")
+    assert repo.mark_stale_not_seen_since("fake", "2026-02-01T00:00:00Z") == 1
+    repo.conn.close()
+    return str(db)
+
+
+def test_stale_skipped(env, tmp_path):
+    jobs, _ = env
+    db = _stale_db(tmp_path)
+    before = (jobs / "fake-a-t.md").read_bytes()
+    with patch.object(sb, "capture_element", return_value=True) as cap:
+        res = run(env, db_path=db)
+    assert cap.call_count == 1
+    assert cap.call_args.args[0] == "https://x.test/b"
+    assert res["skipped_stale"] == 1
+    assert res["captured"] == 1
+    assert (jobs / "fake-a-t.md").read_bytes() == before
+
+
+def test_include_stale_captures_all(env, tmp_path):
+    db = _stale_db(tmp_path)
+    with patch.object(sb, "capture_element", return_value=True) as cap:
+        res = run(env, db_path=db, include_stale=True)
+    assert cap.call_count == 2
+    assert res["skipped_stale"] == 0
+
+
+def test_missing_db_skips_nothing(env, tmp_path):
+    with patch.object(sb, "capture_element", return_value=True) as cap:
+        res = run(env, db_path=str(tmp_path / "nope.db"))
+    assert cap.call_count == 2
+    assert res["skipped_stale"] == 0
