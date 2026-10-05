@@ -166,12 +166,28 @@ def handle_scrape(args: argparse.Namespace) -> None:
     repo = JobRepository(args.db)
     raw_dir = None if args.no_raw else args.raw_dir
     screenshots_dir = None if args.no_screenshots else args.screenshots_dir
+    printed: set[str] = set()
+
+    def on_site_done(site_id: str, counters: dict) -> None:
+        printed.add(site_id)
+        print(f"{site_id}: {json.dumps(counters)}", flush=True)
+
     results = run(
-        site_ids, repo, args.jobs_dir, ignore_robots=args.ignore_robots, raw_dir=raw_dir, screenshots_dir=screenshots_dir
+        site_ids,
+        repo,
+        args.jobs_dir,
+        ignore_robots=args.ignore_robots,
+        raw_dir=raw_dir,
+        screenshots_dir=screenshots_dir,
+        on_site_done=on_site_done,
     )
 
     for site_id, counters in results.items():
-        print(f"{site_id}: {json.dumps(counters)}")
+        if site_id not in printed:
+            print(f"{site_id}: {json.dumps(counters)}", flush=True)
+
+    if any("error" in counters for counters in results.values()):
+        sys.exit(1)
 
 
 def handle_rebuild(args: argparse.Namespace) -> None:

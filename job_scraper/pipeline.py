@@ -1,4 +1,5 @@
 import sys
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 
@@ -26,6 +27,7 @@ def run_site(
     raw_dir: str | None = None,
     screenshots_dir: str | None = None,
     today: str | None = None,
+    counters: dict | None = None,
 ) -> dict:
     """For each ListingStub from adapter.list_postings(): fetch its detail
     page via fetch_page(adapter.fetch_strategy, stub.detail_url); if
@@ -52,17 +54,21 @@ def run_site(
     "screenshots_skipped": int, ...}."""
     if today is None:
         today = datetime.now().date().isoformat()
-    counters = {
-        "seen": 0,
-        "excluded": 0,
-        "duplicates": 0,
-        "written": 0,
-        "stale_marked": 0,
-        "newly_stale": 0,
-        "screenshots_taken": 0,
-        "screenshots_failed": 0,
-        "screenshots_skipped": 0,
-    }
+    if counters is None:
+        counters = {}
+    counters.update(
+        {
+            "seen": 0,
+            "excluded": 0,
+            "duplicates": 0,
+            "written": 0,
+            "stale_marked": 0,
+            "newly_stale": 0,
+            "screenshots_taken": 0,
+            "screenshots_failed": 0,
+            "screenshots_skipped": 0,
+        }
+    )
 
     for stub in adapter.list_postings():
         counters["seen"] += 1
@@ -135,6 +141,7 @@ def run(
     ignore_robots: bool = False,
     raw_dir: str | None = None,
     screenshots_dir: str | None = None,
+    on_site_done: Callable[[str, dict], None] | None = None,
 ) -> dict[str, dict]:
     """For each site_id: if not in SITE_REGISTRY, skip with a printed
     warning (to stderr) and continue. If robots_allowed(adapter.base_url) is
@@ -168,14 +175,23 @@ def run(
                 continue
 
         run_started_at = datetime.now().isoformat()
-        counters = run_site(
-            adapter,
-            repo,
-            jobs_dir,
-            run_started_at,
-            raw_dir=raw_dir,
-            screenshots_dir=screenshots_dir,
-        )
-        results[site_id] = counters
+        counters: dict = {}
+        try:
+            run_site(
+                adapter,
+                repo,
+                jobs_dir,
+                run_started_at,
+                raw_dir=raw_dir,
+                screenshots_dir=screenshots_dir,
+                counters=counters,
+            )
+            results[site_id] = counters
+        except Exception as exc:
+            msg = f"{type(exc).__name__}: {exc}"
+            print(f"Error: site {site_id} failed: {msg}", file=sys.stderr)
+            results[site_id] = {**counters, "error": msg}
+        if on_site_done is not None:
+            on_site_done(site_id, results[site_id])
 
     return results

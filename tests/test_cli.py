@@ -535,3 +535,32 @@ def test_stale_sync_help(capsys, monkeypatch):
     out = capsys.readouterr().out
     assert "--db" in out
     assert "--jobs-dir" in out
+
+
+def test_scrape_prints_counters_incrementally_once(temp_db, monkeypatch, capsys):
+    repo, db_path = temp_db
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "scrape", "--site", "a", "--site", "b", "--db", db_path])
+
+    def fake_run(site_ids, repo, jobs_dir, **kwargs):
+        results = {"a": {"seen": 1}, "b": {"seen": 2}}
+        for sid, c in results.items():
+            kwargs["on_site_done"](sid, c)
+        return results
+
+    with patch("job_scraper.cli.run", side_effect=fake_run):
+        main()
+
+    lines = [ln for ln in capsys.readouterr().out.splitlines() if ln.startswith(("a:", "b:"))]
+    assert lines == ['a: {"seen": 1}', 'b: {"seen": 2}']
+
+
+def test_scrape_exits_1_on_site_error(temp_db, monkeypatch, capsys):
+    repo, db_path = temp_db
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "scrape", "--site", "a", "--db", db_path])
+
+    with patch("job_scraper.cli.run", return_value={"a": {"seen": 1, "error": "RuntimeError: boom"}}):
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+
+    assert exc_info.value.code == 1
+    assert 'a: {"seen": 1, "error": "RuntimeError: boom"}' in capsys.readouterr().out

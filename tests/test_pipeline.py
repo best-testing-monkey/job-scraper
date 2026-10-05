@@ -462,3 +462,75 @@ def test_reseen_posting_not_duplicate_of_itself(tmp_path: Path) -> None:
     assert second["duplicates"] == 0 and second["written"] == 0
     assert repo.conn.execute(
         "SELECT COUNT(*) FROM jobs WHERE duplicate_of IS NOT NULL").fetchone()[0] == 0
+
+
+class BoomAdapter(SiteAdapter):
+    site_id = "boom-site"
+    base_url = "https://boom.example.com"
+    fetch_strategy = FetchStrategy.STATIC
+
+    def list_postings(self) -> Iterator[ListingStub]:
+        raise RuntimeError("boom")
+        yield  # pragma: no cover
+
+    def parse_detail(self, stub: ListingStub, page: Any) -> JobPosting:
+        raise NotImplementedError
+
+
+class PartialAdapter(FakeAdapter):
+    site_id = "partial-site"
+
+    def list_postings(self) -> Iterator[ListingStub]:
+        yield ListingStub(
+            listing_id="job-1",
+            detail_url="https://fake-site.example.com/job/1",
+            title="Python Developer",
+        )
+        yield ListingStub(
+            listing_id="job-2",
+            detail_url="https://fake-site.example.com/job/2",
+            title="Senior Developer",
+        )
+
+
+def test_run_survives_site_exception(tmp_path: Path, capsys) -> None:
+    repo = JobRepository(str(tmp_path / "test.db"))
+    registry = {"boom-site": BoomAdapter, "fake-site": FakeAdapter}
+    calls: list[tuple[str, dict]] = []
+
+    with patch("job_scraper.pipeline.SITE_REGISTRY", registry):
+        with patch("job_scraper.pipeline.robots_allowed", return_value=True):
+            with patch("job_scraper.pipeline.fetch_page", return_value=None):
+                results = run(
+                    ["boom-site", "fake-site"],
+                    repo,
+                    str(tmp_path / "jobs"),
+                    on_site_done=lambda sid, c: calls.append((sid, c)),
+                )
+
+    assert set(results) == {"boom-site", "fake-site"}
+    assert results["boom-site"]["error"].startswith("RuntimeError: boom")
+    assert results["fake-site"]["seen"] == 3
+    assert "error" not in results["fake-site"]
+    assert [sid for sid, _ in calls] == ["boom-site", "fake-site"]
+    assert "Error: site boom-site failed: RuntimeError: boom" in capsys.readouterr().err
+
+
+def test_run_error_keeps_partial_counters(tmp_path: Path) -> None:
+    repo = JobRepository(str(tmp_path / "test.db"))
+    registry = {"partial-site": PartialAdapter}
+    state = {"n": 0}
+
+    def fake_fetch(strategy, url):
+        state["n"] += 1
+        if state["n"] == 2:
+            raise TimeoutError("curl timeout")
+        return None
+
+    with patch("job_scraper.pipeline.SITE_REGISTRY", registry):
+        with patch("job_scraper.pipeline.robots_allowed", return_value=True):
+            with patch("job_scraper.pipeline.fetch_page", side_effect=fake_fetch):
+                results = run(["partial-site"], repo, str(tmp_path / "jobs"))
+
+    assert results["partial-site"]["seen"] == 2
+    assert results["partial-site"]["error"] == "TimeoutError: curl timeout"
