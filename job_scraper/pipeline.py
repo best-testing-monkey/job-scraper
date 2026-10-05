@@ -4,7 +4,13 @@ from pathlib import Path
 
 from job_scraper.core.db import JobRepository
 from job_scraper.core.filters import apply_dedup, is_excluded
-from job_scraper.core.markdown_export import screenshot_relpath, stem_for, write
+from job_scraper.core.markdown_export import (
+    md_path_for,
+    screenshot_relpath,
+    set_stale_line,
+    stem_for,
+    write,
+)
 from job_scraper.core.raw_export import write as write_raw
 from job_scraper.core.robots import robots_allowed
 from job_scraper.core.screenshots import capture_element
@@ -19,6 +25,7 @@ def run_site(
     run_started_at: str,
     raw_dir: str | None = None,
     screenshots_dir: str | None = None,
+    today: str | None = None,
 ) -> dict:
     """For each ListingStub from adapter.list_postings(): fetch its detail
     page via fetch_page(adapter.fetch_strategy, stub.detail_url); if
@@ -34,15 +41,23 @@ def run_site(
     and do NOT export markdown for a duplicate, regardless of `changed`.
     If not a duplicate and changed: call markdown_export.write(posting,
     jobs_dir). After the loop, call
-    repo.mark_stale_not_seen_since(adapter.site_id, run_started_at).
+    repo.mark_stale_not_seen_since(adapter.site_id, run_started_at,
+    stale_on=today) after collecting repo.list_newly_stale(...); each newly
+    stale posting gets a '- Stale since: <today>' markdown bullet, and an
+    unchanged non-duplicate posting seen live loses any such bullet. `today`
+    defaults to the local date (YYYY-MM-DD) and is injectable for tests.
     Returns a dict of counters: {"seen": int, "excluded": int,
-    "duplicates": int, "written": int, "stale_marked": int}."""
+    "duplicates": int, "written": int, "stale_marked": int,
+    "newly_stale": int, ...}."""
+    if today is None:
+        today = datetime.now().date().isoformat()
     counters = {
         "seen": 0,
         "excluded": 0,
         "duplicates": 0,
         "written": 0,
         "stale_marked": 0,
+        "newly_stale": 0,
         "screenshots_taken": 0,
         "screenshots_failed": 0,
     }
@@ -60,6 +75,13 @@ def run_site(
             continue
 
         posting, dup_id = apply_dedup(posting, repo)
+        if dup_id is not None:
+            own = repo.conn.execute(
+                "SELECT id FROM jobs WHERE site_id = ? AND listing_id = ?",
+                (posting.site_id, posting.listing_id),
+            ).fetchone()
+            if own is not None and own[0] == dup_id:
+                dup_id = None  # a re-seen posting matches its own row: not a duplicate
         changed = repo.upsert(posting, seen_at=run_started_at)
 
         if dup_id is not None:
@@ -89,9 +111,20 @@ def run_site(
                     screenshot = screenshot_relpath(stem)
             write(posting, jobs_dir, screenshot=screenshot)
             counters["written"] += 1
+        else:
+            set_stale_line(
+                str(md_path_for(jobs_dir, posting.site_id, posting.listing_id, posting.title)),
+                None,
+            )
 
-    stale_count = repo.mark_stale_not_seen_since(adapter.site_id, run_started_at)
+    newly = repo.list_newly_stale(adapter.site_id, run_started_at)
+    stale_count = repo.mark_stale_not_seen_since(
+        adapter.site_id, run_started_at, stale_on=today
+    )
+    for listing_id, title in newly:
+        set_stale_line(str(md_path_for(jobs_dir, adapter.site_id, listing_id, title)), today)
     counters["stale_marked"] = stale_count
+    counters["newly_stale"] = len(newly)
 
     return counters
 

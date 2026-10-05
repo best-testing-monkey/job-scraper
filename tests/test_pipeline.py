@@ -349,3 +349,83 @@ def test_screenshot_not_for_excluded_or_duplicates(tmp_path: Path) -> None:
     counters, cap = _run_shots(tmp_path / "d", DupAdapter(), str(tmp_path / "s3"), return_value=True)
     assert counters["duplicates"] == 1
     assert cap.call_count == 1
+
+
+class StaleAdapter(SiteAdapter):
+    site_id = "stale-site"
+    base_url = "https://stale-site.example.com"
+    fetch_strategy = FetchStrategy.STATIC
+
+    def __init__(
+        self, ids: list[str], descs: dict[str, str] | None = None, dups: tuple[str, ...] = ()
+    ) -> None:
+        self.dups = dups
+        self.ids = ids
+        self.descs = descs or {}
+
+    def list_postings(self) -> Iterator[ListingStub]:
+        for i in self.ids:
+            yield ListingStub(
+                listing_id=i,
+                detail_url=f"https://stale-site.example.com/{i}",
+                title="Dup Role" if i in self.dups else f"Role {i}",
+            )
+
+    def parse_detail(self, stub: ListingStub, page: Any) -> JobPosting:
+        return JobPosting(
+            site_id=self.site_id,
+            listing_id=stub.listing_id,
+            source_url=stub.detail_url,
+            title=stub.title,
+            client="Acme",
+            description=self.descs.get(stub.listing_id, f"Description of {stub.listing_id}"),
+        )
+
+
+def _stale_run(repo, jobs, adapter, n: int, today: str) -> dict:
+    with patch("job_scraper.pipeline.fetch_page", return_value=None):
+        return run_site(adapter, repo, str(jobs), f"2023-01-0{n}T00:00:00", today=today)
+
+
+def test_stale_since_lifecycle(tmp_path: Path) -> None:
+    repo = JobRepository(str(tmp_path / "t.db"))
+    jobs = tmp_path / "jobs"
+    a_md = jobs / "stale-site-A-role-a.md"
+    b_md = jobs / "stale-site-B-role-b.md"
+
+    _stale_run(repo, jobs, StaleAdapter(["A", "B"]), 1, "2026-10-01")
+    assert "Stale since" not in b_md.read_text()
+
+    c = _stale_run(repo, jobs, StaleAdapter(["A"]), 2, "2026-10-05")
+    assert c["newly_stale"] == 1 and c["stale_marked"] == 1
+    assert b_md.read_text().count("- Stale since: 2026-10-05") == 1
+    assert "Stale since" not in a_md.read_text()
+
+    c = _stale_run(repo, jobs, StaleAdapter(["A"]), 3, "2026-10-08")
+    assert c["newly_stale"] == 0
+    assert b_md.read_text().count("- Stale since:") == 1
+    assert "- Stale since: 2026-10-05" in b_md.read_text()
+
+    _stale_run(repo, jobs, StaleAdapter(["A", "B"]), 4, "2026-10-09")
+    assert "Stale since" not in b_md.read_text()
+    row = repo.conn.execute("SELECT is_stale FROM jobs WHERE listing_id = 'B'").fetchone()
+    assert row[0] == 0
+
+    _stale_run(repo, jobs, StaleAdapter(["A"]), 5, "2026-10-10")
+    assert "- Stale since: 2026-10-10" in b_md.read_text()
+    _stale_run(repo, jobs, StaleAdapter(["A", "B"], {"B": "New text"}), 6, "2026-10-11")
+    text = b_md.read_text()
+    assert "Stale since" not in text and "New text" in text
+
+
+def test_stale_duplicate_gets_no_bullet(tmp_path: Path) -> None:
+    repo = JobRepository(str(tmp_path / "t.db"))
+    jobs = tmp_path / "jobs"
+    adapter = StaleAdapter(["A", "B"], dups=("A", "B"))
+    _stale_run(repo, jobs, adapter, 1, "2026-10-01")
+    files = sorted(p.name for p in jobs.glob("*.md"))
+    assert files == ["stale-site-A-dup-role.md"]
+    c = _stale_run(repo, jobs, StaleAdapter(["A"], dups=("A",)), 2, "2026-10-05")
+    assert c["newly_stale"] == 0
+    assert sorted(p.name for p in jobs.glob("*.md")) == files
+    assert "Stale since" not in (jobs / files[0]).read_text()
