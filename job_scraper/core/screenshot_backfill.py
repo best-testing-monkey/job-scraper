@@ -39,6 +39,7 @@ def backfill_screenshots(
         "failed": 0,
         "skipped_existing": 0,
         "skipped_no_selector": 0,
+        "skipped_blocked": 0,
     }
     md_files = sorted(Path(jobs_dir).glob(f"{site_id}-*.md"))
 
@@ -67,13 +68,17 @@ def backfill_screenshots(
                 str(png),
                 stealth=stealth,
                 hide_selectors=adapter.screenshot_hide_selectors,
+                pre_actions=adapter.screenshot_pre_actions,
+                skip_selectors=adapter.screenshot_skip_selectors,
             )
         except Exception as exc:  # noqa: BLE001 - one failure must not stop the run
             print(f"Screenshot failed for {md.name}: {exc}", file=sys.stderr)
             ok = False
-        if ok:
+        if ok is True:
             counts["captured"] += 1
             set_screenshot_line(str(md), screenshot_relpath(stem))
-        else:
+        elif ok is False:
             counts["failed"] += 1
+        elif ok is None:
+            counts["skipped_blocked"] += 1
     return counts
