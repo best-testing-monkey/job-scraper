@@ -209,3 +209,16 @@ def test_screenshot_selector_matches_description_element(fixtures_dir: Path) -> 
     assert "Inzet van een senior tester die tevens ketentesten kan organiseren en uitvoeren" in els[0].get_text()
     assert els[0].find(["nav", "header", "footer", "form"]) is None
     assert "cookie" not in els[0].get_text().lower()
+
+
+def test_screenshot_hides_sticky_header(detail_html: bytes) -> None:
+    from bs4 import BeautifulSoup
+
+    assert SynprofsAdapter.screenshot_hide_selectors == ("header#masthead",)
+    soup = BeautifulSoup(detail_html, "html.parser")
+    el = soup.select_one(SynprofsAdapter.screenshot_selector)
+    assert el is not None
+    for sel in SynprofsAdapter.screenshot_hide_selectors:
+        soup.select(sel)  # valid CSS
+    assert len(soup.select("header#masthead")) == 1
+    assert el.select_one("header#masthead") is None

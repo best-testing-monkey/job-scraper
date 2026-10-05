@@ -15,6 +15,7 @@ class SynprofsAdapter(SiteAdapter):
     base_url: str = "https://www.synprofs.nl"
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
     screenshot_selector = "div.sd-sdcx-components-vacancies-parts-publication-text"
+    screenshot_hide_selectors = ("header#masthead",)  # fixed site header overlaps top lines
     LISTING_URL: str = "https://www.synprofs.nl/vacancy-sitemap.xml"
 
     def list_postings(self) -> Iterator[ListingStub]:
