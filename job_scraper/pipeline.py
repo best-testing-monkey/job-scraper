@@ -17,7 +17,7 @@ from job_scraper.core.markdown_export import (
 from job_scraper.core.raw_export import write as write_raw
 from job_scraper.core.robots import robots_allowed
 from job_scraper.core.screenshots import capture_element
-from job_scraper.sites.base import FetchStrategy, SiteAdapter, fetch_page
+from job_scraper.sites.base import FetchStrategy, PostingGone, SiteAdapter, fetch_page
 from job_scraper.sites.registry import SITE_REGISTRY
 
 
@@ -69,12 +69,28 @@ def run_site(
             "screenshots_taken": 0,
             "screenshots_failed": 0,
             "screenshots_skipped": 0,
+            "gone": 0,
+            "gone_suppressed": 0,
         }
     )
+    gone_ids: list[str] = []
 
     for stub in adapter.list_postings():
         counters["seen"] += 1
-        page = fetch_page(adapter.fetch_strategy, stub.detail_url)
+        try:
+            page = fetch_page(
+                adapter.fetch_strategy,
+                stub.detail_url,
+                gone_check=adapter.gone_check(stub.listing_id),
+            )
+        except PostingGone as exc:
+            counters["gone"] += 1
+            gone_ids.append(stub.listing_id)
+            print(
+                f"Notice: {adapter.site_id} {stub.listing_id} is gone ({exc.reason})",
+                file=sys.stderr,
+            )
+            continue
         posting = adapter.parse_detail(stub, page)
 
         if raw_dir:
@@ -126,6 +142,15 @@ def run_site(
                 str(md_path_for(jobs_dir, posting.site_id, posting.listing_id, posting.title)),
                 None,
             )
+
+    if len(gone_ids) >= 10 and len(gone_ids) * 2 > counters["seen"]:
+        print(
+            f"Warning: {adapter.site_id}: {len(gone_ids)} of {counters['seen']} postings "
+            "look gone; treating as an outage/block, not marking them stale",
+            file=sys.stderr,
+        )
+        repo.touch_seen(adapter.site_id, gone_ids, run_started_at)
+        counters["gone_suppressed"] = len(gone_ids)
 
     newly = repo.list_newly_stale(adapter.site_id, run_started_at)
     stale_count = repo.mark_stale_not_seen_since(

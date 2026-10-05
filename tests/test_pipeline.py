@@ -10,7 +10,8 @@ import pytest
 from job_scraper.core.db import JobRepository
 from job_scraper.core.models import JobPosting, ListingStub
 from job_scraper.pipeline import fetch_page, run, run_site
-from job_scraper.sites.base import FetchStrategy, SiteAdapter
+from job_scraper.core.gone import GoneCheck
+from job_scraper.sites.base import FetchStrategy, PostingGone, SiteAdapter
 
 
 class FakeAdapter(SiteAdapter):
@@ -544,7 +545,7 @@ def test_run_error_keeps_partial_counters(tmp_path: Path) -> None:
     registry = {"partial-site": PartialAdapter}
     state = {"n": 0}
 
-    def fake_fetch(strategy, url):
+    def fake_fetch(strategy, url, **kw):
         state["n"] += 1
         if state["n"] == 2:
             raise TimeoutError("curl timeout")
@@ -697,3 +698,127 @@ def test_source_url_differs_when_unchanged_content(tmp_path: Path) -> None:
         counters = run_site(adapter, repo, str(jobs_dir), "2023-01-03T00:00:00")
 
     assert counters["written"] == 0
+
+
+class GoneAdapter(StaleAdapter):
+    site_id = "gone-site"
+    listing_paths = ("/jobs",)
+    gone_markers = ("niet gevonden",)
+
+    def __init__(self, ids: list[str]) -> None:
+        super().__init__(ids)
+        self.parse_calls: list[str] = []
+
+    def list_postings(self) -> Iterator[ListingStub]:
+        for i in self.ids:
+            yield ListingStub(
+                listing_id=i, detail_url=f"https://gone-site.example.com/{i}", title=f"Role {i}"
+            )
+
+    def parse_detail(self, stub: ListingStub, page: Any) -> JobPosting:
+        self.parse_calls.append(stub.listing_id)
+        return super().parse_detail(stub, page)
+
+
+def _gone_run(repo, jobs, adapter, n, today, gone, **kw):
+    calls: list[tuple[str, Any]] = []
+
+    def fake(strategy, url, **k):
+        calls.append((url, k.get("gone_check")))
+        if url.rsplit("/", 1)[1] in gone:
+            raise PostingGone(url, "http 404")
+        return b"<html></html>"
+
+    with patch("job_scraper.pipeline.fetch_page", side_effect=fake):
+        c = run_site(adapter, repo, str(jobs), f"2023-01-0{n}T00:00:00", today=today, **kw)
+    return c, calls
+
+
+def _stale_row(repo, lid):
+    return repo.conn.execute(
+        "SELECT is_stale, stale_since FROM jobs WHERE listing_id = ?", (lid,)
+    ).fetchone()
+
+
+def test_gone_posting_marked_stale(tmp_path: Path) -> None:
+    repo = JobRepository(str(tmp_path / "t.db"))
+    jobs = tmp_path / "jobs"
+    _gone_run(repo, jobs, GoneAdapter(["A", "B"]), 1, "2026-10-01", set())
+    adapter = GoneAdapter(["A", "B"])
+    c, calls = _gone_run(repo, jobs, adapter, 2, "2026-10-05", {"B"})
+    assert tuple(_stale_row(repo, "B")) == (1, "2026-10-05")
+    assert tuple(_stale_row(repo, "A")) == (0, None)
+    assert "- Stale since: 2026-10-05" in (jobs / "gone-site-B-role-b.md").read_text()
+    assert c["gone"] == 1 and c["newly_stale"] == 1 and c["gone_suppressed"] == 0
+    assert c["written"] == 0 and c["seen"] == 2
+    assert adapter.parse_calls == ["A"]
+    # (d) gone_check passed
+    for url, gc in calls:
+        lid = url.rsplit("/", 1)[1]
+        assert gc == GoneCheck(lid, GoneAdapter.listing_paths, GoneAdapter.gone_markers)
+
+
+def test_gone_written_counts_only_others(tmp_path: Path) -> None:
+    repo = JobRepository(str(tmp_path / "t.db"))
+    c, _ = _gone_run(repo, tmp_path / "jobs", GoneAdapter(["A", "B"]), 1, "2026-10-01", {"B"})
+    assert c["written"] == 1 and c["gone"] == 1
+
+
+def test_gone_keeps_existing_stale_since(tmp_path: Path) -> None:
+    repo = JobRepository(str(tmp_path / "t.db"))
+    jobs = tmp_path / "jobs"
+    _gone_run(repo, jobs, GoneAdapter(["A", "B"]), 1, "2026-10-01", set())
+    _gone_run(repo, jobs, GoneAdapter(["A"]), 2, "2026-10-02", set())
+    assert tuple(_stale_row(repo, "B")) == (1, "2026-10-02")
+    c, _ = _gone_run(repo, jobs, GoneAdapter(["A", "B"]), 3, "2026-10-09", {"B"})
+    assert tuple(_stale_row(repo, "B")) == (1, "2026-10-02")
+    assert c["newly_stale"] == 0 and c["gone"] == 1
+    md = (jobs / "gone-site-B-role-b.md").read_text()
+    assert "- Stale since: 2026-10-02" in md and "2026-10-09" not in md
+
+
+def test_gone_not_in_db_creates_no_row(tmp_path: Path) -> None:
+    repo = JobRepository(str(tmp_path / "t.db"))
+    jobs = tmp_path / "jobs"
+    c, _ = _gone_run(repo, jobs, GoneAdapter(["A", "B"]), 1, "2026-10-01", {"B"})
+    assert _stale_row(repo, "B") is None
+    assert c["gone"] == 1 and c["newly_stale"] == 0
+    assert not (jobs / "gone-site-B-role-b.md").exists()
+
+
+def test_gone_safety_valve_suppresses(tmp_path: Path, capsys) -> None:
+    repo = JobRepository(str(tmp_path / "t.db"))
+    jobs = tmp_path / "jobs"
+    ids = [f"J{i}" for i in range(10)]
+    _gone_run(repo, jobs, GoneAdapter(ids), 1, "2026-10-01", set())
+    c, _ = _gone_run(repo, jobs, GoneAdapter(ids), 2, "2026-10-05", set(ids))
+    assert c["gone"] == 10 and c["gone_suppressed"] == 10
+    assert c["newly_stale"] == 0 and c["stale_marked"] == 0
+    assert repo.conn.execute("SELECT COUNT(*) FROM jobs WHERE is_stale = 1").fetchone()[0] == 0
+    assert "Warning" in capsys.readouterr().err
+
+
+def test_gone_below_valve_marks_normally(tmp_path: Path) -> None:
+    repo = JobRepository(str(tmp_path / "t.db"))
+    jobs = tmp_path / "jobs"
+    ids = [f"J{i}" for i in range(10)]
+    _gone_run(repo, jobs, GoneAdapter(ids), 1, "2026-10-01", set())
+    c, _ = _gone_run(repo, jobs, GoneAdapter(ids), 2, "2026-10-05", {"J0", "J1", "J2"})
+    assert c["gone"] == 3 and c["gone_suppressed"] == 0 and c["newly_stale"] == 3
+    assert repo.conn.execute("SELECT COUNT(*) FROM jobs WHERE is_stale = 1").fetchone()[0] == 3
+
+
+def test_gone_ten_but_not_majority_marks_normally(tmp_path: Path) -> None:
+    repo = JobRepository(str(tmp_path / "t.db"))
+    jobs = tmp_path / "jobs"
+    ids = [f"J{i}" for i in range(21)]
+    _gone_run(repo, jobs, GoneAdapter(ids), 1, "2026-10-01", set())
+    c, _ = _gone_run(repo, jobs, GoneAdapter(ids), 2, "2026-10-05", set(ids[:10]))
+    assert c["gone"] == 10 and c["gone_suppressed"] == 0 and c["newly_stale"] == 10
+
+
+def test_normal_run_has_zero_gone(tmp_path: Path) -> None:
+    repo = JobRepository(str(tmp_path / "t.db"))
+    c, _ = _gone_run(repo, tmp_path / "jobs", GoneAdapter(["A", "B"]), 1, "2026-10-01", set())
+    assert c["gone"] == 0 and c["gone_suppressed"] == 0
+    assert c["seen"] == 2 and c["written"] == 2 and c["stale_marked"] == 0
