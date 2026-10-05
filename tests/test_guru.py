@@ -142,3 +142,9 @@ def test_screenshot_selector_matches_description_element(fixture: str) -> None:
     assert "Test case Automation using Selenium framework" in els[0].get_text()
     assert els[0].find(["nav", "header", "footer", "form"]) is None
     assert "cookie" not in els[0].get_text().lower()
+
+
+def test_screenshot_pre_actions_pinned_empty() -> None:
+    # E14-S08 probe: the live "Show more" control is a login link
+    # (a[href^="/login.aspx"]); clicking navigates away, so no pre-action.
+    assert GuruAdapter.screenshot_pre_actions == ()
