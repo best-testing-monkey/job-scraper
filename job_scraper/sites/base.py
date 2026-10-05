@@ -59,6 +59,8 @@ class SiteAdapter(ABC):
     screenshot_skip_selectors: ClassVar[tuple[str, ...]] = ()
     """CSS selectors (valid for Playwright); if any of these matches after load, the
     page is a gate/teaser: skip the screenshot."""
+    screenshot_min_height: ClassVar[int] = 100
+    """Minimum element height in pixels; captures shorter than this are skipped on purpose."""
 
     @abstractmethod
     def list_postings(self) -> Iterator[ListingStub]: ...

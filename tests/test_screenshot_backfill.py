@@ -17,6 +17,7 @@ class FakeAdapter:
     screenshot_hide_selectors = ()
     screenshot_pre_actions = ()
     screenshot_skip_selectors = ()
+    screenshot_min_height = 100
     fetch_strategy = FetchStrategy.STATIC
 
 
@@ -57,7 +58,7 @@ def test_all_success(env):
         "skipped_stale": 0,
     }
     assert cap.call_args_list[0].args[:2] == ("https://x.test/a", "div.x")
-    assert cap.call_args_list[0].kwargs == {"stealth": False, "hide_selectors": (), "pre_actions": (), "skip_selectors": ()}
+    assert cap.call_args_list[0].kwargs == {"stealth": False, "hide_selectors": (), "pre_actions": (), "skip_selectors": (), "min_height": 100}
     text = (env[0] / "fake-a-t.md").read_text()
     assert "- Screenshot: screenshots/fake-a-t.png" in text
     assert "Screenshot" not in (env[0] / "other-1-t.md").read_text()
@@ -107,7 +108,7 @@ def test_stealth_flag(env, monkeypatch):
     monkeypatch.setattr(FakeAdapter, "fetch_strategy", FetchStrategy.STEALTH)
     with patch.object(sb, "capture_element", return_value=True) as cap:
         run(env)
-    assert cap.call_args.kwargs == {"stealth": True, "hide_selectors": (), "pre_actions": (), "skip_selectors": ()}
+    assert cap.call_args.kwargs == {"stealth": True, "hide_selectors": (), "pre_actions": (), "skip_selectors": (), "min_height": 100}
 
 
 def test_idempotent_single_line(env):
@@ -182,3 +183,18 @@ def test_missing_db_skips_nothing(env, tmp_path):
         res = run(env, db_path=str(tmp_path / "nope.db"))
     assert cap.call_count == 2
     assert res["skipped_stale"] == 0
+
+
+def test_min_height_passed(env, monkeypatch):
+    monkeypatch.setattr(FakeAdapter, "screenshot_min_height", 150)
+    with patch.object(sb, "capture_element", return_value=True) as cap:
+        run(env)
+    assert cap.call_args.kwargs["min_height"] == 150
+
+
+def test_site_registry_has_min_height():
+    for site_id, adapter_cls in SITE_REGISTRY.items():
+        assert hasattr(adapter_cls, "screenshot_min_height")
+        min_height = adapter_cls.screenshot_min_height
+        assert isinstance(min_height, int), f"{site_id}.screenshot_min_height is {type(min_height)}, not int"
+        assert min_height > 0, f"{site_id}.screenshot_min_height is {min_height}, not > 0"
