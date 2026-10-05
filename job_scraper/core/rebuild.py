@@ -45,7 +45,7 @@ def rebuild_site(site_id: str, repo: JobRepository, jobs_dir: str, raw_dir: str)
 
     cursor = repo.conn.cursor()
     db_rows = cursor.execute(
-        "SELECT listing_id, title, source_url, last_seen_at, duplicate_of FROM jobs WHERE site_id = ?",
+        "SELECT listing_id, title, source_url, last_seen_at, duplicate_of, is_stale, stale_since FROM jobs WHERE site_id = ?",
         (site_id,)
     ).fetchall()
 
@@ -61,17 +61,17 @@ def rebuild_site(site_id: str, repo: JobRepository, jobs_dir: str, raw_dir: str)
 
         matching_row = None
         for row in db_rows:
-            listing_id, title, source_url, last_seen_at, duplicate_of = row
+            listing_id, title, source_url, last_seen_at, duplicate_of, is_stale, stale_since = row
             expected_stem = f"{site_id}-{listing_id}-{slugify(title)}"
             if expected_stem == stem:
-                matching_row = (listing_id, title, source_url, last_seen_at, duplicate_of)
+                matching_row = (listing_id, title, source_url, last_seen_at, duplicate_of, is_stale, stale_since)
                 break
 
         if matching_row is None:
             counters["skipped_no_db"] += 1
             continue
 
-        listing_id, title, source_url, last_seen_at, duplicate_of = matching_row
+        listing_id, title, source_url, last_seen_at, duplicate_of, is_stale, stale_since = matching_row
 
         try:
             page_bytes = raw_file.read_bytes()
@@ -95,7 +95,8 @@ def rebuild_site(site_id: str, repo: JobRepository, jobs_dir: str, raw_dir: str)
             continue
 
         repo.upsert(posting, seen_at=last_seen_at)
-        markdown_export.write(posting, jobs_dir)
+        repo.set_stale_state(site_id, listing_id, is_stale, stale_since)
+        markdown_export.write(posting, jobs_dir, stale_since=stale_since if is_stale and stale_since else None)
         counters["rebuilt"] += 1
 
     return counters

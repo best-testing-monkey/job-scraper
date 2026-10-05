@@ -265,3 +265,144 @@ def test_rebuild_site_returns_correct_keys(tmp_db: JobRepository, tmp_dirs: tupl
 
     assert set(result.keys()) == {"rebuilt", "skipped_no_db", "skipped_duplicate", "excluded", "errors"}
     assert all(isinstance(v, int) for v in result.values())
+
+
+def test_rebuild_site_preserves_stale_state_with_date(tmp_path: Path, detail_html: bytes) -> None:
+    jobs_dir = str(tmp_path / "jobs")
+    raw_dir = str(tmp_path / "raw")
+    db_path = str(tmp_path / "test.db")
+
+    repo = JobRepository(db_path)
+
+    initial_posting = JobPosting(
+        site_id="pro_act",
+        listing_id="8887",
+        source_url="https://pro-act.nl/vacatures/agile-coach-8887/",
+        title="Agile Coach",
+        description="OLD DESCRIPTION",
+    )
+
+    seen_at = "2026-09-15T10:00:00Z"
+    repo.upsert(initial_posting, seen_at=seen_at)
+
+    # Mark it as stale with a date
+    repo.set_stale_state("pro_act", "8887", 1, "2026-10-03")
+
+    Path(raw_dir).mkdir(parents=True, exist_ok=True)
+    site_raw_dir = Path(raw_dir) / "pro_act"
+    site_raw_dir.mkdir(parents=True, exist_ok=True)
+    (site_raw_dir / "pro_act-8887-agile-coach.html").write_bytes(detail_html)
+
+    result = rebuild_site("pro_act", repo, jobs_dir, raw_dir)
+
+    assert result["rebuilt"] == 1
+
+    # Check DB state: should still be stale with the same date
+    cursor = repo.conn.cursor()
+    row = cursor.execute(
+        "SELECT is_stale, stale_since FROM jobs WHERE site_id = ? AND listing_id = ?",
+        ("pro_act", "8887")
+    ).fetchone()
+    assert row is not None
+    is_stale, stale_since = row
+    assert is_stale == 1
+    assert stale_since == "2026-10-03"
+
+    # Check markdown: should contain the stale since bullet
+    markdown_file = Path(jobs_dir) / filename_for(initial_posting)
+    markdown_content = markdown_file.read_text()
+    assert "- Stale since: 2026-10-03" in markdown_content
+
+
+def test_rebuild_site_preserves_non_stale_state(tmp_path: Path, detail_html: bytes) -> None:
+    jobs_dir = str(tmp_path / "jobs")
+    raw_dir = str(tmp_path / "raw")
+    db_path = str(tmp_path / "test.db")
+
+    repo = JobRepository(db_path)
+
+    initial_posting = JobPosting(
+        site_id="pro_act",
+        listing_id="8887",
+        source_url="https://pro-act.nl/vacatures/agile-coach-8887/",
+        title="Agile Coach",
+        description="OLD DESCRIPTION",
+    )
+
+    seen_at = "2026-09-15T10:00:00Z"
+    repo.upsert(initial_posting, seen_at=seen_at)
+
+    # Make sure it's not stale
+    repo.set_stale_state("pro_act", "8887", 0, None)
+
+    Path(raw_dir).mkdir(parents=True, exist_ok=True)
+    site_raw_dir = Path(raw_dir) / "pro_act"
+    site_raw_dir.mkdir(parents=True, exist_ok=True)
+    (site_raw_dir / "pro_act-8887-agile-coach.html").write_bytes(detail_html)
+
+    result = rebuild_site("pro_act", repo, jobs_dir, raw_dir)
+
+    assert result["rebuilt"] == 1
+
+    # Check DB state: should still be non-stale
+    cursor = repo.conn.cursor()
+    row = cursor.execute(
+        "SELECT is_stale, stale_since FROM jobs WHERE site_id = ? AND listing_id = ?",
+        ("pro_act", "8887")
+    ).fetchone()
+    assert row is not None
+    is_stale, stale_since = row
+    assert is_stale == 0
+    assert stale_since is None
+
+    # Check markdown: should NOT contain stale since bullet
+    markdown_file = Path(jobs_dir) / filename_for(initial_posting)
+    markdown_content = markdown_file.read_text()
+    assert "- Stale since:" not in markdown_content
+
+
+def test_rebuild_site_preserves_stale_without_date(tmp_path: Path, detail_html: bytes) -> None:
+    jobs_dir = str(tmp_path / "jobs")
+    raw_dir = str(tmp_path / "raw")
+    db_path = str(tmp_path / "test.db")
+
+    repo = JobRepository(db_path)
+
+    initial_posting = JobPosting(
+        site_id="pro_act",
+        listing_id="8887",
+        source_url="https://pro-act.nl/vacatures/agile-coach-8887/",
+        title="Agile Coach",
+        description="OLD DESCRIPTION",
+    )
+
+    seen_at = "2026-09-15T10:00:00Z"
+    repo.upsert(initial_posting, seen_at=seen_at)
+
+    # Mark it as stale WITHOUT a date (pre-migration data)
+    repo.set_stale_state("pro_act", "8887", 1, None)
+
+    Path(raw_dir).mkdir(parents=True, exist_ok=True)
+    site_raw_dir = Path(raw_dir) / "pro_act"
+    site_raw_dir.mkdir(parents=True, exist_ok=True)
+    (site_raw_dir / "pro_act-8887-agile-coach.html").write_bytes(detail_html)
+
+    result = rebuild_site("pro_act", repo, jobs_dir, raw_dir)
+
+    assert result["rebuilt"] == 1
+
+    # Check DB state: should still be stale without date
+    cursor = repo.conn.cursor()
+    row = cursor.execute(
+        "SELECT is_stale, stale_since FROM jobs WHERE site_id = ? AND listing_id = ?",
+        ("pro_act", "8887")
+    ).fetchone()
+    assert row is not None
+    is_stale, stale_since = row
+    assert is_stale == 1
+    assert stale_since is None
+
+    # Check markdown: should NOT contain stale since bullet (no date)
+    markdown_file = Path(jobs_dir) / filename_for(initial_posting)
+    markdown_content = markdown_file.read_text()
+    assert "- Stale since:" not in markdown_content
