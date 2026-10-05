@@ -491,3 +491,28 @@ def test_screenshots_multiple_sites(monkeypatch, capsys):
             called_sites = [call[0][0] for call in mock_backfill.call_args_list]
             assert "pro_act" in called_sites
             assert "hero" in called_sites
+
+
+def test_stale_sync_prints_counters(temp_db, tmp_path, monkeypatch, capsys):
+    """stale-sync prints one JSON line with the five counter keys"""
+    repo, db_path = temp_db
+    jobs_dir = str(tmp_path / "jobs")
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "stale-sync", "--db", db_path, "--jobs-dir", jobs_dir])
+
+    main()
+
+    out = capsys.readouterr().out.strip().splitlines()
+    assert len(out) == 1
+    assert set(json.loads(out[0])) == {"stale_rows", "dated", "written", "cleared", "missing_md"}
+
+
+def test_stale_sync_help(capsys, monkeypatch):
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "stale-sync", "--help"])
+
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+
+    assert exc_info.value.code == 0
+    out = capsys.readouterr().out
+    assert "--db" in out
+    assert "--jobs-dir" in out

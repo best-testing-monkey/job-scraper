@@ -1,11 +1,13 @@
 import argparse
 import json
 import sys
+from datetime import datetime
 
 from job_scraper.core.db import JobRepository
 from job_scraper.core.rebuild import rebuild_site, NOT_REBUILDABLE
 from job_scraper.core.screenshot_backfill import backfill_screenshots
 from job_scraper.core.screenshots import browser_available
+from job_scraper.core.stale_sync import sync_stale_markers
 from job_scraper.pipeline import run
 from job_scraper.sites.registry import SITE_REGISTRY
 
@@ -107,6 +109,20 @@ def main() -> None:
         help="Path to screenshots directory (default: screenshots/)",
     )
 
+    stale_sync_parser = subparsers.add_parser(
+        "stale-sync", help="Backfill/repair Stale since bullets in markdown from the database"
+    )
+    stale_sync_parser.add_argument(
+        "--db",
+        default="scraper.db",
+        help="Path to database (default: scraper.db)",
+    )
+    stale_sync_parser.add_argument(
+        "--jobs-dir",
+        default="jobs/",
+        help="Path to jobs directory (default: jobs/)",
+    )
+
     subparsers.add_parser("list-sites", help="List all available sites")
 
     args = parser.parse_args()
@@ -117,6 +133,8 @@ def main() -> None:
         handle_rebuild(args)
     elif args.command == "screenshots":
         handle_screenshots(args)
+    elif args.command == "stale-sync":
+        handle_stale_sync(args)
     elif args.command == "list-sites":
         handle_list_sites()
     else:
@@ -199,6 +217,13 @@ def handle_screenshots(args: argparse.Namespace) -> None:
         except ValueError as e:
             print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)
+
+
+def handle_stale_sync(args: argparse.Namespace) -> None:
+    repo = JobRepository(args.db)
+    today = datetime.now().date().isoformat()
+    counters = sync_stale_markers(repo, args.jobs_dir, today)
+    print(json.dumps(counters))
 
 
 def handle_list_sites() -> None:

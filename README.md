@@ -39,6 +39,14 @@ uv run python -m job_scraper screenshots --site pro_act --missing-only
 
 Screenshots are taken at scrape time by default; this command back-fills existing jobs (`--missing-only` skips ones that already have a PNG).
 
+Repair or backfill stale markers from the database:
+
+```bash
+uv run python -m job_scraper stale-sync
+```
+
+**Stale postings.** The markdown bullet `- Stale since: YYYY-MM-DD` is written by `scrape` when a posting disappears and removed when it returns. `stale-sync` repairs/backfills it from `scraper.db`; stale rows without a date are dated with the day the command runs. The app hides a stale posting 3 days after that date.
+
 ## Currently supported sites
 
 - `pro_act` — Pro-Act IT (pro-act.nl/vacatures)
