@@ -1,5 +1,6 @@
 import logging
 import struct
+import time
 import types
 from unittest.mock import patch
 
@@ -8,6 +9,7 @@ import pytest
 from job_scraper.core.screenshots import (
     _is_challenge,
     _screenshot_with_retry,
+    _settle,
     browser_available,
     capture_element,
 )
@@ -356,3 +358,99 @@ def test_stealth_fetch_exception_returns_false(tmp_path, monkeypatch):
         capture_element("https://x/", "#a", str(tmp_path / "o.png"), stealth=True)
         is False
     )
+
+
+# --- settle wait (E16-S01) ------------------------------------------------
+
+
+def _centre_pixel(browser_page, png_path):
+    import base64
+
+    b64 = base64.b64encode(png_path.read_bytes()).decode()
+    browser_page.goto("about:blank")
+    return browser_page.evaluate(
+        """(src) => new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const c = document.createElement('canvas');
+                c.width = img.width; c.height = img.height;
+                const ctx = c.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                resolve(Array.from(ctx.getImageData(
+                    Math.floor(img.width / 2), Math.floor(img.height / 2), 1, 1).data));
+            };
+            img.onerror = () => reject(new Error('decode failed'));
+            img.src = src;
+        })""",
+        "data:image/png;base64," + b64,
+    )
+
+
+def _centre_of_capture(tmp_path, html):
+    from playwright.sync_api import sync_playwright
+
+    page = tmp_path / "fade.html"
+    page.write_text(html)
+    out = tmp_path / "fade.png"
+    assert capture_element(page.as_uri(), "#job", str(out)) is True
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        try:
+            return _centre_pixel(browser.new_page(), out)
+        finally:
+            browser.close()
+
+
+@pytest.mark.enable_socket
+@needs_browser
+def test_settle_waits_for_scroll_triggered_fade(tmp_path):
+    html = (
+        '<div style="height:3000px"></div>'
+        '<div id="job" style="background:#000;width:600px;height:300px;'
+        'opacity:0;transition:opacity 600ms"></div>'
+        "<script>new IntersectionObserver(function(es){es.forEach(function(e){"
+        "if(e.isIntersecting){e.target.style.opacity=1;}});})"
+        ".observe(document.getElementById('job'));</script>"
+    )
+    r, g, b, _a = _centre_of_capture(tmp_path, html)
+    assert r < 30 and g < 30 and b < 30
+
+
+@pytest.mark.enable_socket
+@needs_browser
+def test_settle_waits_for_ancestor_fade(tmp_path):
+    html = (
+        "<style>@keyframes fi{from{opacity:0}to{opacity:1}}"
+        "#wrap{animation:fi 600ms}</style>"
+        '<div id="wrap"><div id="job" style="background:#000;width:600px;'
+        'height:300px"></div></div>'
+    )
+    r, g, b, _a = _centre_of_capture(tmp_path, html)
+    assert r < 30 and g < 30 and b < 30
+
+
+@pytest.mark.enable_socket
+@needs_browser
+def test_settle_has_no_delay_on_static_page(page_file):
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        try:
+            page = browser.new_page()
+            page.goto(page_file.as_uri())
+            start = time.perf_counter()
+            _settle(page, "#job")
+            assert time.perf_counter() - start < 0.5
+        finally:
+            browser.close()
+
+
+def test_settle_never_raises():
+    from unittest.mock import MagicMock
+
+    page = MagicMock()
+    page.locator.return_value.first.scroll_into_view_if_needed.side_effect = Exception("x")
+    page.wait_for_function.side_effect = Exception("timeout")
+    assert _settle(page, "#job") is None
+    page.wait_for_timeout.assert_called_once_with(100)

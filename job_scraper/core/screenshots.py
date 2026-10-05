@@ -46,6 +46,46 @@ def _is_challenge(response, title: str) -> bool:
     return response.status in (403, 503) and _title_is_challenge(title)
 
 
+SETTLE_JS = """
+(selector) => {
+  const el = document.querySelector(selector);
+  if (!el) return true;
+  for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+    if (parseFloat(getComputedStyle(n).opacity) < 0.99) return false;
+  }
+  for (const a of document.getAnimations()) {
+    if (a.playState !== 'running') continue;
+    const t = a.effect && a.effect.target;
+    if (!t || !t.contains(el)) continue;
+    let iters = 1;
+    try { iters = a.effect.getComputedTiming().iterations; } catch (e) {}
+    if (iters !== Infinity) return false;
+  }
+  return true;
+}
+"""
+
+
+def _settle(page, selector, max_ms=3000) -> None:
+    """Scroll the target into view, then wait for fade-ins to finish. Never raises.
+
+    AOS-style fades only start once the element scrolls into view, so the
+    scroll comes first; the wait is bounded by ``max_ms``.
+    """
+    try:
+        page.locator(selector).first.scroll_into_view_if_needed(timeout=3000)
+    except Exception as exc:  # noqa: BLE001 - settle never fails a capture
+        logger.debug("Settle scroll skipped: %s", exc)
+    try:
+        page.wait_for_function(SETTLE_JS, arg=selector, timeout=max_ms)
+    except Exception as exc:  # noqa: BLE001 - timeout: capture anyway
+        logger.debug("Settle wait ended: %s", exc)
+    try:
+        page.wait_for_timeout(100)
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _screenshot_with_retry(page, selector, out_path, timeout_ms):
     """wait_for_selector + element screenshot, retried once if the element detached."""
     for attempt in (1, 2):
@@ -96,6 +136,7 @@ def _capture_on_page(
         logger.info("Skipping %s: gated page", url)
         Path(out_path).unlink(missing_ok=True)
         return None
+    _settle(page, selector)
     _screenshot_with_retry(page, selector, out_path, timeout_ms)
     return True
 
