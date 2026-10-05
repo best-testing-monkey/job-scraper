@@ -52,6 +52,10 @@ class SiteAdapter(ABC):
     """CSS selectors (valid for both Playwright and soupsieve/bs4) of elements to
     hide (cookie banners, consent dialogs, apply forms, share bars) before the
     element screenshot is taken; empty means hide only the generic overlays."""
+    screenshot_pre_actions: ClassVar[tuple[str, ...]] = ()
+    """CSS selectors (valid for Playwright) of elements to click, each once and in
+    order, after the page loads and before the element screenshot (e.g. a "Show
+    more" button); a missing or unclickable selector is skipped."""
 
     @abstractmethod
     def list_postings(self) -> Iterator[ListingStub]: ...

@@ -40,11 +40,13 @@ def capture_element(
     stealth: bool = False,
     timeout_ms: int = 30000,
     hide_selectors: Sequence[str] = (),
+    pre_actions: Sequence[str] = (),
 ) -> bool:
     """Save a PNG of only the first element matching ``selector``.
 
     Elements matching GENERIC_HIDE_SELECTORS + ``hide_selectors`` are hidden
-    first (display: none) and page scrolling is unlocked.
+    first (display: none) and page scrolling is unlocked. Each selector in
+    ``pre_actions`` is then clicked once (if present and visible).
 
     Never raises: on any failure logs a warning, removes a partial file and
     returns False.
@@ -64,6 +66,14 @@ def capture_element(
                 css = f"{', '.join(hide)} {{ display: none !important; }}\n"
                 css += "html, body { overflow: auto !important; }"
                 page.add_style_tag(content=css)
+                for sel in pre_actions:
+                    try:
+                        target = page.locator(sel).first
+                        if target.count() > 0 and target.is_visible():
+                            target.click(timeout=3000)
+                            page.wait_for_timeout(300)
+                    except Exception as exc:  # noqa: BLE001 - skip, never fail
+                        logger.debug("Pre-action %r skipped: %s", sel, exc)
                 page.wait_for_selector(selector, timeout=timeout_ms)
                 page.locator(selector).first.screenshot(path=out_path)
             finally:

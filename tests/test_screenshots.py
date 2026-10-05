@@ -129,3 +129,48 @@ def test_hide_selectors_hide_overlay_and_form(tmp_path):
         for x in range(width):
             r, g, bl = row[x * bpp : x * bpp + 3]
             assert not (r > 200 and g < 60 and bl < 60), "red overlay pixel found"
+
+
+_PRE_ACTION_PAGE = (
+    '<div id="job"><p>short</p>'
+    "<button id=\"more\" onclick=\"document.getElementById('full').style.display='block';"
+    'this.remove()">Show more</button>'
+    '<div id="full" style="display:none;height:400px">full text</div></div>'
+)
+
+
+def _png_height(path):
+    return struct.unpack(">II", path.read_bytes()[16:24])[1]
+
+
+@pytest.mark.enable_socket
+@needs_browser
+def test_pre_actions_click_expands_content(tmp_path):
+    page = tmp_path / "pre.html"
+    page.write_text(_PRE_ACTION_PAGE)
+    out1, out2 = tmp_path / "plain.png", tmp_path / "clicked.png"
+    assert capture_element(page.as_uri(), "#job", str(out1))
+    assert capture_element(
+        page.as_uri(), "#job", str(out2), pre_actions=("button#more",)
+    )
+    assert _png_height(out2) >= _png_height(out1) + 350  # +400px block minus the removed button
+
+
+@pytest.mark.enable_socket
+@needs_browser
+def test_missing_pre_action_does_not_fail_capture(tmp_path):
+    page = tmp_path / "pre.html"
+    page.write_text(_PRE_ACTION_PAGE)
+    out = tmp_path / "out.png"
+    assert capture_element(
+        page.as_uri(), "#job", str(out), pre_actions=("button#does-not-exist",)
+    ) is True
+    assert out.exists()
+
+
+def test_adapters_default_screenshot_pre_actions_empty():
+    from job_scraper.sites.registry import SITE_REGISTRY
+
+    for cls in SITE_REGISTRY.values():
+        assert isinstance(cls.screenshot_pre_actions, tuple)
+        assert cls.screenshot_pre_actions == ()
