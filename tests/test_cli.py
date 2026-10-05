@@ -303,6 +303,10 @@ def test_screenshots_help(monkeypatch, capsys):
     assert "--missing-only" in captured.out
     assert "--jobs-dir" in captured.out
     assert "--screenshots-dir" in captured.out
+    assert "--prune-small" in captured.out
+    assert "--min-height" in captured.out
+    assert "--move-to" in captured.out
+    assert "--dry-run" in captured.out
 
 
 def test_screenshots_browser_not_available(monkeypatch, capsys):
@@ -564,3 +568,132 @@ def test_scrape_exits_1_on_site_error(temp_db, monkeypatch, capsys):
 
     assert exc_info.value.code == 1
     assert 'a: {"seen": 1, "error": "RuntimeError: boom"}' in capsys.readouterr().out
+
+
+def test_screenshots_prune_small_dry_run_no_site(monkeypatch, capsys):
+    """Test screenshots --prune-small --dry-run with no site"""
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "screenshots", "--prune-small", "--dry-run"])
+
+    with patch("job_scraper.cli.prune_small_screenshots") as mock_prune:
+        with patch("job_scraper.cli.browser_available") as mock_browser:
+            mock_prune.return_value = {
+                "scanned": 10,
+                "small": 3,
+                "moved": 0,
+                "markdown_updated": 0,
+                "unreadable": 0,
+                "skipped_exists": 0,
+            }
+
+            main()
+
+            # Verify browser_available was not called
+            mock_browser.assert_not_called()
+
+            # Verify prune_small_screenshots was called with sites=None
+            mock_prune.assert_called_once()
+            call_kwargs = mock_prune.call_args[1]
+            assert call_kwargs["sites"] is None
+            assert call_kwargs["dry_run"] is True
+            assert call_kwargs["move_to"] is None
+
+            # Verify output is one JSON line
+            captured = capsys.readouterr()
+            lines = captured.out.strip().splitlines()
+            assert len(lines) == 1
+            output_json = json.loads(lines[0])
+            assert output_json["scanned"] == 10
+
+
+def test_screenshots_prune_small_with_sites_and_move_to(monkeypatch, capsys):
+    """Test screenshots --prune-small --site hero --site harveynash --move-to /x --min-height 120"""
+    monkeypatch.setattr(sys, "argv", [
+        "job_scraper", "screenshots", "--prune-small",
+        "--site", "hero",
+        "--site", "harveynash",
+        "--move-to", "/x",
+        "--min-height", "120"
+    ])
+
+    with patch("job_scraper.cli.prune_small_screenshots") as mock_prune:
+        with patch("job_scraper.cli.browser_available") as mock_browser:
+            mock_prune.return_value = {
+                "scanned": 5,
+                "small": 2,
+                "moved": 2,
+                "markdown_updated": 2,
+                "unreadable": 0,
+                "skipped_exists": 0,
+            }
+
+            main()
+
+            # Verify browser_available was not called
+            mock_browser.assert_not_called()
+
+            # Verify prune_small_screenshots was called with correct arguments
+            mock_prune.assert_called_once()
+            call_kwargs = mock_prune.call_args[1]
+            assert call_kwargs["sites"] == ["hero", "harveynash"]
+            assert call_kwargs["min_height"] == 120
+            assert call_kwargs["move_to"] == "/x"
+            assert call_kwargs["dry_run"] is False
+
+            # Verify positional arguments
+            call_args = mock_prune.call_args[0]
+            assert call_args[0] == "screenshots/"
+            assert call_args[1] == "jobs/"
+
+
+def test_screenshots_prune_small_no_move_to_no_dry_run_fails(monkeypatch, capsys):
+    """Test screenshots --prune-small without --move-to and without --dry-run exits 1"""
+    monkeypatch.setattr(sys, "argv", ["job_scraper", "screenshots", "--prune-small"])
+
+    with patch("job_scraper.cli.prune_small_screenshots") as mock_prune:
+        with patch("job_scraper.cli.browser_available") as mock_browser:
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+            assert exc_info.value.code == 1
+
+            # Verify prune_small_screenshots was NOT called
+            mock_prune.assert_not_called()
+
+            # Verify browser_available was not called
+            mock_browser.assert_not_called()
+
+            # Verify error message on stderr
+            captured = capsys.readouterr()
+            assert "Error: --move-to is required unless --dry-run" in captured.err
+
+
+def test_screenshots_prune_small_all_sites(monkeypatch, capsys):
+    """Test screenshots --prune-small --site all expands to all sites"""
+    monkeypatch.setattr(sys, "argv", [
+        "job_scraper", "screenshots", "--prune-small",
+        "--site", "all",
+        "--move-to", "/tmp/prune",
+        "--dry-run"
+    ])
+
+    with patch("job_scraper.cli.prune_small_screenshots") as mock_prune:
+        with patch("job_scraper.cli.browser_available") as mock_browser:
+            mock_prune.return_value = {
+                "scanned": 100,
+                "small": 0,
+                "moved": 0,
+                "markdown_updated": 0,
+                "unreadable": 0,
+                "skipped_exists": 0,
+            }
+
+            main()
+
+            # Verify browser_available was not called
+            mock_browser.assert_not_called()
+
+            # Verify prune_small_screenshots was called with all sites
+            mock_prune.assert_called_once()
+            call_kwargs = mock_prune.call_args[1]
+            all_sites = sorted(SITE_REGISTRY.keys())
+            assert call_kwargs["sites"] == all_sites

@@ -6,6 +6,7 @@ from datetime import datetime
 from job_scraper.core.db import JobRepository
 from job_scraper.core.rebuild import rebuild_site, NOT_REBUILDABLE
 from job_scraper.core.screenshot_backfill import backfill_screenshots
+from job_scraper.core.screenshot_prune import prune_small_screenshots
 from job_scraper.core.screenshots import browser_available
 from job_scraper.core.stale_sync import sync_stale_markers
 from job_scraper.pipeline import run
@@ -118,6 +119,27 @@ def main() -> None:
         action="store_true",
         help="also try postings the scraper marked stale",
     )
+    screenshots_parser.add_argument(
+        "--prune-small",
+        action="store_true",
+        help="Remove PNGs shorter than --min-height",
+    )
+    screenshots_parser.add_argument(
+        "--min-height",
+        type=int,
+        default=100,
+        help="Minimum PNG height in pixels (default: 100)",
+    )
+    screenshots_parser.add_argument(
+        "--move-to",
+        default=None,
+        help="folder PNGs are moved into (required unless --dry-run); files are never deleted",
+    )
+    screenshots_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Count small PNGs without moving or editing markdown",
+    )
 
     stale_sync_parser = subparsers.add_parser(
         "stale-sync", help="Backfill/repair Stale since bullets in markdown from the database"
@@ -217,6 +239,29 @@ def handle_rebuild(args: argparse.Namespace) -> None:
 
 
 def handle_screenshots(args: argparse.Namespace) -> None:
+    if args.prune_small:
+        if not args.dry_run and not args.move_to:
+            print("Error: --move-to is required unless --dry-run", file=sys.stderr)
+            sys.exit(1)
+
+        sites_list = None
+        if args.sites:
+            if args.sites == ["all"]:
+                sites_list = sorted(SITE_REGISTRY.keys())
+            else:
+                sites_list = args.sites
+
+        counters = prune_small_screenshots(
+            args.screenshots_dir,
+            args.jobs_dir,
+            min_height=args.min_height,
+            sites=sites_list,
+            move_to=args.move_to,
+            dry_run=args.dry_run,
+        )
+        print(json.dumps(counters))
+        return
+
     if not browser_available():
         print('No Playwright Chromium found; see README "Screenshots (browser requirements)"', file=sys.stderr)
         sys.exit(1)
