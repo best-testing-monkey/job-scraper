@@ -384,3 +384,65 @@ def test_migration_clears_self_duplicates(tmp_path):
         rows = repo.conn.execute("SELECT id, duplicate_of FROM jobs ORDER BY id").fetchall()
         assert rows == [(1, None), (2, None), (3, None), (4, 1)]
         repo.conn.close()
+
+
+def test_touch_seen_updates_single_row(temp_db):
+    temp_db.upsert(_p("1", title="Row1"), "2026-10-01T00:00:00Z")
+    temp_db.upsert(_p("2", title="Row2"), "2026-10-01T00:00:00Z")
+
+    result = temp_db.touch_seen("s", ["1"], "2026-10-05T12:00:00Z")
+    assert result == 1
+
+    cursor = temp_db.conn.cursor()
+    cursor.execute("SELECT last_seen_at FROM jobs WHERE listing_id = ?", ("1",))
+    row1_time = cursor.fetchone()[0]
+    assert row1_time == "2026-10-05T12:00:00Z"
+
+    cursor.execute("SELECT last_seen_at FROM jobs WHERE listing_id = ?", ("2",))
+    row2_time = cursor.fetchone()[0]
+    assert row2_time == "2026-10-01T00:00:00Z"
+
+
+def test_touch_seen_stale_row_stays_stale(temp_db):
+    temp_db.upsert(_p("1"), "2026-10-01T00:00:00Z")
+    temp_db.set_stale_state("s", "1", 1, "2026-10-02")
+
+    result = temp_db.touch_seen("s", ["1"], "2026-10-05T12:00:00Z")
+    assert result == 1
+
+    assert _stale(temp_db, "1") == (1, "2026-10-02")
+
+    cursor = temp_db.conn.cursor()
+    cursor.execute("SELECT last_seen_at FROM jobs WHERE listing_id = ?", ("1",))
+    row_time = cursor.fetchone()[0]
+    assert row_time == "2026-10-05T12:00:00Z"
+
+
+def test_touch_seen_unknown_ids(temp_db):
+    temp_db.upsert(_p("1"), "2026-10-01T00:00:00Z")
+
+    result = temp_db.touch_seen("s", ["unknown"], "2026-10-05T12:00:00Z")
+    assert result == 0
+
+
+def test_touch_seen_empty_list(temp_db):
+    temp_db.upsert(_p("1"), "2026-10-01T00:00:00Z")
+
+    result = temp_db.touch_seen("s", [], "2026-10-05T12:00:00Z")
+    assert result == 0
+
+    cursor = temp_db.conn.cursor()
+    cursor.execute("SELECT last_seen_at FROM jobs WHERE listing_id = ?", ("1",))
+    row_time = cursor.fetchone()[0]
+    assert row_time == "2026-10-01T00:00:00Z"
+
+
+def test_touch_seen_prevents_stale_marking(temp_db):
+    run_start = "2026-10-05T00:00:00Z"
+    temp_db.upsert(_p("1", title="Old"), "2026-10-01T00:00:00Z")
+    temp_db.upsert(_p("2", title="Also old"), "2026-10-01T00:00:00Z")
+
+    temp_db.touch_seen("s", ["1"], "2026-10-05T12:00:00Z")
+
+    newly_stale = temp_db.list_newly_stale("s", run_start)
+    assert newly_stale == [("2", "Also old")]

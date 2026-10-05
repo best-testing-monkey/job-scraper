@@ -1,6 +1,7 @@
 import json
 import re
 import sqlite3
+from collections.abc import Sequence
 from job_scraper.core.models import JobPosting
 
 
@@ -188,6 +189,20 @@ class JobRepository:
             (stale_since, site_id, listing_id),
         )
         self.conn.commit()
+
+    def touch_seen(self, site_id: str, listing_ids: Sequence[str], seen_at: str) -> int:
+        """Update last_seen_at for the given listing_ids without changing is_stale,
+        stale_since or any content. Returns the number of rows updated."""
+        if not listing_ids:
+            return 0
+        cursor = self.conn.cursor()
+        params = [(seen_at, site_id, lid) for lid in listing_ids]
+        cursor.executemany(
+            "UPDATE jobs SET last_seen_at = ? WHERE site_id = ? AND listing_id = ?",
+            params,
+        )
+        self.conn.commit()
+        return cursor.rowcount
 
     def find_duplicate(
         self,
