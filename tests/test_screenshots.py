@@ -7,6 +7,7 @@ import pytest
 
 from job_scraper.core.screenshots import (
     _is_challenge,
+    _screenshot_with_retry,
     browser_available,
     capture_element,
 )
@@ -207,6 +208,45 @@ def test_skip_selectors_skip_gate_page(tmp_path):
 def test_adapters_default_screenshot_skip_selectors_empty():
     from job_scraper.sites.registry import SITE_REGISTRY
 
-    for cls in SITE_REGISTRY.values():
+    for site_id, cls in SITE_REGISTRY.items():
         assert isinstance(cls.screenshot_skip_selectors, tuple)
-        assert cls.screenshot_skip_selectors == ()
+        if site_id != "ictergezocht":  # gate-page skip set in E14-S04
+            assert cls.screenshot_skip_selectors == ()
+
+
+def _retry_page(first_exc):
+    from unittest.mock import MagicMock
+
+    page = MagicMock()
+    shot = page.locator.return_value.first.screenshot
+    shot.side_effect = [first_exc, None]
+    return page, shot
+
+
+def test_retry_on_detach_succeeds_second_attempt():
+    page, shot = _retry_page(Exception("Element is not attached to the DOM"))
+    _screenshot_with_retry(page, "#job", "x.png", 1000)
+    assert shot.call_count == 2
+    page.wait_for_timeout.assert_called_once_with(500)
+
+
+def test_other_error_fails_after_one_attempt():
+    page, shot = _retry_page(Exception("boom"))
+    with pytest.raises(Exception, match="boom"):
+        _screenshot_with_retry(page, "#job", "x.png", 1000)
+    assert shot.call_count == 1
+    page.wait_for_timeout.assert_not_called()
+
+
+@pytest.mark.enable_socket
+@needs_browser
+def test_capture_survives_element_replaced_after_load(tmp_path):
+    page = tmp_path / "swap.html"
+    page.write_text(
+        '<div id="job" style="height:200px;width:400px">Job text</div>'
+        "<script>setTimeout(function(){var o=document.getElementById('job');"
+        "var n=o.cloneNode(true);o.replaceWith(n);},50);</script>"
+    )
+    out = tmp_path / "out.png"
+    assert capture_element(page.as_uri(), "#job", str(out)) is True
+    assert out.read_bytes().startswith(PNG_MAGIC)

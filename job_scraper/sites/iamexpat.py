@@ -13,7 +13,13 @@ from job_scraper.sites.base import SiteAdapter, FetchStrategy, fetch_page
 class IamexpatAdapter(SiteAdapter):
     site_id: str = "iamexpat"
     base_url: str = "https://www.iamexpat.nl"
-    screenshot_selector = "div.BodyCenter_main__Sz_2E"
+    screenshot_selector = 'div[class*="BodyCenter_main"]'
+    screenshot_hide_selectors = (
+        '[class*="BodyCenter_main"] > :not(:has(main))',
+        '[class*="BodyCenter_moreJobsContainer"]',
+        '[class*="BodyCenter_moreContainer"]',
+        "div.sticky.bottom-0",
+    )
     fetch_strategy: FetchStrategy = FetchStrategy.STATIC
     LISTING_URL: str = "https://www.iamexpat.nl/career/jobs-netherlands"
 

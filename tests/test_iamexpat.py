@@ -209,3 +209,29 @@ def test_screenshot_selector_matches_description_element(fixture: str) -> None:
     assert "The department is organized according to agile principles in a SAFe value stream" in els[0].get_text()
     assert els[0].find(["nav", "header", "footer", "form"]) is None
     assert "cookie" not in els[0].get_text().lower()
+
+
+def test_screenshot_hide_selectors_valid_and_hide_widgets() -> None:
+    from bs4 import BeautifulSoup
+
+    adapter = IamexpatAdapter()
+    assert adapter.screenshot_hide_selectors
+    html = (
+        Path(__file__).parent / "fixtures" / "iamexpat" / "detail_tLJWUBCWY1P8MBXMScbwRE.html"
+    ).read_text()
+    soup = BeautifulSoup(html, "html.parser")
+    el = soup.select_one(adapter.screenshot_selector)
+    hidden = set()
+    for sel in adapter.screenshot_hide_selectors:
+        hidden.update(id(x) for x in el.select(sel))  # valid CSS or raises
+    text_of_visible = " ".join(
+        c.get_text(" ")
+        for c in el.find_all(True, recursive=False)
+        if id(c) not in hidden
+    )
+    assert "Apply for this position" not in text_of_visible
+    assert "Want more jobs like this" not in text_of_visible
+    assert "Similar jobs" not in text_of_visible
+    assert "More jobs from this employer" not in text_of_visible
+    assert "About this role" in text_of_visible
+    assert "The department is organized according to agile principles" in text_of_visible

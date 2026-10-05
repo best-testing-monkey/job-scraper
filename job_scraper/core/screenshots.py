@@ -41,6 +41,20 @@ def _is_challenge(response, title: str) -> bool:
     return response.status in (403, 503) and "just a moment" in title.lower()
 
 
+def _screenshot_with_retry(page, selector, out_path, timeout_ms):
+    """wait_for_selector + element screenshot, retried once if the element detached."""
+    for attempt in (1, 2):
+        try:
+            page.wait_for_selector(selector, timeout=timeout_ms)
+            page.locator(selector).first.screenshot(path=out_path)
+            return
+        except Exception as exc:  # noqa: BLE001 - only detach errors retry
+            msg = str(exc).lower()
+            if attempt == 2 or not ("not attached" in msg or "detached" in msg):
+                raise
+            page.wait_for_timeout(500)
+
+
 def capture_element(
     url: str,
     selector: str,
@@ -101,7 +115,7 @@ def capture_element(
                     logger.info("Skipping %s: gated page", url)
                     Path(out_path).unlink(missing_ok=True)
                     return None
-                page.locator(selector).first.screenshot(path=out_path)
+                _screenshot_with_retry(page, selector, out_path, timeout_ms)
             finally:
                 browser.close()
         return True
