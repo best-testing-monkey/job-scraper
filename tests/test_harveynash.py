@@ -150,8 +150,14 @@ def test_screenshot_selector_matches_description_element(fixture: str) -> None:
 def test_screenshot_hide_selectors_valid() -> None:
     from bs4 import BeautifulSoup
 
-    assert HarveyNashAdapter.screenshot_hide_selectors == ("div.social-share",)
+    assert HarveyNashAdapter.screenshot_hide_selectors == (
+        "div.social-share",
+        "div.post-content a.primaryBtn",
+    )
     html = Path("tests/fixtures/harveynash/detail_299204.html").read_text()
     soup = BeautifulSoup(html, "html.parser")
     post = soup.select_one(HarveyNashAdapter.screenshot_selector)
     assert post.select_one("div.social-share") is not None
+    for sel in HarveyNashAdapter.screenshot_hide_selectors:
+        soup.select(sel)  # valid for soupsieve
+    assert post.select("a.primaryBtn")
