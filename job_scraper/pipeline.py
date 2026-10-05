@@ -106,6 +106,7 @@ def run_site(
                         hide_selectors=adapter.screenshot_hide_selectors,
                         pre_actions=adapter.screenshot_pre_actions,
                         skip_selectors=adapter.screenshot_skip_selectors,
+                        min_height=adapter.screenshot_min_height,
                     )
                 except Exception as exc:
                     print(f"Warning: screenshot failed for {stem}: {exc}", file=sys.stderr)

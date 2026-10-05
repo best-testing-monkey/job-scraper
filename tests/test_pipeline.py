@@ -373,6 +373,29 @@ def test_screenshot_not_for_excluded_or_duplicates(tmp_path: Path) -> None:
     assert cap.call_count == 1
 
 
+def test_screenshot_min_height_default(tmp_path: Path) -> None:
+    shots = str(tmp_path / "shots")
+    counters, cap = _run_shots(tmp_path, ShotAdapter(), shots, return_value=None)
+    assert cap.call_args_list[0].kwargs["min_height"] == 100
+    assert counters["screenshots_skipped"] == 2
+    md = (tmp_path / "jobs" / f"{_STEM1}.md").read_text()
+    assert "- Screenshot:" not in md
+    assert counters["written"] == 2
+
+
+def test_screenshot_min_height_custom(tmp_path: Path) -> None:
+    class CustomHeightAdapter(ShotAdapter):
+        screenshot_min_height = 150
+
+    shots = str(tmp_path / "shots")
+    counters, cap = _run_shots(tmp_path, CustomHeightAdapter(), shots, return_value=None)
+    assert cap.call_args_list[0].kwargs["min_height"] == 150
+    assert counters["screenshots_skipped"] == 2
+    md = (tmp_path / "jobs" / f"{_STEM1}.md").read_text()
+    assert "- Screenshot:" not in md
+    assert counters["written"] == 2
+
+
 class StaleAdapter(SiteAdapter):
     site_id = "stale-site"
     base_url = "https://stale-site.example.com"
